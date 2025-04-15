@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../stores/auth-store';
+import { supabase } from '../lib/supabase';
+import { Alert } from 'react-native';
 
 // Developer Screens
 import DeveloperDashboardScreen from '../screens/developer/dashboard-screen';
@@ -17,9 +19,34 @@ import ClientBrowseScreen from '../screens/client/browse-screen';
 const Tab = createBottomTabNavigator();
 
 function MainNavigator() {
-  const { user } = useAuthStore();
+  const { user, signOut } = useAuthStore();
   const userRole = user?.user_metadata?.role || 'client';
   const isDeveloper = userRole === 'developer';
+
+  useEffect(() => {
+    const validateSession = async () => {
+      console.log('MainNavigator mounted, validating session...');
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        console.log('Session validation failed in MainNavigator. Signing out.', error?.message);
+        // Alert.alert("Session Expired", "Your session is no longer valid. Please log in again.");
+        await signOut();
+        // No need to explicitly navigate, App.tsx will react to session becoming null
+      } else {
+        console.log('Session validated successfully in MainNavigator.');
+      }
+    };
+
+    validateSession();
+    // Dependency on signOut ensures it's available and stable if wrapped in useCallback in store
+    // If signOut causes re-renders, consider using useAuthStore.getState().signOut()
+  }, [signOut]);
+
+  // Prevent rendering tabs if user info is missing (during sign out transition)
+  if (!user) {
+    return null; // Or a loading indicator
+  }
 
   return (
     <Tab.Navigator
@@ -42,6 +69,9 @@ function MainNavigator() {
           // Restore original size prop
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
+        tabBarActiveTintColor: 'tomato',
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false, // Hide header for tab screens
       })}
     >
       {isDeveloper ? (

@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import {
+  View, Text, TextInput, StyleSheet, Alert, TouchableOpacity,
+  SafeAreaView, KeyboardAvoidingView, Platform
+} from 'react-native';
 import { useAuthStore } from '../../stores/auth-store';
 import { useNavigation } from '@react-navigation/native';
+import { useColors, ColorTheme } from '../../theme';
 
 // Define the possible roles
 type Role = 'client' | 'developer';
@@ -10,9 +14,11 @@ const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<Role>('client'); // State for selected role, default 'client'
+  const [role, setRole] = useState<Role>('client');
   const { signUp, loading } = useAuthStore();
   const navigation = useNavigation<any>();
+  const colors = useColors();
+  const styles = getStyles(colors);
 
   const handleSignUp = async () => {
     console.log('*** handleSignUp triggered with role:', role);
@@ -26,156 +32,205 @@ const SignUpScreen = () => {
         return;
     }
 
-    // Pass email, password, AND role to the store's signUp function
-    const { error } = await signUp(email, password, role); // Pass role here
+    const { error } = await signUp(email, password, role);
 
     if (error) {
-      // Use a more specific error message if possible, or fallback
       const message = error.message || 'An error occurred during sign up. Please try again.';
       Alert.alert('Sign Up Failed', message);
     } else {
-        Alert.alert('Success', 'Account created successfully! Check your email for verification.'); // Changed success message
-        navigation.navigate('Login'); // Navigate to Login after successful signup
+        Alert.alert('Success', 'Account created successfully! Check your email for verification.');
+        navigation.navigate('Login');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password (min. 6 characters)" // Added hint
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-      />
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>Create Account</Text>
 
-      {/* Role Selection */}
-      <View style={styles.roleContainer}>
-        <Text style={styles.roleLabel}>I am a:</Text>
-        <View style={styles.roleButtons}>
-          <TouchableOpacity
-            style={[styles.roleButton, styles.roleButtonClient, role === 'client' && styles.roleButtonActive]} // Added specific style
-            onPress={() => setRole('client')}
-            disabled={loading}
-          >
-            <Text style={[styles.roleButtonText, role === 'client' && styles.roleButtonTextActive]}>Client</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleButton, styles.roleButtonDeveloper, role === 'developer' && styles.roleButtonActive]} // Added specific style
-            onPress={() => setRole('developer')}
-            disabled={loading}
-          >
-            <Text style={[styles.roleButtonText, role === 'developer' && styles.roleButtonTextActive]}>Developer</Text>
-          </TouchableOpacity>
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.subtle}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              textContentType="emailAddress"
+              autoComplete="email"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password (min. 6 characters)"
+              placeholderTextColor={colors.subtle}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              textContentType="newPassword"
+              autoComplete="password-new"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor={colors.subtle}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              textContentType="newPassword"
+              autoComplete="password-new"
+            />
+
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>I am a:</Text>
+              <View style={styles.roleButtons}>
+                <TouchableOpacity
+                  style={[styles.roleButton, role === 'client' && styles.roleButtonActive]}
+                  onPress={() => setRole('client')}
+                  disabled={loading}
+                >
+                  <Text style={[styles.roleButtonText, role === 'client' && styles.roleButtonTextActive]}>Client</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.roleButton, role === 'developer' && styles.roleButtonActive]}
+                  onPress={() => setRole('developer')}
+                  disabled={loading}
+                >
+                  <Text style={[styles.roleButtonText, role === 'developer' && styles.roleButtonTextActive]}>Developer</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
+              <Text style={styles.linkText}>Already have an account? Login</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-
-      <Button title={loading ? 'Creating Account...' : 'Create Account'} onPress={handleSignUp} disabled={loading} />
-      <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.linkText}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ColorTheme) => StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f8f9fa', // Light background
+    backgroundColor: colors.background,
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
+    padding: 25,
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
-    fontSize: 28, // Larger title
-    fontWeight: 'bold',
-    marginBottom: 30, // More space below title
-    textAlign: 'center',
-    color: '#343a40', // Darker title color
+    fontSize: 32,
+    fontWeight: "bold",
+    color: colors.text,
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  form: {
+    width: "100%",
+    maxWidth: 400,
   },
   input: {
-    height: 50, // Taller input fields
-    backgroundColor: '#fff', // White background for inputs
-    borderColor: '#ced4da', // Lighter border color
-    borderWidth: 1,
-    marginBottom: 15, // More space between inputs
+    height: 55,
+    borderWidth: 1.5,
+    borderColor: colors.subtle,
+    borderRadius: 10,
+    marginBottom: 20,
     paddingHorizontal: 15,
-    borderRadius: 8, // Rounded corners
-    fontSize: 16, // Slightly larger font size
+    paddingVertical: 10,
+    backgroundColor: colors.background,
+    fontSize: 16,
+    color: colors.text,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    height: 55,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 15,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  linkButton: {
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  linkText: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: "500",
   },
   roleContainer: {
-    marginBottom: 20, // Space below role selection
-    alignItems: 'center', // Center items horizontally
+    marginBottom: 25,
+    alignItems: 'stretch',
+    width: '100%',
   },
   roleLabel: {
     fontSize: 16,
-    color: '#495057', // Medium gray text
-    marginBottom: 10, // Space below label
+    color: colors.text,
+    marginBottom: 10,
+    textAlign: 'center',
+    opacity: 0.8,
   },
   roleButtons: {
     flexDirection: 'row',
-    justifyContent: 'center', // Center buttons horizontally
-    width: '80%', // Limit width
+    justifyContent: 'center',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    overflow: 'hidden',
   },
-  // Base style for role buttons
   roleButton: {
-    flex: 1, // Make buttons take equal space
+    flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#007bff', // Blue border
-    alignItems: 'center', // Center text inside button
-    backgroundColor: '#fff', // Default white background
+    alignItems: 'center',
+    backgroundColor: colors.background,
   },
-  // Style for the 'Client' button (left side)
-  roleButtonClient: {
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    marginRight: -1, // Overlap borders slightly for connected look
-  },
-  // Style for the 'Developer' button (right side)
-  roleButtonDeveloper: {
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-  },
-  // Style for the ACTIVE role button
   roleButtonActive: {
-    backgroundColor: '#007bff', // Blue background when active
+    backgroundColor: colors.primary,
   },
-  // Base text style for role buttons
   roleButtonText: {
-    color: '#007bff', // Blue text
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '500',
   },
-  // Text style for the ACTIVE role button
   roleButtonTextActive: {
-    color: '#fff', // White text when active
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
-  linkButton: {
-    marginTop: 25, // More space above link
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#007bff', // Consistent blue link color
-    fontSize: 16,
-  },
-  // Note: Default RN Button styling might need separate handling if custom look is desired
 });
 
 export default SignUpScreen;
