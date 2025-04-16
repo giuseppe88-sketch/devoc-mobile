@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../stores/auth-store';
+import { colors as themeColors, spacing } from '../../theme';
+
+const colors = themeColors.light;
 
 function ClientDashboardScreen({ navigation }: { navigation: any }) {
   const { user } = useAuthStore();
@@ -57,7 +60,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
             style={styles.searchBar}
             onPress={() => navigation.navigate('Browse')}
           >
-            <Ionicons name="search" size={20} color="#999" />
+            <Ionicons name="search" size={20} color={colors.placeholder} />
             <Text style={styles.searchText}>Search for developers...</Text>
           </TouchableOpacity>
         </View>
@@ -97,7 +100,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
                   )}
                 </View>
                 <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={16} color="#FFD700" />
+                  <Ionicons name="star" size={16} color={colors.star} />
                   <Text style={styles.ratingText}>{developer.rating}</Text>
                 </View>
               </TouchableOpacity>
@@ -130,11 +133,11 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
                 </View>
                 <View style={styles.bookingDetails}>
                   <View style={styles.bookingDetail}>
-                    <Ionicons name="calendar-outline" size={16} color="#666" />
+                    <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
                     <Text style={styles.bookingDetailText}>{booking.date}</Text>
                   </View>
                   <View style={styles.bookingDetail}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
                     <Text style={styles.bookingDetailText}>{booking.time}</Text>
                   </View>
                 </View>
@@ -160,159 +163,185 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background, 
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   greeting: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: colors.text,
   },
   subGreeting: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 5,
+    color: colors.textSecondary, 
+    marginTop: spacing.xs,
   },
   searchContainer: {
-    padding: 20,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.subtle, 
     borderRadius: 12,
-    padding: 12,
+    padding: spacing.md,
   },
   searchText: {
-    marginLeft: 10,
-    color: '#999',
+    marginLeft: spacing.sm,
+    color: colors.placeholder, 
     fontSize: 16,
   },
   section: {
-    padding: 20,
-    paddingTop: 10,
+    paddingVertical: spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: colors.text,
   },
   seeAll: {
-    color: '#4A80F0',
     fontSize: 14,
+    color: colors.primary,
+    fontWeight: '600',
   },
   developerCard: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.card, 
     borderRadius: 12,
-    padding: 15,
-    marginRight: 15,
-    width: 160,
+    padding: spacing.md,
+    marginRight: spacing.md,
+    marginLeft: spacing.lg,
+    width: 180,
+    shadowColor: colors.shadow, 
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   developerImage: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    marginBottom: 10,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
   },
   developerName: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 5,
+    color: colors.text, 
+    textAlign: 'center',
+    marginBottom: spacing.xs,
   },
   skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 10,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   skillBadge: {
-    backgroundColor: '#e6f0ff',
-    borderRadius: 10,
+    backgroundColor: colors.subtle, 
+    borderRadius: 12,
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginRight: 5,
-    marginBottom: 5,
+    margin: 2,
   },
   skillText: {
-    color: '#4A80F0',
-    fontSize: 10,
+    fontSize: 11,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 'auto',
   },
   ratingText: {
-    marginLeft: 5,
+    marginLeft: 4,
+    fontSize: 14,
+    color: colors.text,
     fontWeight: '600',
-    color: '#666',
   },
   bookingCard: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.card, 
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    padding: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    shadowColor: colors.shadow, 
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
   developerNameBooking: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.text,
   },
   confirmedBadge: {
-    backgroundColor: '#e6f7ee',
+    backgroundColor: colors.success + '20',
+    borderRadius: 12,
+    paddingVertical: 4,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
   },
   confirmedText: {
-    color: '#34c759',
+    color: colors.success,
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   bookingDetails: {
-    marginTop: 5,
+    marginTop: spacing.sm,
   },
   bookingDetail: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: spacing.xs,
   },
   bookingDetailText: {
-    marginLeft: 8,
-    color: '#666',
+    marginLeft: spacing.sm,
     fontSize: 14,
+    color: colors.textSecondary,
   },
   emptyState: {
-    padding: 20,
     alignItems: 'center',
+    paddingVertical: spacing.xl,
+    marginHorizontal: spacing.lg,
   },
   emptyStateText: {
-    color: '#999',
     fontSize: 16,
-    marginBottom: 15,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
   },
   findDevelopersButton: {
-    backgroundColor: '#4A80F0',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    backgroundColor: colors.primary, 
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: 8,
   },
   findDevelopersText: {
-    color: 'white',
-    fontWeight: '600',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

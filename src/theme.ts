@@ -5,12 +5,18 @@ interface Theme {
   colors: {
     primary: string;
     secondary: string;
+    accent: string;
     background: string;
     text: string;
+    textSecondary: string;
+    subtle: string;
+    card: string;
+    border: string;
+    placeholder: string;
+    shadow: string;
+    star: string;
     error: string;
     success: string;
-    accent: string;
-    subtle: string;
   };
   spacing: {
     xs: number;
@@ -27,26 +33,38 @@ declare module 'styled-components/native' {
   export interface DefaultTheme extends Theme {}
 }
 
-const colors = {
+export const colors = {
   light: {
-    primary: '#3366FF', // vibrant blue
-    secondary: '#6E8EFF', // lighter blue
-    accent: '#FF6B6B', // soft coral
-    background: '#F7F9FC', // off-white
-    text: '#2E3A59', // dark blue-gray
-    subtle: '#EDF1F7', // very light gray
-    error: '#FF6B6B', // soft coral (used for errors/alerts)
-    success: '#00C853', // keeping previous success green
+    primary: '#2C3E50', 
+    secondary: '#999', 
+    accent: '#FF6B6B', 
+    background: '#F7F9FC', 
+    text: '#2E3A59', 
+    textSecondary: '#555', 
+    subtle: '#EDF1F7', 
+    card: '#FFFFFF', 
+    border: '#E0E0E0', 
+    placeholder: '#999', 
+    shadow: '#000000', 
+    star: '#FFD700', 
+    error: '#FF6B6B', 
+    success: '#00C853', 
   },
   dark: {
-    primary: '#2C3E50', // Updated Blue Charcoal
-    secondary: '#6E8EFF', // Example: keeping lighter blue
-    accent: '#FF6B6B', // Example: keeping soft coral
-    background: '#121212', // Example: dark background
-    text: '#E0E0E0', // Example: light text
-    subtle: '#2E3A59', // Example: using dark blue-gray for subtle dark elements
-    error: '#FF6B6B', // Example: keeping soft coral
-    success: '#00C853', // Example: keeping success green
+    primary: '#2C3E50', 
+    secondary: '#6E8EFF', 
+    accent: '#FF6B6B', 
+    background: '#121212', 
+    text: '#E0E0E0', 
+    textSecondary: '#AAAAAA', 
+    subtle: '#2E3A59', 
+    card: '#1E1E1E', 
+    border: '#333333', 
+    placeholder: '#777777', 
+    shadow: '#000000', 
+    star: '#FFD700', 
+    error: '#FF6B6B', 
+    success: '#00C853', 
   },
 };
 

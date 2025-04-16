@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-// import { supabase } from '../../lib/supabase';
+import { colors as themeColors } from '../../theme';
 
 // Define Developer type if not already defined elsewhere
 interface Developer {
@@ -145,7 +145,7 @@ function ClientBrowseScreen({ navigation }: { navigation: any }) {
         <View style={styles.developerInfo}>
           <Text style={styles.developerName}>{item.name}</Text>
           <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={16} color="#FFD700" />
+            <Ionicons name="star" size={16} color={themeColors.light.star} />
             <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
           </View>
         </View>
@@ -174,6 +174,217 @@ function ClientBrowseScreen({ navigation }: { navigation: any }) {
     </TouchableOpacity>
   );
 
+  const colors = themeColors.light;
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      paddingHorizontal: 20,
+    },
+    header: {
+      paddingTop: 30,
+      paddingBottom: 20,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 30,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      paddingHorizontal: 15,
+      paddingVertical: 12,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    searchIcon: {
+      marginRight: 12,
+      color: colors.placeholder,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 16,
+      color: colors.text,
+    },
+    filtersContainer: {
+      marginBottom: 20,
+    },
+    filtersTitle: {
+      fontSize: 17,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    filterButton: {
+      paddingVertical: 9,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      marginRight: 10,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+    },
+    filterButtonSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+      borderWidth: 1.5,
+    },
+    filterButtonText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.textSecondary,
+    },
+    filterButtonTextSelected: {
+      color: colors.card,
+      fontWeight: '600',
+    },
+    developerCard: {
+      backgroundColor: colors.card,
+      borderRadius: 15,
+      padding: 18,
+      marginBottom: 18,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.07,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    developerHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    avatar: {
+      width: 55,
+      height: 55,
+      borderRadius: 27.5,
+      marginRight: 15,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    avatarPlaceholder: {
+      width: 55,
+      height: 55,
+      borderRadius: 27.5,
+      marginRight: 15,
+      backgroundColor: colors.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.border,
+    },
+    avatarPlaceholderText: {
+      color: colors.textSecondary,
+      fontWeight: 'bold',
+      fontSize: 18,
+    },
+    developerInfo: {
+      flex: 1,
+    },
+    developerName: {
+      fontSize: 19,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    ratingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    ratingText: {
+      marginLeft: 6,
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    bio: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginBottom: 15,
+      lineHeight: 21,
+    },
+    skillsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: 15,
+    },
+    skillBadge: {
+      backgroundColor: colors.secondary,
+      borderRadius: 15,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    skillText: {
+      fontSize: 13,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    bookButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginTop: 8,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      elevation: 3,
+    },
+    bookButtonText: {
+      color: colors.card,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    errorText: {
+      color: colors.accent,
+      textAlign: 'center',
+      marginTop: 20,
+      fontSize: 15,
+    },
+    emptyListContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 50,
+      paddingHorizontal: 30,
+    },
+    emptyListText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 10,
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -182,7 +393,7 @@ function ClientBrowseScreen({ navigation }: { navigation: any }) {
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color={colors.placeholder} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name, skills, or keywords"
@@ -201,22 +412,22 @@ function ClientBrowseScreen({ navigation }: { navigation: any }) {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
-                styles.filterBadge,
-                selectedSkills.includes(item) && styles.filterBadgeSelected,
+                styles.filterButton,
+                selectedSkills.includes(item) && styles.filterButtonSelected,
               ]}
               onPress={() => toggleSkillFilter(item)}
             >
               <Text
                 style={[
-                  styles.filterText,
-                  selectedSkills.includes(item) && styles.filterTextSelected,
+                  styles.filterButtonText,
+                  selectedSkills.includes(item) && styles.filterButtonTextSelected,
                 ]}
               >
                 {item}
               </Text>
             </TouchableOpacity>
           )}
-          contentContainerStyle={styles.filtersList}
+          contentContainerStyle={styles.filtersContainer}
         />
       </View>
 
@@ -224,192 +435,23 @@ function ClientBrowseScreen({ navigation }: { navigation: any }) {
         <View style={styles.loadingContainer}>
           <Text>Loading developers...</Text>
         </View>
-      ) : filteredDevelopers.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="search-outline" size={48} color="#ccc" />
-          <Text style={styles.emptyText}>No developers found</Text>
-          <Text style={styles.emptySubtext}>Try adjusting your filters</Text>
-        </View>
       ) : (
         <FlatList
           data={filteredDevelopers}
-          keyExtractor={(item) => item.id}
           renderItem={renderDeveloperItem}
-          contentContainerStyle={styles.developersList}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyListContainer}>
+              <Ionicons name="sad-outline" size={50} color={colors.textSecondary} />
+              <Text style={styles.emptyListText}>No developers found</Text>
+              <Text style={styles.emptyListText}>Try adjusting your search or filters.</Text>
+            </View>
+          )}
+          contentContainerStyle={filteredDevelopers.length === 0 ? styles.emptyListContainer : { paddingBottom: 20 }}
         />
       )}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 5,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 12,
-    marginHorizontal: 20,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 45,
-    fontSize: 16,
-  },
-  filtersContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 15,
-  },
-  filtersTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  filtersList: {
-    paddingRight: 20,
-  },
-  filterBadge: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginRight: 8,
-  },
-  filterBadgeSelected: {
-    backgroundColor: '#4A80F0',
-  },
-  filterText: {
-    color: '#666',
-    fontWeight: '500',
-  },
-  filterTextSelected: {
-    color: 'white',
-  },
-  developersList: {
-    padding: 20,
-    paddingTop: 0,
-  },
-  developerCard: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-  },
-  developerHeader: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-  avatarPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#4A80F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarPlaceholderText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  developerInfo: {
-    marginLeft: 10,
-    justifyContent: 'center',
-  },
-  developerName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  ratingText: {
-    marginLeft: 5,
-    fontWeight: '600',
-    color: '#666',
-  },
-  bio: {
-    color: '#666',
-    marginBottom: 10,
-  },
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 15,
-  },
-  skillBadge: {
-    backgroundColor: '#e6f0ff',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  skillText: {
-    color: '#4A80F0',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  bookButton: {
-    backgroundColor: '#4A80F0',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  bookButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 100,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 20,
-    color: '#666',
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    marginTop: 5,
-  },
-});
 
 export default ClientBrowseScreen;
