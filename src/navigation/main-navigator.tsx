@@ -19,10 +19,11 @@ import ClientBrowseScreen from '../screens/client/browse-screen';
 const Tab = createBottomTabNavigator();
 
 function MainNavigator() {
-  const { user, signOut } = useAuthStore();
-  const userRole = user?.user_metadata?.role || 'client';
+  const { user, signOut, userRole } = useAuthStore();
   const isDeveloper = userRole === 'developer';
 
+  console.log("Role from store:", userRole, "Is Developer:", isDeveloper)
+  console.log("Developer", isDeveloper)
   useEffect(() => {
     const validateSession = async () => {
       console.log('MainNavigator mounted, validating session...');
