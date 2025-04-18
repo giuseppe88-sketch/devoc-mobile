@@ -1,12 +1,15 @@
 import { create } from "zustand";
-import { Session, User, AuthError } from "@supabase/supabase-js";
-import { signInUser, signUpUser, signOutUser } from "../services/authService";
+import { AuthError, Session, User } from "@supabase/supabase-js";
+import { signInUser, signOutUser, signUpUser } from "../services/authService";
 
 interface AuthState {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: AuthError | null }>;
   signUp: (
     email: string,
     password: string,
@@ -32,6 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ loading: false });
       return { error };
     }
+
     set({ loading: false });
     return { error: null };
   },

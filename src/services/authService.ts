@@ -15,7 +15,7 @@ interface SignUpCredentials {
  * Signs up a new user with email, password, and role.
  */
 export const signUpUser = async (
-  credentials: SignUpCredentials
+  credentials: SignUpCredentials,
 ): Promise<{ error: AuthError | null }> => {
   const { email, password, role } = credentials;
 
@@ -24,16 +24,14 @@ export const signUpUser = async (
     data: {
       role: role,
     },
-    emailRedirectTo:
-      "https://supabase-redirector.vercel.app",
-
+    emailRedirectTo: "https://supabase-redirector.vercel.app",
     // emailRedirectTo: 'https://supabase-redirector.vercel.app/' // Ensure trailing slash if needed, though usually not critical
   };
 
   // Log the options right before the call
   console.log(
     "*** Supabase signUp options:",
-    JSON.stringify(signUpOptions, null, 2)
+    JSON.stringify(signUpOptions, null, 2),
   );
 
   // Attempt to sign up the authentication user
@@ -62,7 +60,7 @@ export const signUpUser = async (
  * Signs in an existing user with email and password.
  */
 export const signInUser = async (
-  credentials: SignInWithPasswordCredentials
+  credentials: SignInWithPasswordCredentials,
 ): Promise<{ error: AuthError | null }> => {
   const { error } = await supabase.auth.signInWithPassword(credentials);
   if (error) {

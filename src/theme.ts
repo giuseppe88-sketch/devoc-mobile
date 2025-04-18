@@ -17,6 +17,7 @@ interface Theme {
     star: string;
     error: string;
     success: string;
+    warning: string;
   };
   spacing: {
     xs: number;
@@ -49,6 +50,7 @@ export const colors = {
     star: '#FFD700', 
     error: '#FF6B6B', 
     success: '#00C853', 
+    warning: '#FFA726',
   },
   dark: {
     primary: '#2C3E50', 
@@ -65,6 +67,7 @@ export const colors = {
     star: '#FFD700', 
     error: '#FF6B6B', 
     success: '#00C853', 
+    warning: '#FFA726',
   },
 };
 

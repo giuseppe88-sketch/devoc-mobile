@@ -27,11 +27,11 @@ function App(): ReactNode {
       setSession(session);
       setLoading(false);
     });
-
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
         setLoading(false);
+        console.log("Session Token (onAuthStateChange):", session?.access_token);
       }
     );
 

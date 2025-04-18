@@ -1,28 +1,37 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../stores/auth-store';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../stores/auth-store";
+import { colors as themeColors, spacing } from "../../theme";
+
+const colors = themeColors.dark;
 
 function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
   const { user } = useAuthStore();
-  const name = user?.user_metadata?.name || 'Developer';
+  const name = user?.user_metadata?.name || "Developer";
 
   // Mock data for upcoming bookings
   const upcomingBookings = [
     {
-      id: '1',
-      clientName: 'Tech Solutions Inc.',
-      date: 'April 15, 2025',
-      time: '10:00 AM - 11:00 AM',
-      status: 'confirmed',
+      id: "1",
+      clientName: "Tech Solutions Inc.",
+      date: "April 15, 2025",
+      time: "10:00 AM - 11:00 AM",
+      status: "confirmed",
     },
     {
-      id: '2',
-      clientName: 'Web Innovators',
-      date: 'April 17, 2025',
-      time: '2:00 PM - 3:30 PM',
-      status: 'pending',
+      id: "2",
+      clientName: "Web Innovators",
+      date: "April 17, 2025",
+      time: "2:00 PM - 3:30 PM",
+      status: "pending",
     },
   ];
 
@@ -52,7 +61,7 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Bookings')}>
+            <TouchableOpacity onPress={() => navigation.navigate("Bookings")}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -71,7 +80,7 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
                   <View
                     style={[
                       styles.statusBadge,
-                      booking.status === 'confirmed'
+                      booking.status === "confirmed"
                         ? styles.confirmedBadge
                         : styles.pendingBadge,
                     ]}
@@ -79,22 +88,30 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
                     <Text
                       style={[
                         styles.statusText,
-                        booking.status === 'confirmed'
+                        booking.status === "confirmed"
                           ? styles.confirmedText
                           : styles.pendingText,
                       ]}
                     >
-                      {booking.status === 'confirmed' ? 'Confirmed' : 'Pending'}
+                      {booking.status === "confirmed" ? "Confirmed" : "Pending"}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.bookingDetails}>
                   <View style={styles.bookingDetail}>
-                    <Ionicons name="calendar-outline" size={16} color="#666" />
+                    <Ionicons
+                      name="calendar-outline"
+                      size={16}
+                      color={colors.textSecondary}
+                    />
                     <Text style={styles.bookingDetailText}>{booking.date}</Text>
                   </View>
                   <View style={styles.bookingDetail}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={colors.textSecondary}
+                    />
                     <Text style={styles.bookingDetailText}>{booking.time}</Text>
                   </View>
                 </View>
@@ -110,16 +127,16 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
         <View style={styles.actionSection}>
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate('Availability')}
+            onPress={() => navigation.navigate("Availability")}
           >
-            <Ionicons name="calendar" size={24} color="#4A80F0" />
+            <Ionicons name="calendar" size={24} color={colors.text} />
             <Text style={styles.actionButtonText}>Set Availability</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => navigation.navigate('Profile')}
+            onPress={() => navigation.navigate("Profile")}
           >
-            <Ionicons name="person" size={24} color="#4A80F0" />
+            <Ionicons name="person" size={24} color={colors.text} />
             <Text style={styles.actionButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
@@ -131,136 +148,154 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
   greeting: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+    color: colors.text,
   },
   subGreeting: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 5,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   statCard: {
-    backgroundColor: '#f0f5ff',
+    backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-    width: '30%',
+    padding: spacing.md,
+    alignItems: "center",
+    width: "30%",
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4A80F0',
+    fontWeight: "bold",
+    color: colors.text,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 5,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   section: {
-    padding: 20,
-    paddingTop: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "bold",
+    color: colors.text,
   },
   seeAll: {
-    color: '#4A80F0',
+    color: colors.text,
     fontSize: 14,
+    fontWeight: "600",
   },
   bookingCard: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   bookingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
   },
   clientName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
+    color: colors.text,
   },
   statusBadge: {
+    borderRadius: 12,
+    paddingVertical: 4,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
   },
   confirmedBadge: {
-    backgroundColor: '#e6f7ee',
+    backgroundColor: colors.success + "20",
   },
   pendingBadge: {
-    backgroundColor: '#fff8e6',
+    backgroundColor: colors.warning + "20",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "bold",
   },
   confirmedText: {
-    color: '#34c759',
+    color: colors.success,
   },
   pendingText: {
-    color: '#ff9500',
+    color: colors.warning,
   },
   bookingDetails: {
-    marginTop: 5,
+    marginTop: spacing.sm,
   },
   bookingDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.xs,
   },
   bookingDetailText: {
-    marginLeft: 8,
-    color: '#666',
+    marginLeft: spacing.sm,
     fontSize: 14,
+    color: colors.textSecondary,
   },
   emptyState: {
-    padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
+    paddingVertical: spacing.xl,
   },
   emptyStateText: {
-    color: '#999',
     fontSize: 16,
+    color: colors.textSecondary,
   },
   actionSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-    paddingTop: 10,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   actionButton: {
-    backgroundColor: '#f0f5ff',
-    borderRadius: 12,
-    padding: 15,
-    alignItems: 'center',
-    width: '45%',
+    alignItems: "center",
+    padding: spacing.sm,
   },
   actionButtonText: {
-    color: '#4A80F0',
-    fontWeight: '600',
-    marginTop: 8,
+    marginTop: spacing.xs,
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "600",
   },
 });
 
