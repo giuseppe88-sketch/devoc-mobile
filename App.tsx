@@ -10,7 +10,7 @@ import { useAuthStore } from "./src/stores/auth-store";
 import { supabase } from "./src/lib/supabase";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "styled-components/native";
-import { useColors, spacing } from './src/theme';
+import { useColors, spacing } from "./src/theme";
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -31,7 +31,10 @@ function App(): ReactNode {
       (_event, session) => {
         setSession(session);
         setLoading(false);
-        console.log("Session Token (onAuthStateChange):", session?.access_token);
+        console.log(
+          "Session Token (onAuthStateChange):",
+          session?.access_token
+        );
       }
     );
 

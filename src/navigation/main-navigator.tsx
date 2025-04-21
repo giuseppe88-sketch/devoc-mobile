@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../stores/auth-store';
 import { supabase } from '../lib/supabase';
@@ -8,6 +9,7 @@ import { Alert } from 'react-native';
 // Developer Screens
 import DeveloperDashboardScreen from '../screens/developer/dashboard-screen';
 import DeveloperProfileScreen from '../screens/developer/profile-screen';
+import EditDeveloperProfileScreen from '../screens/developer/edit-profile-screen';
 import DeveloperAvailabilityScreen from '../screens/developer/availability-screen';
 // import DeveloperBookingsScreen from '../screens/developer/bookings-screen';
 
@@ -16,7 +18,28 @@ import ClientDashboardScreen from '../screens/client/dashboard-screen';
 import ClientBrowseScreen from '../screens/client/browse-screen';
 // import ClientBookingsScreen from '../screens/client/bookings-screen';
 
+import { ProfileStackParamList } from "../types"; // Import shared types
+
 const Tab = createBottomTabNavigator();
+const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
+
+// Profile Stack Navigator Component
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator screenOptions={{ headerShown: true }}>
+      <ProfileStack.Screen 
+        name="DeveloperProfile" 
+        component={DeveloperProfileScreen} 
+        options={{ title: 'Profile' }} // Set screen title
+      />
+      <ProfileStack.Screen 
+        name="EditDeveloperProfile" 
+        component={EditDeveloperProfileScreen} 
+        options={{ title: 'Edit Profile' }} // Set screen title
+      />
+    </ProfileStack.Navigator>
+  );
+}
 
 function MainNavigator() {
   const { user, signOut, userRole } = useAuthStore();
@@ -72,14 +95,14 @@ function MainNavigator() {
         },
         tabBarActiveTintColor: 'tomato',
         tabBarInactiveTintColor: 'gray',
-        headerShown: false, // Hide header for tab screens
+        headerShown: false, // Hide header for main tab screens (Profile stack will show its own)
       })}
     >
       {isDeveloper ? (
         // Developer Tabs
         <>
           <Tab.Screen name="Dashboard" component={DeveloperDashboardScreen} />
-          <Tab.Screen name="Profile" component={DeveloperProfileScreen} />
+          <Tab.Screen name="Profile" component={ProfileStackNavigator} />
           <Tab.Screen name="Availability" component={DeveloperAvailabilityScreen} />
           {/* <Tab.Screen name="Bookings" component={DeveloperBookingsScreen} /> */}
         </>
