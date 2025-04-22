@@ -41,18 +41,48 @@ function EditDeveloperProfileScreen() {
   // --- Data Fetching using Custom Hook ---
   const { data: profileData, isLoading, error: fetchError } = useDeveloperProfile(user?.id);
 
-  // State for form fields
-  const [name, setName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [bio, setBio] = useState('');
-  const [skills, setSkills] = useState(''); 
-  const [focusAreas, setFocusAreas] = useState(''); 
-  const [portfolioUrl, setPortfolioUrl] = useState('');
-  const [githubUrl, setGithubUrl] = useState('');
-  const [hourlyRate, setHourlyRate] = useState('');
-  const [location, setLocation] = useState('');
-  const [yearsOfExperience, setYearsOfExperience] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  // --- Types ---
+  // Interface for the consolidated form state
+  interface EditProfileFormState {
+    name: string;
+    avatarUrl: string | null;
+    bio: string;
+    skills: string;
+    focusAreas: string;
+    portfolioUrl: string;
+    githubUrl: string;
+    hourlyRate: string;
+    location: string;
+    yearsOfExperience: string;
+    phoneNumber: string;
+  }
+
+  // State for form fields using a single state object
+  const initialFormState: EditProfileFormState = {
+    name: '',
+    avatarUrl: null,
+    bio: '',
+    skills: '',
+    focusAreas: '',
+    portfolioUrl: '',
+    githubUrl: '',
+    hourlyRate: '',
+    location: '',
+    yearsOfExperience: '',
+    phoneNumber: '',
+  };
+  const [formState, setFormState] = useState<EditProfileFormState>(initialFormState);
+
+  // Generic handler for updating form state
+  const handleInputChange = <K extends keyof EditProfileFormState>(
+    field: K,
+    value: EditProfileFormState[K]
+  ) => {
+    setFormState((prevState) => ({
+      ...prevState,
+      [field]: value,
+    }));
+  };
 
   // useActionState hook manages the submission process
   // state: holds the result of the last action { success, message }
@@ -64,17 +94,19 @@ function EditDeveloperProfileScreen() {
   useEffect(() => {
     if (profileData) {
       // Populate state from the combined profile data fetched by the hook
-      setName(profileData.name || ''); // Hook maps full_name to name
-      setAvatarUrl(profileData.avatar_url || null);
-      setBio(profileData.bio || '');
-      setSkills(profileData.skills?.join(', ') || '');
-      setFocusAreas(profileData.focus_areas?.join(', ') || '');
-      setPortfolioUrl(profileData.portfolio_url || '');
-      setGithubUrl(profileData.github_url || '');
-      setHourlyRate(profileData.hourly_rate?.toString() || '');
-      setLocation(profileData.location || '');
-      setYearsOfExperience(profileData.years_of_experience?.toString() || '');
-      setPhoneNumber(profileData.phone_number || '');
+      setFormState({
+        name: profileData.name || '',
+        avatarUrl: profileData.avatar_url || null,
+        bio: profileData.bio || '',
+        skills: profileData.skills?.join(', ') || '',
+        focusAreas: profileData.focus_areas?.join(', ') || '',
+        portfolioUrl: profileData.portfolio_url || '',
+        githubUrl: profileData.github_url || '',
+        hourlyRate: profileData.hourly_rate?.toString() || '',
+        location: profileData.location || '',
+        yearsOfExperience: profileData.years_of_experience?.toString() || '',
+        phoneNumber: profileData.phone_number || '',
+      });
     }
   }, [profileData]); // Depend on the data from the hook
 
@@ -96,26 +128,26 @@ function EditDeveloperProfileScreen() {
     // --- Prepare Data for Action --- 
     // User data from 'users' table
     const userDataToUpdate: Partial<UserProfileData> = {
-      full_name: name.trim(),
-      bio: bio.trim(),
+      full_name: formState.name.trim(),
+      bio: formState.bio.trim(),
       // avatar_url is handled by ImagePickerComponent directly via its upload function
       // We only update it here if a NEW url was generated/provided NOT via the picker
       // If ImagePicker handles the upload AND update, remove avatar_url here.
-      ...(avatarUrl && !avatarUrl.startsWith('data:') ? { avatar_url: avatarUrl } : {}), 
+      ...(formState.avatarUrl && !formState.avatarUrl.startsWith('data:') ? { avatar_url: formState.avatarUrl } : {}),
     };
 
     // Developer profile specific data for 'developer_profiles' table/function
     const developerProfileDataToUpsert: ProfileFormData = {
-      phone_number: phoneNumber.trim() || undefined, 
-      skills: skills.split(',').map(s => s.trim()).filter(s => s), 
-      focus_areas: focusAreas.split(',').map(s => s.trim()).filter(s => s),
-      portfolio_url: portfolioUrl.trim() || undefined, 
-      github_url: githubUrl.trim() || undefined, 
-      hourly_rate: hourlyRate ? parseFloat(hourlyRate) : undefined, 
-      location: location.trim() || undefined, 
-      years_of_experience: yearsOfExperience
-        ? parseInt(yearsOfExperience, 10)
-        : undefined, 
+      phone_number: formState.phoneNumber.trim() || undefined,
+      skills: formState.skills.split(',').map(s => s.trim()).filter(s => s),
+      focus_areas: formState.focusAreas.split(',').map(s => s.trim()).filter(s => s),
+      portfolio_url: formState.portfolioUrl.trim() || undefined,
+      github_url: formState.githubUrl.trim() || undefined,
+      hourly_rate: formState.hourlyRate ? parseFloat(formState.hourlyRate) : undefined,
+      location: formState.location.trim() || undefined,
+      years_of_experience: formState.yearsOfExperience
+        ? parseInt(formState.yearsOfExperience, 10)
+        : undefined,
     };
 
     // Wrap the action dispatch in startTransition
@@ -131,7 +163,7 @@ function EditDeveloperProfileScreen() {
   // Handle image selection/upload
   const handleImagePicked = (newAvatarUrl: string | null) => {
     console.log("New avatar URL set:", newAvatarUrl);
-    setAvatarUrl(newAvatarUrl); 
+    handleInputChange('avatarUrl', newAvatarUrl); // Update state object
     // NOTE: The ImagePickerComponent likely handles the UPLOAD.
     // Decide if the ImagePicker should ALSO update the 'users' table
     // or if we rely on the main save action. For simplicity here,
@@ -167,7 +199,7 @@ function EditDeveloperProfileScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* <ImagePickerComponent 
-        currentAvatarUrl={avatarUrl}
+        currentAvatarUrl={formState.avatarUrl}
         onUploadComplete={handleAvatarUploadComplete}
         uploadPath={`avatars/${user?.id}`}
       /> */}
@@ -175,8 +207,8 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>Name</Text>
       <TextInput
         style={styles.input}
-        value={name}
-        onChangeText={setName}
+        value={formState.name}
+        onChangeText={(text) => handleInputChange('name', text)}
         placeholder="Your full name"
         placeholderTextColor={colors.light.placeholder}
         autoCapitalize="words"
@@ -185,8 +217,8 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>Bio</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
-        value={bio}
-        onChangeText={setBio}
+        value={formState.bio}
+        onChangeText={(text) => handleInputChange('bio', text)}
         placeholder="Tell us a bit about yourself"
         placeholderTextColor={colors.light.placeholder}
         multiline
@@ -196,8 +228,8 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>Phone Number</Text>
       <TextInput
         style={styles.input}
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
+        value={formState.phoneNumber}
+        onChangeText={(text) => handleInputChange('phoneNumber', text)}
         placeholder="(Optional) Your phone number"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="phone-pad"
@@ -206,27 +238,27 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>Skills (comma-separated)</Text>
       <TextInput
         style={styles.input}
-        value={skills}
-        onChangeText={setSkills}
-        placeholder="e.g., React, Node.js, Python"
+        value={formState.skills}
+        onChangeText={(text) => handleInputChange('skills', text)}
+        placeholder="e.g., React Native, TypeScript, Node.js"
         placeholderTextColor={colors.light.placeholder}
       />
 
       <Text style={styles.label}>Focus Areas (comma-separated)</Text>
       <TextInput
         style={styles.input}
-        value={focusAreas}
-        onChangeText={setFocusAreas}
-        placeholder="e.g., Frontend, Backend, DevOps"
+        value={formState.focusAreas}
+        onChangeText={(text) => handleInputChange('focusAreas', text)}
+        placeholder="e.g., Mobile Development, UI/UX Design"
         placeholderTextColor={colors.light.placeholder}
       />
 
       <Text style={styles.label}>Portfolio URL</Text>
       <TextInput
         style={styles.input}
-        value={portfolioUrl}
-        onChangeText={setPortfolioUrl}
-        placeholder="(Optional) https://yourportfolio.com"
+        value={formState.portfolioUrl}
+        onChangeText={(text) => handleInputChange('portfolioUrl', text)}
+        placeholder="(Optional) Link to your portfolio"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="url"
         autoCapitalize="none"
@@ -235,20 +267,20 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>GitHub URL</Text>
       <TextInput
         style={styles.input}
-        value={githubUrl}
-        onChangeText={setGithubUrl}
-        placeholder="(Optional) https://github.com/yourusername"
+        value={formState.githubUrl}
+        onChangeText={(text) => handleInputChange('githubUrl', text)}
+        placeholder="(Optional) Link to your GitHub profile"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="url"
         autoCapitalize="none"
       />
 
-      <Text style={styles.label}>Hourly Rate ($)</Text>
+      <Text style={styles.label}>Hourly Rate (USD)</Text>
       <TextInput
         style={styles.input}
-        value={hourlyRate}
-        onChangeText={setHourlyRate}
-        placeholder="(Optional) e.g., 50"
+        value={formState.hourlyRate}
+        onChangeText={(text) => handleInputChange('hourlyRate', text)}
+        placeholder="(Optional) e.g., 75"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="numeric"
       />
@@ -256,17 +288,17 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>Location</Text>
       <TextInput
         style={styles.input}
-        value={location}
-        onChangeText={setLocation}
-        placeholder="(Optional) City, Country"
+        value={formState.location}
+        onChangeText={(text) => handleInputChange('location', text)}
+        placeholder="(Optional) e.g., San Francisco, CA or Remote"
         placeholderTextColor={colors.light.placeholder}
       />
 
       <Text style={styles.label}>Years of Experience</Text>
       <TextInput
         style={styles.input}
-        value={yearsOfExperience}
-        onChangeText={setYearsOfExperience}
+        value={formState.yearsOfExperience}
+        onChangeText={(text) => handleInputChange('yearsOfExperience', text)}
         placeholder="(Optional) e.g., 5"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="numeric"
