@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
 
     // --- Parse Request Body ---
     const profileData: Partial<ProfileData> = await req.json();
+    console.log("Parsed profile data from body:", profileData);
 
     // Basic validation (check if required fields are provided)
     if (

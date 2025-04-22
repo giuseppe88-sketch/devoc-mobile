@@ -1,5 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Linking,
+  Alert
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../stores/auth-store';
@@ -20,6 +30,22 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
 
   const handleEditPress = () => {
     navigation.navigate('EditDeveloperProfile', { profileData: profileData ?? null });
+  };
+
+  const handleLinkPress = async (url: string | undefined | null) => {
+    if (!url) return;
+
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      try {
+        await Linking.openURL(url);
+      } catch (err) {
+        Alert.alert(`Don't know how to open this URL: ${url}`);
+      }
+    } else {
+      Alert.alert(`Don't know how to open this URL: ${url}`);
+    }
   };
 
   if (isLoading) {
@@ -113,11 +139,23 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Portfolio URL</Text>
-                 <Text style={styles.value}>{profileData?.portfolio_url || <Text style={styles.notSetText}>Not set</Text>}</Text>
+                 {profileData?.portfolio_url ? (
+                   <TouchableOpacity onPress={() => handleLinkPress(profileData.portfolio_url)}>
+                     <Text style={[styles.value, styles.linkText]}>{profileData.portfolio_url}</Text>
+                   </TouchableOpacity>
+                 ) : (
+                   <Text style={styles.notSetText}>Not set</Text>
+                 )}
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>GitHub URL</Text>
-                 <Text style={styles.value}>{profileData?.github_url || <Text style={styles.notSetText}>Not set</Text>}</Text>
+                 {profileData?.github_url ? (
+                   <TouchableOpacity onPress={() => handleLinkPress(profileData.github_url)}>
+                     <Text style={[styles.value, styles.linkText]}>{profileData.github_url}</Text>
+                   </TouchableOpacity>
+                 ) : (
+                   <Text style={styles.notSetText}>Not set</Text>
+                 )}
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Location</Text>
@@ -165,7 +203,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   detailsCard: { 
-    backgroundColor: colors.card,
     borderRadius: spacing.md,
     marginHorizontal: spacing.md,
     padding: spacing.lg,
@@ -178,11 +215,11 @@ const styles = StyleSheet.create({
   },
   detailsContainer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }, 
   detailItem: {
-    borderWidth: 1,            // Add full border
-    borderColor: colors.border,  // Use theme border color
-    borderRadius: spacing.sm,  // Add border radius
-    padding: spacing.md,       // Add padding on all sides
-    marginBottom: spacing.md,  // Keep margin for separation
+    borderWidth: 1,            
+    borderColor: colors.border,  
+    borderRadius: spacing.sm,  
+    padding: spacing.md,       
+    marginBottom: spacing.md,  
   },
   label: { 
     fontSize: 14, 
@@ -194,6 +231,10 @@ const styles = StyleSheet.create({
     fontSize: 17, 
     color: colors.text, 
     lineHeight: 24, 
+  },
+  linkText: { 
+    color: colors.primary, 
+    textDecorationLine: 'underline',
   },
   notSetText: { 
     fontSize: 16,
