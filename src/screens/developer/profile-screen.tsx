@@ -50,7 +50,7 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
         <View style={styles.header}>
           <Text style={styles.title}>Your Profile</Text>
           <TouchableOpacity onPress={handleEditPress} style={styles.editButton}>
-            <Ionicons name="create-outline" size={24} color={colors.primary} />
+            <Ionicons name="create-outline" size={24} color={colors.secondary} />
           </TouchableOpacity>
         </View>
 
@@ -61,31 +61,31 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                   <Image source={{ uri: profileData.avatar_url }} style={styles.avatar} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={40} color="#999" />
+                    <Ionicons name="person" size={50} color={colors.textSecondary} />
                   </View>
                 )}
              </View>
 
-             <View style={styles.detailsContainer}>
+             <View style={styles.detailsCard}>
                 <View style={styles.detailItem}>
                    <Text style={styles.label}>Name</Text>
-                   <Text style={styles.value}>{profileData?.name || 'N/A'}</Text>
+                   <Text style={styles.value}>{profileData?.name || <Text style={styles.notSetText}>N/A</Text>}</Text>
                  </View>
                  <View style={styles.detailItem}>
                    <Text style={styles.label}>Email</Text>
-                   <Text style={styles.value}>{user?.email || 'N/A'}</Text>
+                   <Text style={styles.value}>{user?.email || <Text style={styles.notSetText}>N/A</Text>}</Text>
                  </View>
                  <View style={styles.detailItem}>
                    <Text style={styles.label}>Phone</Text>
-                   <Text style={styles.value}>{profileData?.phone_number || 'Not set'}</Text>
+                   <Text style={styles.value}>{profileData?.phone_number || <Text style={styles.notSetText}>Not set</Text>}</Text>
                  </View>
                  <View style={styles.detailItem}>
                    <Text style={styles.label}>Bio</Text>
-                   <Text style={styles.value}>{profileData?.bio || 'Not set'}</Text>
+                   <Text style={styles.value}>{profileData?.bio || <Text style={styles.notSetText}>Not set</Text>}</Text>
                  </View>
                  <View style={styles.detailItem}>
                    <Text style={styles.label}>Hourly Rate</Text>
-                   <Text style={styles.value}>{profileData?.hourly_rate ? `$${profileData.hourly_rate}/hr` : 'Not set'}</Text>
+                   <Text style={styles.value}>{profileData?.hourly_rate ? `$${profileData.hourly_rate}/hr` : <Text style={styles.notSetText}>Not set</Text>}</Text>
                  </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Focus Areas</Text>
@@ -96,7 +96,7 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                          <Text style={styles.badgeText}>{area}</Text>
                        </View>
                      ))
-                   ) : <Text style={styles.value}>Not set</Text>}
+                   ) : <Text style={styles.notSetText}>Not set</Text>}
                  </View>
                </View>
                <View style={styles.detailItem}>
@@ -108,24 +108,24 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                          <Text style={styles.badgeText}>{skill}</Text>
                        </View>
                      ))
-                    ) : <Text style={styles.value}>Not set</Text>}
+                    ) : <Text style={styles.notSetText}>Not set</Text>}
                  </View>
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Portfolio URL</Text>
-                 <Text style={styles.value}>{profileData?.portfolio_url || 'Not set'}</Text>
+                 <Text style={styles.value}>{profileData?.portfolio_url || <Text style={styles.notSetText}>Not set</Text>}</Text>
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>GitHub URL</Text>
-                 <Text style={styles.value}>{profileData?.github_url || 'Not set'}</Text>
+                 <Text style={styles.value}>{profileData?.github_url || <Text style={styles.notSetText}>Not set</Text>}</Text>
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Location</Text>
-                 <Text style={styles.value}>{profileData?.location || 'Not set'}</Text>
+                 <Text style={styles.value}>{profileData?.location || <Text style={styles.notSetText}>Not set</Text>}</Text>
                </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Years of Experience</Text>
-                 <Text style={styles.value}>{profileData?.years_of_experience || 'Not set'}</Text>
+                 <Text style={styles.value}>{profileData?.years_of_experience ? `${profileData.years_of_experience} years` : <Text style={styles.notSetText}>Not set</Text>}</Text>
                </View>
              </View>
            </>
@@ -145,30 +145,79 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   title: { fontSize: 28, fontWeight: 'bold', color: colors.text },
   editButton: { padding: spacing.sm },
-  avatarContainer: { alignItems: 'center', marginVertical: spacing.lg },
-  avatar: { width: 120, height: 120, borderRadius: 60 },
+  avatarContainer: { alignItems: 'center', marginVertical: spacing.lg }, 
+  avatar: {
+    width: 120, 
+    height: 120, 
+    borderRadius: 60, 
+    borderWidth: 2,
+    borderColor: colors.secondary,
+  },
   avatarPlaceholder: {
     width: 120, height: 120, borderRadius: 60, backgroundColor: colors.card,
     justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  detailsContainer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  detailsCard: { 
+    backgroundColor: colors.card,
+    borderRadius: spacing.md,
+    marginHorizontal: spacing.md,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, 
+  },
+  detailsContainer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }, 
   detailItem: {
-    marginBottom: spacing.md, paddingBottom: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
+    borderWidth: 1,            // Add full border
+    borderColor: colors.border,  // Use theme border color
+    borderRadius: spacing.sm,  // Add border radius
+    padding: spacing.md,       // Add padding on all sides
+    marginBottom: spacing.md,  // Keep margin for separation
   },
-  label: { fontSize: 14, color: colors.textSecondary, marginBottom: spacing.sm },
-  value: { fontSize: 16, color: colors.text, lineHeight: 22 },
-  listContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm },
+  label: { 
+    fontSize: 14, 
+    color: colors.textSecondary, 
+    marginBottom: spacing.xs, 
+    opacity: 0.8, 
+  },
+  value: { 
+    fontSize: 17, 
+    color: colors.text, 
+    lineHeight: 24, 
+  },
+  notSetText: { 
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+    opacity: 0.7,
+  },
+  listContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.xs },
   badge: {
-    backgroundColor: colors.secondary, paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm, borderRadius: 15,
-    marginRight: spacing.sm, marginBottom: spacing.sm,
+    backgroundColor: colors.subtle, 
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 15,
+    marginRight: spacing.sm, 
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.secondary, 
   },
-  badgeText: { color: colors.text, fontSize: 12, fontWeight: '500' },
-  errorText: { color: colors.error, textAlign: 'center', margin: spacing.md },
+  badgeText: { 
+    color: colors.text, 
+    fontSize: 13, 
+    fontWeight: '500' 
+  },
+  errorText: { color: colors.error, textAlign: 'center', margin: spacing.md, fontSize: 16 },
 });
 
 export default DeveloperProfileScreen;

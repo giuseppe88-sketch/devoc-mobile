@@ -4,7 +4,7 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "supabase";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 // Define the expected structure for the profile data
 interface ProfileData {
@@ -18,7 +18,7 @@ interface ProfileData {
   years_of_experience?: number;
 }
 
-console.log('"create-developer-profile" function initialized');
+console.log('"upsert-developer-profile" function initialized');
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Successfully retrieved user:', user);
+    console.log("Successfully retrieved user:", user);
 
     // --- Parse Request Body ---
     const profileData: Partial<ProfileData> = await req.json();
@@ -114,7 +114,9 @@ Deno.serve(async (req) => {
 
       if (existingProfile) {
         // --- UPDATE existing profile ---
-        console.log(`Profile found for user ID: ${user.id}. Attempting UPDATE.`);
+        console.log(
+          `Profile found for user ID: ${user.id}. Attempting UPDATE.`,
+        );
         const { data: updateData, error: updateError } = await supabaseClient
           .from("developer_profiles")
           .update(dataToUpsert) // dataToUpsert includes id and updated_at
@@ -126,7 +128,9 @@ Deno.serve(async (req) => {
         if (updateError) console.error("Error during UPDATE:", updateError);
       } else {
         // --- INSERT new profile ---
-        console.log(`No profile found for user ID: ${user.id}. Attempting INSERT.`);
+        console.log(
+          `No profile found for user ID: ${user.id}. Attempting INSERT.`,
+        );
         const { data: insertData, error: insertError } = await supabaseClient
           .from("developer_profiles")
           .insert(dataToUpsert) // dataToUpsert includes id and updated_at
@@ -136,16 +140,15 @@ Deno.serve(async (req) => {
         dbError = insertError;
         if (insertError) console.error("Error during INSERT:", insertError);
       }
-
     } catch (error) {
       // Catch errors specifically from select/insert/update if they were thrown
       console.error("Caught error during DB operation:", error);
       // Ensure dbError is set if it wasn't already (e.g., unexpected error)
-      let errorMessage = 'Unknown DB operation error';
+      let errorMessage = "Unknown DB operation error";
       if (error instanceof Error) {
-         errorMessage = error.message;
-      } else if (typeof error === 'string') {
-         errorMessage = error;
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
       }
       if (!dbError) dbError = { message: errorMessage, details: error };
     }
@@ -153,7 +156,7 @@ Deno.serve(async (req) => {
     // --- Handle potential errors from Insert/Update ---
     if (dbError) {
       // Use the already logged specific error if available
-      console.error("Final Database error check:", dbError); 
+      console.error("Final Database error check:", dbError);
       return new Response(
         JSON.stringify({ error: "Database error", details: dbError }),
         {

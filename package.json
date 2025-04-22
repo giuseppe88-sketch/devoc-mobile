@@ -9,9 +9,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~3.2.1",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
+    "@react-navigation/stack": "^7.2.10",
     "@supabase/supabase-js": "^2.26.0",
     "@tanstack/react-query": "^4.29.15",
     "date-fns": "^2.30.0",
@@ -36,8 +38,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.19.10",
     "styled-components": "^6.0.1",
-    "zustand": "^4.3.8",
-    "@expo/metro-runtime": "~3.2.1"
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",

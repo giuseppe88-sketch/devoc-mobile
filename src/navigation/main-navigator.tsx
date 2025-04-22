@@ -19,6 +19,10 @@ import ClientBrowseScreen from '../screens/client/browse-screen';
 // import ClientBookingsScreen from '../screens/client/bookings-screen';
 
 import { ProfileStackParamList } from "../types"; // Import shared types
+import { colors as themeColors } from '../theme'; 
+
+// Assuming dark theme for navigation elements
+const colors = themeColors.dark;
 
 const Tab = createBottomTabNavigator();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
@@ -26,16 +30,34 @@ const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Cre
 // Profile Stack Navigator Component
 function ProfileStackNavigator() {
   return (
-    <ProfileStack.Navigator screenOptions={{ headerShown: true }}>
+    <ProfileStack.Navigator 
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.card, // Change to card background color
+        },
+        headerTintColor: colors.text, // Set header text/icon color
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        // We might want to hide the back button text for cleaner look
+        headerBackTitleVisible: false, 
+      }}
+    >
       <ProfileStack.Screen 
         name="DeveloperProfile" 
         component={DeveloperProfileScreen} 
-        options={{ title: 'Profile' }} // Set screen title
+        options={{ 
+          // Replace title text with an icon
+          headerTitle: () => <Ionicons name="person-circle-outline" size={28} color={colors.text} />, 
+        }} 
       />
       <ProfileStack.Screen 
         name="EditDeveloperProfile" 
         component={EditDeveloperProfileScreen} 
-        options={{ title: 'Edit Profile' }} // Set screen title
+        options={{ 
+          // Replace title text with an icon
+          headerTitle: () => <Ionicons name="create-outline" size={26} color={colors.text} />, 
+        }} 
       />
     </ProfileStack.Navigator>
   );
