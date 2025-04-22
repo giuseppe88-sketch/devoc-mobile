@@ -16,81 +16,15 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack'; 
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/auth-store';
-import { DeveloperProfile } from '../../types';
 import { useDeveloperProfile } from '../../hooks/useDeveloperProfile'; 
 import { colors, spacing } from '../../theme'; 
-// import ImagePickerComponent from '../../components/common/image-picker'; 
-// import { colors } from '../../theme/colors'; 
+import { saveProfileAction, UserProfileData } from '../../actions/profile-actions';
+import type { ActionState } from '../../actions/profile-actions'; 
+import type { DeveloperProfile } from '../../types'; 
 import type { ProfileStackParamList } from '../../types'; 
-
-// Define the expected shape of the action state
-interface ActionState {
-  success: boolean;
-  message?: string;
-}
 
 // Define the type for the form data passed to the action
 type ProfileFormData = Partial<Omit<DeveloperProfile, 'user_id'>>; 
-
-// --- Server Action --- 
-// This function handles the logic for saving the profile.
-// It will be wrapped by useActionState.
-async function saveProfileAction(
-  previousState: ActionState | null, 
-  formData: { user_id: string, userData: Partial<UserProfileData>, devData: ProfileFormData } 
-): Promise<ActionState> {
-  const { user_id, userData, devData } = formData;
-
-  console.log("Action triggered. Updating user data:", userData);
-  console.log("Action triggered. Upserting dev data:", devData);
-
-  try {
-    // 1. Update public.users table (only if userData has keys)
-    if (Object.keys(userData).length > 0) {
-      const { error: userUpdateError } = await supabase
-        .from('users')
-        .update(userData)
-        .eq('id', user_id);
-
-      if (userUpdateError) {
-        console.error('User update error:', userUpdateError);
-        return { success: false, message: `Failed to update user profile: ${userUpdateError.message}` };
-      }
-      console.log("User data updated successfully.");
-    }
-
-    // 2. Invoke the Edge Function to upsert developer_profiles
-    const { data: functionData, error: functionError } = await supabase.functions.invoke(
-      'upsert-developer-profile', 
-      {
-        // Pass data structured as the function expects
-        body: { ...devData, id: user_id }, 
-      }
-    );
-
-    if (functionError) {
-      console.error('Edge function error:', functionError);
-      // Attempt to parse Supabase Edge Function error details if available
-      const detailedMessage = functionError.context?.errorMessage || functionError.message;
-      return { success: false, message: `Failed to update developer details: ${detailedMessage}` };
-    }
-
-    console.log('Edge function success:', functionData);
-    return { success: true, message: 'Profile updated successfully!' };
-
-  } catch (err: any) {
-    console.error('Unexpected error in saveProfileAction:', err);
-    return { success: false, message: err.message || 'An unexpected error occurred during save.' };
-  }
-}
-
-// Define UserProfileData type based on users table fields being updated
-interface UserProfileData {
-  full_name?: string;
-  bio?: string;
-  avatar_url?: string;
-  // Add other fields from 'users' table if they are updatable here
-}
 
 // --- Component --- 
 
