@@ -6,6 +6,7 @@
 - Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
 - Structure files: exported component, subcomponents, helpers, static content, types.
 - Follow Expo's official documentation for setting up and configuring projects.
+- Use React 19 features when possible
 
 # Naming Conventions
 
