@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../stores/auth-store';
 import { supabase } from '../lib/supabase';
-import { Alert } from 'react-native';
+import { Alert, View, ActivityIndicator } from 'react-native';
 
 // Developer Screens
 import DeveloperDashboardScreen from '../screens/developer/dashboard-screen';
@@ -42,7 +42,7 @@ function ProfileStackNavigator() {
 }
 
 function MainNavigator() {
-  const { user, signOut, userRole } = useAuthStore();
+  const { user, signOut, userRole, loadingProfile } = useAuthStore();
   const isDeveloper = userRole === 'developer';
 
   console.log("Role from store:", userRole, "Is Developer:", isDeveloper)
@@ -68,8 +68,12 @@ function MainNavigator() {
   }, [signOut]);
 
   // Prevent rendering tabs if user info is missing (during sign out transition)
-  if (!user) {
-    return null; // Or a loading indicator
+  if (!user || loadingProfile) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#333333' }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
   }
 
   return (
