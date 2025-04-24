@@ -113,6 +113,14 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                    <Text style={styles.label}>Hourly Rate</Text>
                    <Text style={styles.value}>{profileData?.hourly_rate ? `$${profileData.hourly_rate}/hr` : <Text style={styles.notSetText}>Not set</Text>}</Text>
                  </View>
+                 <View style={styles.detailItem}>
+                   <Text style={styles.label}>Rating</Text>
+                   <Text style={styles.value}>
+                     {profileData?.rating !== null && profileData?.rating !== undefined 
+                       ? profileData.rating.toFixed(1) 
+                       : <Text style={styles.notSetText}>Not rated yet</Text>}
+                   </Text>
+                 </View>
                <View style={styles.detailItem}>
                  <Text style={styles.label}>Focus Areas</Text>
                  <View style={styles.listContainer}>

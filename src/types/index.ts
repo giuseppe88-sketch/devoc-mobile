@@ -1,3 +1,5 @@
+import { Database } from './supabase';
+
 export interface User {
   id: string;
   email: string;
@@ -7,17 +9,17 @@ export interface User {
   };
 }
 
-export interface Developer {
-  id: string;
-  userId: string;
-  name: string;
-  bio: string;
-  skills: string[];
-  timezone: string;
-  avatar?: string;
-  rating?: number;
-  availability?: Availability[];
+export type DeveloperProfile = Database['public']['Tables']['developer_profiles']['Row'];
+
+// Represents the combined profile data fetched by the useDeveloperProfile hook
+export interface FetchedDeveloperProfile extends DeveloperProfile {
+  name?: string | null;       // Mapped from users.full_name
+  avatar_url?: string | null; // From users.avatar_url
+  bio?: string | null;        // From users.bio
+  user_id: string;          // Explicitly added in the hook
 }
+
+export type UserDeveloperProfile = DeveloperProfile & User;
 
 export interface Client {
   id: string;
@@ -65,3 +67,15 @@ export interface Notification {
   createdAt: string; // ISO date string
   relatedBookingId?: string;
 }
+
+export type EditDeveloperProfileRouteParams = {
+  // Using Partial<DeveloperProfile> makes it more aligned with the actual profile
+  // Add email separately if it's not part of the DB profile table
+  profileData?: Partial<DeveloperProfile> & { email?: string }; 
+};
+
+// Define the parameters for each screen in the Profile stack
+export type ProfileStackParamList = {
+  DeveloperProfile: undefined; // No parameters expected for the main profile view
+  EditDeveloperProfile: EditDeveloperProfileRouteParams; // Use the existing type for edit screen params
+};

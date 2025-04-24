@@ -1,12 +1,12 @@
 import { useQuery, QueryFunctionContext } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { DeveloperProfile } from '../types';
+import { DeveloperProfile, FetchedDeveloperProfile } from '../types';
 
 // Keep the query key type for clarity
 type DeveloperProfileQueryKey = ['developerProfile', string | undefined];
 
 // Updated function to fetch from both tables and combine
-async function fetchDeveloperProfile({ queryKey }: QueryFunctionContext<DeveloperProfileQueryKey>): Promise<DeveloperProfile | null> {
+async function fetchDeveloperProfile({ queryKey }: QueryFunctionContext<DeveloperProfileQueryKey>): Promise<FetchedDeveloperProfile | null> {
   const [, userId] = queryKey;
   if (!userId) return null;
 
@@ -39,7 +39,7 @@ async function fetchDeveloperProfile({ queryKey }: QueryFunctionContext<Develope
     }
 
     // Combine results - ensure DeveloperProfile type includes all fields
-    const combinedProfile: DeveloperProfile = {
+    const combinedProfile: FetchedDeveloperProfile = {
       user_id: userId, // Use the id we queried with
       name: userData?.full_name, // Map full_name to name
       avatar_url: userData?.avatar_url,
@@ -68,10 +68,13 @@ async function fetchDeveloperProfile({ queryKey }: QueryFunctionContext<Develope
 export function useDeveloperProfile(userId: string | undefined) {
   // Use v4 syntax: queryKey is first argument, options object is second (optional)
   // No need for explicit generic types here if TS can infer them correctly now
-  return useQuery(['developerProfile', userId], fetchDeveloperProfile, {
-    // Options object for v4
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000, // Correct option name for v4
-  });
+  return useQuery<FetchedDeveloperProfile | null, Error, FetchedDeveloperProfile | null, DeveloperProfileQueryKey>(
+    ['developerProfile', userId],
+    fetchDeveloperProfile,
+    {
+      // Options object for v4
+      enabled: !!userId,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000, // Correct option name for v4
+    });
 }
