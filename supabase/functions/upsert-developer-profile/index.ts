@@ -3,9 +3,9 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "supabase-edge-runtime-types"; // Use import map alias
-import { createClient } from "@supabase/supabase-js"; // Use import map alias
-import { corsHeaders } from "shared/cors.ts"; // Use import map alias
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts'; // Use full JSR specifier
+import { createClient } from 'npm:@supabase/supabase-js@2'; // Use full NPM specifier
+import { corsHeaders } from '../_shared/cors.ts'; // Use direct relative path
 
 // Define the expected structure for the profile data
 interface ProfileData {
