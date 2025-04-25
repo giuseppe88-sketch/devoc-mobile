@@ -17,8 +17,10 @@ import DeveloperAvailabilityScreen from '../screens/developer/availability-scree
 import ClientDashboardScreen from '../screens/client/dashboard-screen';
 import ClientBrowseScreen from '../screens/client/browse-screen';
 // import ClientBookingsScreen from '../screens/client/bookings-screen';
+import ClientProfileScreen from '../screens/client/profile-screen'; 
+import EditClientProfileScreen from '../screens/client/edit-profile-screen'; 
 
-import { ProfileStackParamList } from "../types"; // Import shared types
+import { ProfileStackParamList, ClientProfileStackParamList } from "../types"; // Import shared types
 import { colors as themeColors } from '../theme'; 
 
 // Assuming dark theme for navigation elements
@@ -26,6 +28,7 @@ const colors = themeColors.dark;
 
 const Tab = createBottomTabNavigator();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
+const ClientProfileStack = createNativeStackNavigator<ClientProfileStackParamList>(); // Create Client Profile Stack
 
 // Profile Stack Navigator Component
 function ProfileStackNavigator() {
@@ -60,6 +63,41 @@ function ProfileStackNavigator() {
         }} 
       />
     </ProfileStack.Navigator>
+  );
+}
+
+function ClientProfileStackNavigator() {
+  return (
+    <ClientProfileStack.Navigator 
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.card, // Change to card background color
+        },
+        headerTintColor: colors.text, // Set header text/icon color
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        // We might want to hide the back button text for cleaner look
+        headerBackTitleVisible: false, 
+      }}
+    >
+      <ClientProfileStack.Screen 
+        name="ClientProfile" 
+        component={ClientProfileScreen} 
+        options={{ 
+          // Replace title text with an icon
+          headerTitle: () => <Ionicons name="person-circle-outline" size={28} color={colors.text} />, 
+        }} 
+      />
+      <ClientProfileStack.Screen 
+        name="EditClientProfile" 
+        component={EditClientProfileScreen} 
+        options={{ 
+          // Replace title text with an icon
+          headerTitle: () => <Ionicons name="create-outline" size={26} color={colors.text} />, 
+        }} 
+      />
+    </ClientProfileStack.Navigator>
   );
 }
 
@@ -136,6 +174,7 @@ function MainNavigator() {
         // Client Tabs
         <>
           <Tab.Screen name="Dashboard" component={ClientDashboardScreen} />
+          <Tab.Screen name="Profile" component={ClientProfileStackNavigator} />
           <Tab.Screen name="Browse" component={ClientBrowseScreen} />
           {/* <Tab.Screen name="Bookings" component={ClientBookingsScreen} /> */}
         </>

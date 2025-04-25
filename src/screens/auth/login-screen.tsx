@@ -17,7 +17,7 @@ function LoginScreen({ navigation }: { navigation: any }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { signIn, loading } = useAuthStore();
-  const colors = useColors();
+  const colors = useColors('light'); // Use light theme
   const styles = getStyles(colors);
 
   const handleLogin = async () => {

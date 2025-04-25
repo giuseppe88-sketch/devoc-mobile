@@ -79,3 +79,29 @@ export type ProfileStackParamList = {
   DeveloperProfile: undefined; // No parameters expected for the main profile view
   EditDeveloperProfile: EditDeveloperProfileRouteParams; // Use the existing type for edit screen params
 };
+
+// --- Add Client Profile Types ---
+export type ClientProfile = Database['public']['Tables']['client_profiles']['Row'];
+
+// Parameters for the Edit Client Profile screen
+export type EditClientProfileRouteParams = {
+  profileData?: Partial<ClientProfile> & { email?: string };
+  email?: string; // Include email if it needs to be passed/displayed separately
+};
+
+// Define the parameters for each screen in the Client Profile stack
+export type ClientProfileStackParamList = {
+  ClientProfile: undefined;
+  EditClientProfile: EditClientProfileRouteParams;
+};
+// --- End Client Profile Types ---
+
+// --- Add Fetched Client Profile Type ---
+// Represents the combined profile data fetched by the useClientProfile hook
+export interface FetchedClientProfile extends ClientProfile {
+  email?: string | null; // From users table
+  // Add other fields from 'users' table if needed, e.g., name, avatar_url
+  // Ensure names don't clash or handle merging appropriately
+  user_id: string; // Explicitly add the user id
+}
+// --- End Fetched Client Profile Type ---

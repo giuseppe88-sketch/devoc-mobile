@@ -17,7 +17,7 @@ const SignUpScreen = () => {
   const [role, setRole] = useState<Role>('client');
   const { signUp, loading } = useAuthStore();
   const navigation = useNavigation<any>();
-  const colors = useColors();
+  const colors = useColors('light'); // Use light theme
   const styles = getStyles(colors);
 
   const handleSignUp = async () => {
