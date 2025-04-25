@@ -7,23 +7,20 @@ import "supabase-edge-runtime-types"; // Use import map alias
 import { createClient } from "@supabase/supabase-js"; // Use import map alias
 import { corsHeaders } from "shared/cors.ts"; // Use import map alias
 
-// Define the expected structure for the profile data
+// Define the expected structure for the client profile data
 interface ProfileData {
-  phone_number?: string;
-  skills?: string[];
-  focus_areas?: string[];
-  portfolio_url?: string;
-  github_url?: string;
-  hourly_rate?: number;
-  location?: string;
-  years_of_experience?: number;
+  client_name: string; // Required field
+  company_name?: string;
+  logo_url?: string;
+  website_url?: string;
 }
 
-console.log('"upsert-developer-profile" function initialized');
+console.log('"upsert-client-profile" function initialized');
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request for upsert-client-profile...");
     return new Response("ok", { headers: corsHeaders });
   }
 
@@ -37,23 +34,17 @@ Deno.serve(async (req) => {
     }
 
     // --- Get User ID from Auth Header ---
-    // Create a Supabase client with the Auth context of the logged-in user.
     const supabaseClient = createClient(
-      // Supabase API URL - env var exported by default when deployed.
       Deno.env.get("SUPABASE_URL") ?? "",
-      // Supabase API ANON KEY - env var exported by default when deployed.
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      // Create client with Auth context of the user that called the function.
-      // This way RLS policies are applied.
       {
         global: {
           headers: { Authorization: req.headers.get("Authorization")! },
         },
       },
     );
-    // Now we can get the session or user object
-    const { data: { user }, error: userError } = await supabaseClient.auth
-      .getUser();
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
       console.error("User auth error:", userError?.message);
@@ -67,43 +58,34 @@ Deno.serve(async (req) => {
 
     // --- Parse Request Body ---
     const profileData: Partial<ProfileData> = await req.json();
-    console.log("Parsed profile data from body:", profileData);
+    console.log("Parsed client profile data from body:", profileData);
 
     // Basic validation (check if required fields are provided)
-    if (
-      !profileData.phone_number && !profileData.skills &&
-      !profileData.focus_areas && !profileData.portfolio_url &&
-      !profileData.github_url && !profileData.hourly_rate &&
-      !profileData.location && !profileData.years_of_experience
-    ) {
-      return new Response(JSON.stringify({ error: "Missing required field" }), {
+    if (!profileData.client_name) { // client_name is required
+      return new Response(JSON.stringify({ error: "Missing required field: client_name" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // --- Prepare Data for Upsert ---
-    // We use the user's ID as the primary key or unique identifier in the profiles table.
     const dataToUpsert = {
       id: user.id, // Link to auth.users table
       updated_at: new Date().toISOString(),
-      phone_number: profileData.phone_number ?? null,
-      skills: profileData.skills ?? null,
-      focus_areas: profileData.focus_areas ?? null,
-      portfolio_url: profileData.portfolio_url ?? null,
-      github_url: profileData.github_url ?? null,
-      hourly_rate: profileData.hourly_rate ?? null,
-      location: profileData.location ?? null,
-      years_of_experience: profileData.years_of_experience ?? null,
+      client_name: profileData.client_name,
+      company_name: profileData.company_name ?? null,
+      logo_url: profileData.logo_url ?? null,
+      website_url: profileData.website_url ?? null,
+      // created_at is handled by default in DB
     };
 
-    // --- Upsert Profile Data (Replaced with Select then Insert/Update) ---
+    // --- Upsert Profile Data (Select then Insert/Update) ---
     let data, dbError;
 
     try {
-      console.log(`Attempting to SELECT profile for user ID: ${user.id}`);
+      console.log(`Attempting to SELECT client profile for user ID: ${user.id}`);
       const { data: existingProfile, error: selectError } = await supabaseClient
-        .from("developer_profiles")
+        .from("client_profiles")
         .select("id") // Select only the id to check for existence
         .eq("id", user.id)
         .maybeSingle(); // Returns null if not found, doesn't throw error
@@ -117,11 +99,11 @@ Deno.serve(async (req) => {
       if (existingProfile) {
         // --- UPDATE existing profile ---
         console.log(
-          `Profile found for user ID: ${user.id}. Attempting UPDATE.`,
+          `Client profile found for user ID: ${user.id}. Attempting UPDATE.`,
         );
         const { data: updateData, error: updateError } = await supabaseClient
-          .from("developer_profiles")
-          .update(dataToUpsert) // dataToUpsert includes id and updated_at
+          .from("client_profiles")
+          .update(dataToUpsert)
           .eq("id", user.id)
           .select()
           .single();
@@ -131,11 +113,11 @@ Deno.serve(async (req) => {
       } else {
         // --- INSERT new profile ---
         console.log(
-          `No profile found for user ID: ${user.id}. Attempting INSERT.`,
+          `No client profile found for user ID: ${user.id}. Attempting INSERT.`,
         );
         const { data: insertData, error: insertError } = await supabaseClient
-          .from("developer_profiles")
-          .insert(dataToUpsert) // dataToUpsert includes id and updated_at
+          .from("client_profiles")
+          .insert(dataToUpsert)
           .select()
           .single();
         data = insertData;
@@ -145,19 +127,17 @@ Deno.serve(async (req) => {
     } catch (error) {
       // Catch errors specifically from select/insert/update if they were thrown
       console.error("Caught error during DB operation:", error);
-      // Ensure dbError is set if it wasn't already (e.g., unexpected error)
       let errorMessage = "Unknown DB operation error";
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (typeof error === "string") {
+      } else if (typeof error === 'string') {
         errorMessage = error;
       }
-      if (!dbError) dbError = { message: errorMessage, details: error };
+      if (!dbError) dbError = { message: errorMessage, details: String(error) };
     }
 
     // --- Handle potential errors from Insert/Update ---
     if (dbError) {
-      // Use the already logged specific error if available
       console.error("Final Database error check:", dbError);
       return new Response(
         JSON.stringify({ error: "Database error", details: dbError }),
@@ -170,7 +150,7 @@ Deno.serve(async (req) => {
 
     // --- Return Success Response ---
     return new Response(JSON.stringify({ profile: data }), {
-      status: 200, // 200 OK for upsert, could use 201 if only inserting
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
@@ -190,18 +170,17 @@ Deno.serve(async (req) => {
 
 /* To invoke locally:
 
-  1. Make sure you have a `developer_profiles` table created.
-  2. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  3. Make an HTTP request (replace ANON_KEY and profile data):
+  1. Make sure you have a `client_profiles` table created.
+  2. Run `supabase start`
+  3. Make an HTTP request (replace YOUR_USER_JWT_TOKEN and profile data):
 
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/create-developer-profile' \
+  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/upsert-client-profile' \
     --header 'Authorization: Bearer YOUR_USER_JWT_TOKEN' \
     --header 'Content-Type: application/json' \
-    --data '{
-      "phone_number": "1234567890",
-      "skills": ["Analytical Engine", "Mathematics"],
-      "focus_areas": ["Early Computing"],
-      "hourly_rate": 100
+    --data '{ \
+      "client_name": "Example Client", \
+      "company_name": "Example Corp", \
+      "logo_url": "http://example.com/logo.png", \
+      "website_url": "http://example.com" \
     }'
-
 */

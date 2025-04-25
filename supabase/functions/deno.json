@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "supabase-edge-runtime-types": "jsr:@supabase/functions-js/edge-runtime.d.ts",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2",
+    "shared/": "../_shared/"
+  }
+}
