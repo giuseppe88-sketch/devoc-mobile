@@ -4,188 +4,211 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Button,
   ScrollView,
   Image,
-  useColorScheme,
+  TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from "../../stores/auth-store";
 import { useClientProfile } from "../../hooks/useClientProfile";
 import { ClientProfileStackParamList } from "../../types";
 import { colors as themeColors, spacing } from "../../theme";
-import { useColors } from "../../theme";
+import { Linking, Alert } from 'react-native';
+
+// --- Theme Colors ---
+const colors = themeColors.light; // Use light theme colors
 
 // Define navigation prop type for type safety
 type ClientProfileScreenNavigationProp = NativeStackNavigationProp<
   ClientProfileStackParamList,
-  "ClientProfile"
+  'ClientProfile'
 >;
 
-function ClientProfileScreen() {
+export function ClientProfileScreen() {
   const navigation = useNavigation<ClientProfileScreenNavigationProp>();
   const userId = useAuthStore((state) => state.user?.id);
   const { data: profile, isLoading, isError, error } = useClientProfile(userId);
-  // const colorScheme = useColorScheme() ?? 'light';
-
-  const colors = useColors('light');
 
   const handleEditProfile = () => {
     // Prepare profile data for navigation, ensuring email is string | undefined
     const profileForNavigation = profile
-      ? {
-          ...profile,
-          email: profile.email ?? undefined, // Convert null or undefined email to undefined
-        }
-      : undefined;
-
-    // Pass the adjusted profile data.
-    // We likely only need profileData now, assuming EditClientProfile reads email from there.
+      ? { ...profile, email: profile.email ?? undefined } // Convert null to undefined
+      : { email: undefined }; // Use profile.email if available
     navigation.navigate("EditClientProfile", {
       profileData: profileForNavigation,
     });
   };
 
+  const handleLinkPress = async (url: string | undefined | null) => {
+    if (!url) return;
+
+    // Prepend https:// if scheme is missing
+    const formattedUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+
+    const supported = await Linking.canOpenURL(formattedUrl);
+
+    if (supported) {
+      try {
+        await Linking.openURL(formattedUrl);
+      } catch (err) {
+        Alert.alert(`Don't know how to open this URL: ${formattedUrl}`);
+      }
+    } else {
+      Alert.alert(`Don't know how to open this URL: ${formattedUrl}`);
+    }
+  };
+
   if (isLoading) {
     return (
-      <View style={styles.centeredContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.infoText}>Loading Profile...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} style={styles.centered} />
+      </SafeAreaView>
     );
   }
 
   if (isError) {
     return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.errorText}>Error loading profile:</Text>
-        <Text style={styles.errorText}>
-          {error?.message || "Unknown error"}
-        </Text>
-      </View>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <View style={styles.centeredContainer}>
-        <Text style={styles.infoText}>No profile found.</Text>
-        {/* Optionally add a button to create a profile? */}
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>
+            Error loading profile: {error instanceof Error ? error.message : 'Unknown error'}
+          </Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={styles.header}>Client Profile</Text>
-      {profile?.logo_url && (
-      <View style={styles.logoContainer}>
-        <Image
-          source={{ uri: profile.logo_url }}
-          style={styles.logoImage}
-          resizeMode="contain" // Optional: Adjust how the image fits
-        />
-      </View>
-      )}
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Client Name:</Text>
-        <Text style={styles.value}>{profile.client_name || "N/A"}</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Profile</Text>
+          <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
+            <Ionicons name="create-outline" size={24} color={colors.secondary} />
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Email:</Text>
-        <Text style={styles.value}>{profile.email || "N/A"}</Text>
-      </View>
+        {profile && (
+          <>
+            <View style={styles.avatarContainer}>
+              {profile.logo_url ? (
+                <Image source={{ uri: profile.logo_url }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons name="person" size={50} color={colors.textSecondary} />
+                </View>
+              )}
+            </View>
 
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Company Name:</Text>
-        <Text style={styles.value}>{profile.company_name || "N/A"}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.label}>Website:</Text>
-        <Text style={styles.value}>{profile.website_url || "N/A"}</Text>
-      </View>
-
-      {/* Add more fields as needed, e.g., logo */}
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Edit Profile"
-          onPress={handleEditProfile}
-          color={colors.primary}
-        />
-      </View>
-    </ScrollView>
+            <View style={styles.detailsCard}>
+              <View style={styles.detailItem}>
+                <Text style={styles.label}>Name</Text>
+                <Text style={styles.value}>{profile.client_name || <Text style={styles.notSetText}>N/A</Text>}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.label}>Email</Text>
+                <Text style={styles.value}>{profile.email || <Text style={styles.notSetText}>N/A</Text>}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.label}>Company Name</Text>
+                <Text style={styles.value}>{profile.company_name || <Text style={styles.notSetText}>Not set</Text>}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.label}>Company Website</Text>
+                {profile.website_url ? (
+                  <TouchableOpacity onPress={() => handleLinkPress(profile.website_url)}>
+                    <Text style={[styles.value, styles.linkText]}>{profile.website_url}</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.notSetText}>Not set</Text>
+                )}
+              </View>
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  centeredContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: useColors('light').background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: useColors('light').background,
-  },
-  contentContainer: {
-    padding: 20,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: useColors('light').text,
-  },
-  logoContainer: {
-    alignItems: 'center', // Center the logo horizontally
-    marginBottom: 20, // Add space below the logo
-  },
-  logoImage: {
-    width: 100, // Adjust width as needed
-    height: 100, // Adjust height as needed
-    borderRadius: 8, // Optional: if you want rounded corners
-    backgroundColor: useColors('light').subtle, // Placeholder background
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: useColors('light').border,
+    borderBottomColor: colors.border,
+  },
+  title: { fontSize: 28, fontWeight: 'bold', color: colors.text },
+  editButton: { padding: spacing.sm },
+  avatarContainer: { 
+    alignItems: 'center', 
+    marginVertical: spacing.lg 
+  }, 
+  avatar: {
+    width: 120, 
+    height: 120,
+    borderRadius: 60, 
+    backgroundColor: colors.subtle,
+    marginBottom: spacing.md,
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.subtle,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  detailsCard: {
+    backgroundColor: colors.card,
+    marginHorizontal: spacing.md,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  detailItem: {
+    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.md,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: useColors('light').text,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+    fontWeight: '600',
   },
   value: {
     fontSize: 16,
-    color: useColors('light').textSecondary || useColors('light').text,
+    color: colors.text,
   },
-  infoText: {
+  linkText: {
+    color: colors.primary, 
+    textDecorationLine: 'underline',
+  },
+  notSetText: {
+    fontStyle: 'italic',
+    color: colors.textSecondary,
     fontSize: 16,
-    color: useColors('light').text,
-    marginTop: 10,
   },
   errorText: {
+    color: colors.error,
     fontSize: 16,
-    color: useColors('light').error,
-    textAlign: "center",
-    marginBottom: 5,
-  },
-  buttonContainer: {
-    marginTop: 30,
+    textAlign: 'center',
   },
 });
-
-export default ClientProfileScreen;

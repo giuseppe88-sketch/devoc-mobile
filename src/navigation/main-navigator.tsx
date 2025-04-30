@@ -17,11 +17,12 @@ import DeveloperAvailabilityScreen from '../screens/developer/availability-scree
 import ClientDashboardScreen from '../screens/client/dashboard-screen';
 import ClientBrowseScreen from '../screens/client/browse-screen';
 // import ClientBookingsScreen from '../screens/client/bookings-screen';
-import ClientProfileScreen from '../screens/client/profile-screen'; 
+import { ClientProfileScreen } from '../screens/client/profile-screen'; 
 import EditClientProfileScreen from '../screens/client/edit-profile-screen'; 
+import { DeveloperDetailScreen } from '../screens/client/developer-detail-screen'; 
 
 import { ProfileStackParamList, ClientProfileStackParamList } from "../types"; // Import shared types
-import { colors as themeColors } from '../theme'; 
+import { colors as themeColors, spacing } from '../theme'; 
 
 // Assuming dark theme for navigation elements
 const colors = themeColors.dark;
@@ -29,6 +30,14 @@ const colors = themeColors.dark;
 const Tab = createBottomTabNavigator();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
 const ClientProfileStack = createNativeStackNavigator<ClientProfileStackParamList>(); // Create Client Profile Stack
+
+// Define Param List for the new Browse Stack
+export type BrowseStackParamList = {
+  ClientBrowse: undefined; // The list screen doesn't need params
+  DeveloperDetail: { developerId: string }; // The detail screen needs the ID
+};
+
+const BrowseStack = createNativeStackNavigator<BrowseStackParamList>(); // Create Browse Stack
 
 // Profile Stack Navigator Component
 function ProfileStackNavigator() {
@@ -101,6 +110,35 @@ function ClientProfileStackNavigator() {
   );
 }
 
+function BrowseStackNavigator() {
+  const colors = themeColors.light; // Use light theme for client stack
+  return (
+    <BrowseStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.background, // Light background
+        },
+        headerTintColor: colors.text, // Light text color
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerBackTitleVisible: false,
+      }}
+    >
+      <BrowseStack.Screen 
+        name="ClientBrowse"
+        component={ClientBrowseScreen}
+        options={{ title: 'Browse Developers' }} // Set title for the browse screen
+      />
+      <BrowseStack.Screen 
+        name="DeveloperDetail"
+        component={DeveloperDetailScreen}
+        options={({ route }) => ({ title: 'Developer Profile' })} // Example: Use params for dynamic title later if needed
+      />
+    </BrowseStack.Navigator>
+  );
+}
+
 function MainNavigator() {
   const { user, signOut, userRole, loadingProfile } = useAuthStore();
   const isDeveloper = userRole === 'developer';
@@ -136,6 +174,8 @@ function MainNavigator() {
     );
   }
 
+  const colors = themeColors.light; // Keep using light for the main tab bar for consistency
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -157,26 +197,42 @@ function MainNavigator() {
           // Restore original size prop
           return <Ionicons name={iconName as any} size={size} color={color} />;
         },
-        tabBarActiveTintColor: 'tomato',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false, // Hide header for main tab screens (Profile stack will show its own)
+        tabBarActiveTintColor: colors.accent, // Color for active tab icon/label
+        tabBarInactiveTintColor: colors.textSecondary, // Color for inactive tab icon/label
+        tabBarStyle: {
+          backgroundColor: colors.card, // Tab bar background color
+          borderTopColor: colors.border, // Optional: Tab bar border color
+          paddingBottom: spacing.xs, // Add some padding at the bottom
+          height: 60, // Adjust height if needed
+        },
+        headerStyle: {
+          backgroundColor: colors.card, // Header background color
+        },
+        headerTintColor: colors.text, // Header text/icon color
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
       })}
     >
       {isDeveloper ? (
         // Developer Tabs
         <>
           <Tab.Screen name="Dashboard" component={DeveloperDashboardScreen} />
-          <Tab.Screen name="Profile" component={ProfileStackNavigator} />
           <Tab.Screen name="Availability" component={DeveloperAvailabilityScreen} />
           {/* <Tab.Screen name="Bookings" component={DeveloperBookingsScreen} /> */}
+          <Tab.Screen name="Profile" component={ProfileStackNavigator} options={{ headerShown: false }}/>
         </>
       ) : (
         // Client Tabs
         <>
           <Tab.Screen name="Dashboard" component={ClientDashboardScreen} />
-          <Tab.Screen name="Profile" component={ClientProfileStackNavigator} />
-          <Tab.Screen name="Browse" component={ClientBrowseScreen} />
+          <Tab.Screen 
+            name="Browse" 
+            component={BrowseStackNavigator} 
+            options={{ headerShown: false }} // Hide Tab Navigator header, Stack header will show
+          />
           {/* <Tab.Screen name="Bookings" component={ClientBookingsScreen} /> */}
+          <Tab.Screen name="Profile" component={ClientProfileStackNavigator} options={{ headerShown: false }} />
         </>
       )}
     </Tab.Navigator>

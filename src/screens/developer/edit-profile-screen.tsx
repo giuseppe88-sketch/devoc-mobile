@@ -200,10 +200,10 @@ function EditDeveloperProfileScreen() {
     >
       {/* <ImagePickerComponent 
         currentAvatarUrl={formState.avatarUrl}
-        onUploadComplete={handleAvatarUploadComplete}
-        uploadPath={`avatars/${user?.id}`}
+        onImagePicked={handleImagePicked} 
+        userId={user?.id} 
       /> */}
-      
+
       <Text style={styles.label}>Name</Text>
       <TextInput
         style={styles.input}
@@ -212,6 +212,16 @@ function EditDeveloperProfileScreen() {
         placeholder="Your full name"
         placeholderTextColor={colors.light.placeholder}
         autoCapitalize="words"
+      />
+
+      <Text style={styles.label}>Avatar URL</Text>
+      <TextInput
+        style={styles.input}
+        value={formState.avatarUrl ?? ''} // Handle null case
+        onChangeText={(text) => handleInputChange('avatarUrl', text || null)} // Set to null if empty
+        placeholder="https://example.com/avatar.png"
+        keyboardType="url"
+        autoCapitalize="none"
       />
 
       <Text style={styles.label}>Bio</Text>

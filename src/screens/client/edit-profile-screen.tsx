@@ -5,18 +5,19 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity, // Add TouchableOpacity
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // Add SafeAreaView
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // Removed direct supabase import as action handles it
 import { useAuthStore } from '../../stores/auth-store';
 import { useClientProfile } from '../../hooks/useClientProfile';
-import { useColors } from '../../theme';
+import { colors as themeColors, spacing } from '../../theme'; // Import theme colors and spacing
 import { ClientProfileStackParamList, ClientProfile } from '../../types';
 // Import the action and its related types
 import {
@@ -24,6 +25,9 @@ import {
   ActionState,
   ClientProfileFormData,
 } from '../../actions/client-profile-actions';
+
+// --- Theme Colors ---
+const colors = themeColors.light; // Use theme colors
 
 // --- Types ---
 
@@ -45,15 +49,12 @@ interface EditClientFormState {
   websiteUrl: string;
 }
 
-// --- Component ---
-
 function EditClientProfileScreen() {
   const navigation = useNavigation<EditClientProfileScreenNavigationProp>();
   const route = useRoute<EditClientProfileScreenRouteProp>();
   const session = useAuthStore((state) => state.session);
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
-  const colors = useColors('light'); // Get colors for the current theme
 
   const { data: profileData, isLoading: isFetching, error: fetchError } = useClientProfile(user?.id);
 
@@ -65,7 +66,6 @@ function EditClientProfileScreen() {
     websiteUrl: '',
   };
   const [formState, setFormState] = useState<EditClientFormState>(initialFormState);
-  // Removed isSaving state, useActionState handles pending state
 
   // useActionState hook to manage the submission
   const [state, submitAction, isPending] = useActionState<ActionState | null, {
@@ -133,57 +133,6 @@ function EditClientProfileScreen() {
     });
   };
 
-  // --- Styles defined inside component using colors --- 
-  const styles = useMemo(() => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background, // Use color from hook
-    },
-    centered: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: colors.background, // Use color from hook
-    },
-    contentContainer: {
-      padding: 20,
-    },
-    label: {
-      fontSize: 16,
-      fontWeight: '600',
-      marginBottom: 8,
-      color: colors.text, // Use color from hook
-    },
-    input: {
-      fontSize: 16,
-      padding: 12,
-      borderWidth: 1,
-      borderRadius: 8,
-      marginBottom: 16,
-      backgroundColor: colors.card, // Use color from hook
-      color: colors.text, // Use color from hook
-      borderColor: colors.border, // Use color from hook
-    },
-    text: {
-      fontSize: 16,
-      color: colors.text, // Use color from hook
-    },
-    errorText: {
-      fontSize: 16,
-      color: colors.error, // Use color from hook
-      textAlign: 'center',
-      marginBottom: 5,
-    },
-    loadingText: {
-        fontSize: 16,
-        color: colors.text,
-        marginTop: 10,
-    },
-    buttonContainer: {
-      marginTop: 24,
-    },
-  }), [colors]); // Recreate styles if colors change
-
   // --- Render Logic ---
   if (isFetching) {
     return (
@@ -199,77 +148,156 @@ function EditClientProfileScreen() {
       <View style={styles.centered}>
         <Text style={styles.errorText}>Error loading profile:</Text>
         <Text style={styles.errorText}>
-          {(fetchError as Error)?.message || 'Unknown error'}
+          {fetchError instanceof Error ? fetchError.message : 'An unknown error occurred'}
         </Text>
-        {/* Add a retry button? */}
       </View>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={styles.label}>Client Name *</Text>
-      <TextInput
-        style={styles.input}
-        value={formState.clientName}
-        onChangeText={(text) => handleInputChange('clientName', text)}
-        placeholder="Your name or company name"
-        placeholderTextColor={colors.placeholder}
-        autoCapitalize="words"
-        />
+    <SafeAreaView style={styles.container}> {/* Use SafeAreaView */}
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <Text style={styles.headerTitle}>Edit Profile</Text> {/* Add header title */}
 
-      <Text style={styles.label}>Company Name (Optional)</Text>
-      <TextInput
-        style={styles.input}
-        value={formState.companyName}
-        onChangeText={(text) => handleInputChange('companyName', text)}
-        placeholder="Legal company name (if different)"
-        placeholderTextColor={colors.placeholder}
-        autoCapitalize="words"
-      />
-
-      <Text style={styles.label}>Logo URL (Optional)</Text>
-      <TextInput
-        style={styles.input}
-        value={formState.logoUrl}
-        onChangeText={(text) => handleInputChange('logoUrl', text)}
-        placeholder="https://example.com/logo.png"
-        placeholderTextColor={colors.placeholder}
-        keyboardType="url"
-        autoCapitalize="none"
-      />
-
-      <Text style={styles.label}>Website URL (Optional)</Text>
-      <TextInput
-        style={styles.input}
-        value={formState.websiteUrl}
-        onChangeText={(text) => handleInputChange('websiteUrl', text)}
-        placeholder="https://your-company.com"
-        placeholderTextColor={colors.placeholder}
-        keyboardType="url"
-        autoCapitalize="none"
-      />
-
-      <View style={styles.buttonContainer}>
-        {isPending ? (
-          <ActivityIndicator size="small" color={colors.primary} />
-        ) : (
-          <Button
-            title="Save Profile"
-            onPress={handleSave}
-            color={colors.primary}
-            disabled={isPending} // Use isPending from useActionState
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Client Name *</Text>
+          <TextInput
+            style={styles.input}
+            value={formState.clientName}
+            onChangeText={(text) => handleInputChange('clientName', text)}
+            placeholder="Your full name or organization name"
+            placeholderTextColor={colors.placeholder}
+            autoCapitalize="words"
           />
-        )}
-      </View>
-    </ScrollView>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Company Name</Text>
+          <TextInput
+            style={styles.input}
+            value={formState.companyName}
+            onChangeText={(text) => handleInputChange('companyName', text)}
+            placeholder="Optional: Your company name"
+            placeholderTextColor={colors.placeholder}
+            autoCapitalize="words"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Logo URL</Text>
+          <TextInput
+            style={styles.input}
+            value={formState.logoUrl}
+            onChangeText={(text) => handleInputChange('logoUrl', text)}
+            placeholder="Optional: URL to your logo (e.g., https://...)"
+            placeholderTextColor={colors.placeholder}
+            keyboardType="url"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Website URL</Text>
+          <TextInput
+            style={styles.input}
+            value={formState.websiteUrl}
+            onChangeText={(text) => handleInputChange('websiteUrl', text)}
+            placeholder="Optional: Your website URL"
+            placeholderTextColor={colors.placeholder}
+            keyboardType="url"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.saveButton, isPending && styles.saveButtonDisabled]} // Use TouchableOpacity
+          onPress={handleSave}
+          disabled={isPending}
+        >
+          {isPending 
+            ? <ActivityIndicator size="small" color={'#ffffff'} /> // Use #ffffff directly
+            : <Text style={styles.saveButtonText}>Save Changes</Text>
+          }
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-// Styles are now defined inside the component using useMemo
+// --- Styles --- (Moved outside component)
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingBottom: spacing.xl, // Ensure space at the bottom
+  },
+  centered: { // Keep centered styles for loading/error states
+    flex: 1, // Make centered view take full screen
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+    backgroundColor: colors.background,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  formGroup: {
+    marginBottom: spacing.md,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+    color: colors.text,
+  },
+  input: {
+    fontSize: 16,
+    paddingVertical: spacing.sm, // Use spacing
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    color: colors.text,
+    borderColor: colors.border,
+  },
+  text: {
+    fontSize: 16,
+    color: colors.text,
+  },
+  errorText: {
+    fontSize: 16,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.text,
+    marginTop: spacing.sm,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  saveButtonDisabled: {
+    backgroundColor: colors.subtle, // Use subtle color for muted state
+  },
+  saveButtonText: {
+    color: '#ffffff', // Use #ffffff directly
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
 
 export default EditClientProfileScreen;

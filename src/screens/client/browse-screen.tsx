@@ -1,457 +1,514 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { colors as themeColors } from '../../theme';
+import React, { useState, useMemo } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity, // Import TouchableOpacity
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { colors as themeColors, spacing } from "@/theme";
+import { useBrowseDevelopers, DeveloperProfile } from "@/hooks/useBrowseDevelopers";
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import stack navigation type
+import { BrowseStackParamList } from '@/navigation/main-navigator'; // Import param list type
 
-// Define Developer type if not already defined elsewhere
-interface Developer {
-  id: string;
-  name: string;
-  bio?: string;
-  skills?: string[];
-  rating?: number;
-  avatar?: string;
-  timezone?: string;
-}
+type Developer = DeveloperProfile;
+const colors = themeColors.light; // Revert back to light theme for client screen
 
-function ClientBrowseScreen({ navigation }: { navigation: any }) {
-  const [developers, setDevelopers] = useState<Developer[]>([]);
-  const [filteredDevelopers, setFilteredDevelopers] = useState<Developer[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+// Define the type for the navigation prop within this screen's context
+type BrowseScreenNavigationProp = NativeStackNavigationProp<
+  BrowseStackParamList, // Use the correct stack param list
+  'ClientBrowse' // The name of this screen in the stack
+>;
 
-  // Popular skills for filtering
-  const popularSkills = [
-    'React Native',
-    'TypeScript',
-    'Node.js',
-    'Flutter',
-    'iOS',
-    'Android',
-    'UI/UX',
-    'Firebase',
+export function ClientBrowseScreen() { // Removed { navigation } prop
+  const { data: developers, isLoading, error } = useBrowseDevelopers();
+  const navigation = useNavigation<BrowseScreenNavigationProp>(); // Get navigation object
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([]);
+
+  const popularFocusAreas = [
+    "Frontend",
+    "Backend",
+    "UI/UX Design",
+    "Cross-Platform",
+    "Native iOS",
+    "Native Android",
+    "Performance",
+    "Testing",
   ];
 
-  // Mock data for developers
-  const mockDevelopers: Developer[] = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      bio: 'Senior React Native developer with 5+ years of experience building cross-platform mobile apps.',
-      skills: ['React Native', 'TypeScript', 'Node.js', 'Redux'],
-      rating: 4.9,
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-      timezone: 'UTC-5',
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      bio: 'Full-stack developer specializing in Flutter and Firebase. Love building beautiful, responsive UIs.',
-      skills: ['Flutter', 'Firebase', 'UI/UX', 'Dart'],
-      rating: 4.8,
-      avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-      timezone: 'UTC+8',
-    },
-    {
-      id: '3',
-      name: 'Alex Rodriguez',
-      bio: 'iOS developer with expertise in Swift and SwiftUI. Former Apple engineer.',
-      skills: ['iOS', 'Swift', 'SwiftUI', 'Objective-C'],
-      rating: 4.7,
-      avatar: 'https://randomuser.me/api/portraits/men/67.jpg',
-      timezone: 'UTC-8',
-    },
-    {
-      id: '4',
-      name: 'Emily Wong',
-      bio: 'Android specialist with a passion for clean architecture and Kotlin.',
-      skills: ['Android', 'Kotlin', 'Java', 'Jetpack Compose'],
-      rating: 4.6,
-      avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
-      timezone: 'UTC+1',
-    },
-    {
-      id: '5',
-      name: 'David Smith',
-      bio: 'Full-stack JavaScript developer. Expert in React Native, React, and Node.js.',
-      skills: ['JavaScript', 'React', 'React Native', 'Node.js'],
-      rating: 4.5,
-      avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
-      timezone: 'UTC',
-    },
-  ];
-
-  useEffect(() => {
-    // Load mock data instead of fetching from API
-    setDevelopers(mockDevelopers);
-    setFilteredDevelopers(mockDevelopers);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    filterDevelopers();
-  }, [searchQuery, selectedSkills, developers]);
-
-  const filterDevelopers = () => {
-    let filtered = [...developers];
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (dev) =>
-          dev.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          dev.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          dev.skills?.some((skill) =>
-            skill.toLowerCase().includes(searchQuery.toLowerCase())
-          )
+  // Filter developers based on search query and selected focus areas
+  const filteredDevelopers = useMemo(() => {
+    // Use default empty array to prevent iterator error on undefined
+    return (developers ?? []).filter((developer) => {
+      const nameMatch = developer.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const skillsMatch = developer.skills?.some((skill) =>
+        skill.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    }
-
-    // Filter by selected skills
-    if (selectedSkills.length > 0) {
-      filtered = filtered.filter((dev) =>
-        selectedSkills.some((skill) => dev.skills?.includes(skill))
+      const focusAreasMatch = developer.focus_areas?.some((area) =>
+        area.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    }
 
-    setFilteredDevelopers(filtered);
-  };
+      if (searchQuery) {
+        return nameMatch || skillsMatch || focusAreasMatch;
+      }
 
-  const toggleSkillFilter = (skill: string) => {
-    if (selectedSkills.includes(skill)) {
-      setSelectedSkills(selectedSkills.filter((s) => s !== skill));
+      return true;
+    }).filter((developer) => {
+      if (selectedFocusAreas.length > 0) {
+        return selectedFocusAreas.some((area) =>
+          developer.focus_areas?.includes(area)
+        );
+      }
+
+      return true;
+    });
+  }, [developers, searchQuery, selectedFocusAreas]);
+
+  const allFocusAreas = useMemo(() => {
+    const areas = new Set<string>();
+    // Use default empty array here too
+    (developers ?? []).forEach((dev) => {
+      dev.focus_areas?.forEach((area) => areas.add(area));
+    });
+    return Array.from(areas).sort();
+  }, [developers]);
+
+  const allSkills = useMemo(() => {
+    const skills = new Set<string>();
+    // Use default empty array
+    (developers ?? []).forEach(dev => {
+      dev.skills?.forEach(skill => skills.add(skill));
+    });
+    return Array.from(skills).sort();
+  }, [developers]);
+
+  const toggleFocusAreaFilter = (area: string) => {
+    if (selectedFocusAreas.includes(area)) {
+      setSelectedFocusAreas(selectedFocusAreas.filter((a) => a !== area));
     } else {
-      setSelectedSkills([...selectedSkills, skill]);
+      setSelectedFocusAreas([...selectedFocusAreas, area]);
     }
   };
 
-  const renderDeveloperItem = ({ item }: { item: Developer }) => (
-    <TouchableOpacity
-      style={styles.developerCard}
-      onPress={() => navigation.navigate('DeveloperProfile', { developerId: item.id })}
-    >
-      <View style={styles.developerHeader}>
-        {item.avatar ? (
-          <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarPlaceholderText}>
-              {item.name.substring(0, 2).toUpperCase()}
-            </Text>
-          </View>
-        )}
-        <View style={styles.developerInfo}>
-          <Text style={styles.developerName}>{item.name}</Text>
-          <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={16} color={themeColors.light.star} />
-            <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
+  const renderDeveloperItem = ({ item }: { item: Developer }) => {
+    if (!item) return null;
+
+    // Function to handle navigation
+    const handlePress = () => {
+      navigation.navigate('DeveloperDetail', { developerId: item.id });
+    };
+
+    return (
+      <TouchableOpacity onPress={handlePress} style={styles.developerCard}>
+        <View style={styles.developerHeader}>
+          {item.avatar_url ? (
+            <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarPlaceholderText}>
+                {item.name.substring(0, 1).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={styles.developerInfo}>
+            <View style={styles.nameRatingContainer}>
+              <Text style={styles.developerName}>{item.name}</Text>
+              <View style={styles.ratingContainer}>
+                <Ionicons name="star" size={14} color={colors.primary} />
+                <Text style={styles.ratingText}>{4}</Text>
+              </View>
+            </View>
+            {item.location && (
+              <Text style={styles.developerDetailText}> {item.location}</Text>
+            )}
+            {item.years_of_experience !== null && (
+              <Text style={styles.developerDetailText}>
+                {item.years_of_experience}{" "}
+                {item.years_of_experience === 1 ? "year" : "years"} experience
+              </Text>
+            )}
           </View>
         </View>
-      </View>
 
-      <Text style={styles.bio} numberOfLines={2}>
-        {item.bio || 'No bio provided'}
-      </Text>
-
-      <View style={styles.skillsContainer}>
-        {item.skills?.slice(0, 3).map((skill, index) => (
-          <View key={index} style={styles.skillBadge}>
-            <Text style={styles.skillText}>{skill}</Text>
-          </View>
-        ))}
-        {(item.skills?.length || 0) > 3 && (
-          <View style={styles.skillBadge}>
-            <Text style={styles.skillText}>+{(item.skills?.length || 0) - 3}</Text>
+        {/* Show Focus Areas using the skill badge style */}
+        {item.focus_areas && item.focus_areas.length > 0 && (
+          <View style={styles.skillsContainer}>
+            <View style={styles.badgesContainer}>
+              {/* Add explicit type for area */}
+              {item.focus_areas.slice(0, 3).map((area: string, index: number) => (
+                <View key={index} style={styles.skillBadge}>
+                  <Text style={styles.skillText}>{area}</Text>
+                </View>
+              ))}
+              {item.focus_areas.length > 3 && (
+                <View style={styles.skillBadgeMore}>
+                  <Text style={styles.skillTextMore}>
+                    +{item.focus_areas.length - 3}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
-      </View>
+      </TouchableOpacity>
+    );
+  };
 
-      <View style={styles.bookButton}>
-        <Text style={styles.bookButtonText}>View Profile</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading Developers...</Text>
+      </SafeAreaView>
+    );
+  }
 
-  const colors = themeColors.light;
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingHorizontal: 20,
-    },
-    header: {
-      paddingTop: 30,
-      paddingBottom: 20,
-      alignItems: 'center',
-    },
-    title: {
-      fontSize: 30,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-    },
-    searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      paddingHorizontal: 15,
-      paddingVertical: 12,
-      marginBottom: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    searchIcon: {
-      marginRight: 12,
-      color: colors.placeholder,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 16,
-      color: colors.text,
-    },
-    filtersContainer: {
-      marginBottom: 20,
-    },
-    filtersTitle: {
-      fontSize: 17,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 12,
-    },
-    filterButton: {
-      paddingVertical: 9,
-      paddingHorizontal: 16,
-      borderRadius: 20,
-      marginRight: 10,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    filterButtonSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-      borderWidth: 1.5,
-    },
-    filterButtonText: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: colors.textSecondary,
-    },
-    filterButtonTextSelected: {
-      color: colors.card,
-      fontWeight: '600',
-    },
-    developerCard: {
-      backgroundColor: colors.card,
-      borderRadius: 15,
-      padding: 18,
-      marginBottom: 18,
-      borderWidth: 1,
-      borderColor: colors.border,
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.07,
-      shadowRadius: 6,
-      elevation: 4,
-    },
-    developerHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    avatar: {
-      width: 55,
-      height: 55,
-      borderRadius: 27.5,
-      marginRight: 15,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    avatarPlaceholder: {
-      width: 55,
-      height: 55,
-      borderRadius: 27.5,
-      marginRight: 15,
-      backgroundColor: colors.border,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1.5,
-      borderColor: colors.border,
-    },
-    avatarPlaceholderText: {
-      color: colors.textSecondary,
-      fontWeight: 'bold',
-      fontSize: 18,
-    },
-    developerInfo: {
-      flex: 1,
-    },
-    developerName: {
-      fontSize: 19,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 2,
-    },
-    ratingContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 4,
-    },
-    ratingText: {
-      marginLeft: 6,
-      fontSize: 14,
-      color: colors.textSecondary,
-      fontWeight: '500',
-    },
-    bio: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      marginBottom: 15,
-      lineHeight: 21,
-    },
-    skillsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginBottom: 15,
-    },
-    skillBadge: {
-      backgroundColor: colors.secondary,
-      borderRadius: 15,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
-      marginRight: 8,
-      marginBottom: 8,
-    },
-    skillText: {
-      fontSize: 13,
-      color: colors.primary,
-      fontWeight: '500',
-    },
-    bookButton: {
-      backgroundColor: colors.primary,
-      paddingVertical: 12,
-      borderRadius: 10,
-      alignItems: 'center',
-      marginTop: 8,
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 3,
-      elevation: 3,
-    },
-    bookButtonText: {
-      color: colors.card,
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
-    errorText: {
-      color: colors.accent,
-      textAlign: 'center',
-      marginTop: 20,
-      fontSize: 15,
-    },
-    emptyListContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 50,
-      paddingHorizontal: 30,
-    },
-    emptyListText: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginTop: 10,
-    },
-  });
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons
+            name="alert-circle-outline"
+            size={60}
+            color={colors.error}
+          />
+          <Text style={styles.errorText}>Could not load developers.</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Find Developers</Text>
-        <Text style={styles.subtitle}>Browse and book skilled developers</Text>
+        <Text style={styles.subtitle}>
+          Browse and connect with talented mobile developers
+        </Text>
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={colors.placeholder} style={styles.searchIcon} />
+        <Ionicons
+          name="search"
+          size={20}
+          color={colors.placeholder}
+          style={styles.searchIcon}
+        />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by name, skills, or keywords"
+          placeholder="Search by name, skill, or keyword..."
+          placeholderTextColor={colors.placeholder}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
-      <View style={styles.filtersContainer}>
-        <Text style={styles.filtersTitle}>Popular Skills</Text>
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterTitle}>Filter by Focus Areas</Text>
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={popularSkills}
+          data={allFocusAreas}
           keyExtractor={(item) => item}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
-                styles.filterButton,
-                selectedSkills.includes(item) && styles.filterButtonSelected,
+                styles.skillButton,
+                selectedFocusAreas.includes(item) && styles.skillButtonSelected,
               ]}
-              onPress={() => toggleSkillFilter(item)}
+              onPress={() => toggleFocusAreaFilter(item)}
             >
               <Text
                 style={[
-                  styles.filterButtonText,
-                  selectedSkills.includes(item) && styles.filterButtonTextSelected,
+                  styles.skillButtonText,
+                  selectedFocusAreas.includes(item) &&
+                    styles.skillButtonTextSelected,
                 ]}
               >
                 {item}
               </Text>
             </TouchableOpacity>
           )}
-          contentContainerStyle={styles.filtersContainer}
+          contentContainerStyle={styles.skillsScrollView}
         />
       </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text>Loading developers...</Text>
-        </View>
-      ) : (
+      <View style={styles.listContainer}>
         <FlatList
           data={filteredDevelopers}
           renderItem={renderDeveloperItem}
           keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={() => (
             <View style={styles.emptyListContainer}>
-              <Ionicons name="sad-outline" size={50} color={colors.textSecondary} />
-              <Text style={styles.emptyListText}>No developers found</Text>
-              <Text style={styles.emptyListText}>Try adjusting your search or filters.</Text>
+              <Text style={styles.emptyListText}>
+                No developers found matching your criteria.
+              </Text>
             </View>
           )}
-          contentContainerStyle={filteredDevelopers.length === 0 ? styles.emptyListContainer : { paddingBottom: 20 }}
+          contentContainerStyle={styles.listContentContainer}
         />
-      )}
+      </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  developerCard: {
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  developerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: spacing.md,
+  },
+  avatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.subtle,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.md,
+  },
+  avatarPlaceholderText: {
+    color: colors.primary,
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  developerInfo: {
+    flex: 1,
+  },
+  nameRatingContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  developerName: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: colors.text,
+    flexShrink: 1,
+    marginRight: spacing.sm,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.subtle,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  ratingText: {
+    marginLeft: spacing.xs,
+    fontSize: 13,
+    fontWeight: "bold",
+    color: colors.primary,
+  },
+  developerDetailText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  skillsContainer: {
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  focusAreasTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+  badgesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  skillBadge: {
+    backgroundColor: colors.subtle,
+    borderRadius: 6,
+    paddingHorizontal: spacing.xsmall,
+    paddingVertical: spacing.xxsmall,
+    marginRight: spacing.xsmall,
+    marginBottom: spacing.xsmall,
+  },
+  skillText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  skillBadgeMore: {
+    backgroundColor: colors.border,
+    borderRadius: 6,
+    paddingHorizontal: spacing.xsmall,
+    paddingVertical: spacing.xxsmall,
+    marginRight: spacing.xsmall,
+    marginBottom: spacing.xsmall,
+  },
+  skillTextMore: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.lg,
+  },
+  errorText: {
+    marginTop: spacing.md,
+    fontSize: 18,
+    fontWeight: "600",
+    color: colors.error,
+    textAlign: "center",
+    paddingHorizontal: spacing.lg,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.subtle,
+    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    height: 58,
+  },
+  searchIcon: {
+    marginHorizontal: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    paddingVertical: spacing.sm,
+    marginLeft: spacing.sm,
+  },
+  filterContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  filterTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  skillsScrollView: {
+    marginHorizontal: -spacing.xs,
+  },
+  skillButton: {
+    backgroundColor: colors.subtle,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginHorizontal: spacing.xs,
+  },
+  skillButtonSelected: {
+    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 20,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    marginHorizontal: spacing.xs,
+  },
+  skillButtonText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  skillButtonTextSelected: {
+    color: colors.card,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  listContainer: {
+    flex: 1,
+  },
+  listContentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  emptyListContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyListText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+});
 
 export default ClientBrowseScreen;

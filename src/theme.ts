@@ -20,6 +20,8 @@ interface Theme {
     warning: string;
   };
   spacing: {
+    xxsmall: number;
+    xsmall: number;
     xs: number;
     sm: number;
     md: number;
@@ -80,7 +82,9 @@ export const useColors = (themeName: ThemeName): ColorTheme => {
 };
 
 export const spacing = {
-  xs: 4,
+  xxsmall: 2,
+  xsmall: 4,
+  xs: 6,
   sm: 8,
   md: 16,
   lg: 24,
