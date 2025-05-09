@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Calendar } from 'react-native-calendars';
-import { Ionicons } from '@expo/vector-icons';
-// import { supabase } from '../../lib/supabase';
+import Toast from 'react-native-toast-message';
+import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/auth-store';
 import { Availability } from '../../types';
+import { useDeveloperFirstCallAvailability, SaveFirstCallAvailabilityParams } from '../../hooks/useDeveloperFirstCallAvailability';
+import { colors as themeColors, spacing } from '../../theme';
+
+const localColors = themeColors.dark;
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const TIME_SLOTS = [
@@ -15,139 +18,103 @@ const TIME_SLOTS = [
 
 function DeveloperAvailabilityScreen() {
   const { user } = useAuthStore();
-  const [availability, setAvailability] = useState<Availability[]>([]);
   const [selectedDay, setSelectedDay] = useState<number>(1); // Default to Monday
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<{[key: string]: boolean}>({});
-  const [loading, setLoading] = useState(false);
+
+  const {
+    availabilitySlots,
+    isLoading,
+    isError,
+    error: availabilityError,
+    saveAvailability,
+    isSaving,
+    developerId, // Can be used to check if developer profile exists before allowing save
+  } = useDeveloperFirstCallAvailability();
 
   useEffect(() => {
-    if (user) {
-      // fetchAvailability();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    // Reset selected time slots when day changes
     const newSelectedTimeSlots: {[key: string]: boolean} = {};
     
-    // Pre-select time slots based on existing availability
-    availability
-      .filter(slot => slot.dayOfWeek === selectedDay)
-      .forEach(slot => {
-        const startHour = parseInt(slot.startTime.split(':')[0]);
-        const endHour = parseInt(slot.endTime.split(':')[0]);
-        
-        for (let hour = startHour; hour < endHour; hour++) {
-          const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
-          newSelectedTimeSlots[timeSlot] = true;
-        }
-      });
-    
+    if (availabilitySlots) {
+      availabilitySlots
+        .filter(slot => slot.day_of_week === selectedDay)
+        .forEach(slot => {
+          const startHour = parseInt(slot.slot_start_time.split(':')[0]);
+          const endHour = parseInt(slot.slot_end_time.split(':')[0]);
+          
+          for (let hour = startHour; hour < endHour; hour++) {
+            const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+            newSelectedTimeSlots[timeSlot] = true;
+          }
+        });
+    }
     setSelectedTimeSlots(newSelectedTimeSlots);
-  }, [selectedDay, availability]);
+  }, [selectedDay, availabilitySlots]);
 
-  // const fetchAvailability = async () => {
-  //   try {
-  //     // First get the developer profile
-  //     const { data: developerData, error: developerError } = await supabase
-  //       .from('developers')
-  //       .select('id')
-  //       .eq('userId', user?.id)
-  //       .single();
+  const handleSaveAvailability = async () => {
 
-  //     if (developerError) throw developerError;
-  //     if (!developerData) return;
+    if (!user || !developerId) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: "User or developer profile not found. Cannot save availability."
+      });
+      console.log('[handleSaveAvailability] User or developer profile not found, aborting.');
+      return;
+    }
 
-  //     const { data, error } = await supabase
-  //       .from('availability')
-  //       .select('*')
-  //       .eq('developerId', developerData.id);
+    console.log(`[handleSaveAvailability] Attempting to save for day: ${DAYS_OF_WEEK[selectedDay]} (index: ${selectedDay})`);
 
-  //     if (error) throw error;
+    const timeRanges: Array<{ slot_start_time: string; slot_end_time: string }> = [];
+    let currentStartTime: string | null = null;
+    let currentEndTime: string | null = null;
 
-  //     if (data) {
-  //       setAvailability(data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching availability:', error);
-  //   }
-  // };
+    for (let i = 0; i < TIME_SLOTS.length; i++) {
+      const timeSlot = TIME_SLOTS[i];
+      const nextSlotHour = parseInt(timeSlot.split(':')[0]) + 1;
+      const nextSlotFormatted = `${nextSlotHour.toString().padStart(2, '0')}:00`;
 
-  // const saveAvailability = async () => {
-  //   if (!user) return;
+      if (selectedTimeSlots[timeSlot]) {
+        if (currentStartTime === null) {
+          currentStartTime = timeSlot;
+        }
+        currentEndTime = nextSlotFormatted;
+      } else {
+        if (currentStartTime !== null && currentEndTime !== null) {
+          timeRanges.push({ slot_start_time: currentStartTime, slot_end_time: currentEndTime });
+          currentStartTime = null;
+          currentEndTime = null;
+        }
+      }
+    }
 
-  //   setLoading(true);
-  //   try {
-  //     // First get the developer profile
-  //     const { data: developerData, error: developerError } = await supabase
-  //       .from('developers')
-  //       .select('id')
-  //       .eq('userId', user?.id)
-  //       .single();
+    if (currentStartTime !== null && currentEndTime !== null) {
+      timeRanges.push({ slot_start_time: currentStartTime, slot_end_time: currentEndTime });
+    }
 
-  //     if (developerError) throw developerError;
-  //     if (!developerData) {
-  //       setLoading(false);
-  //       return;
-  //     }
+    console.log('[handleSaveAvailability] Calculated timeRanges:', JSON.stringify(timeRanges, null, 2));
 
-  //     // Delete existing availability for the selected day
-  //     const { error: deleteError } = await supabase
-  //       .from('availability')
-  //       .delete()
-  //       .eq('developerId', developerData.id)
-  //       .eq('dayOfWeek', selectedDay);
-
-  //     if (deleteError) throw deleteError;
-
-  //     // Group consecutive time slots
-  //     const timeRanges = [];
-  //     let startTime = null;
-  //     let endTime = null;
-
-  //     for (let i = 0; i < TIME_SLOTS.length; i++) {
-  //       const currentSlot = TIME_SLOTS[i];
-  //       const nextSlot = TIME_SLOTS[i + 1];
-        
-  //       if (selectedTimeSlots[currentSlot]) {
-  //         if (startTime === null) {
-  //           startTime = currentSlot;
-  //         }
-  //         endTime = nextSlot || '20:00'; // If it's the last slot, set end time to next hour
-  //       } else if (startTime !== null) {
-  //         timeRanges.push({ startTime, endTime });
-  //         startTime = null;
-  //         endTime = null;
-  //       }
-  //     }
-
-  //     // If there's an open range at the end
-  //     if (startTime !== null) {
-  //       timeRanges.push({ startTime, endTime: '20:00' });
-  //     }
-
-  //     // Insert new availability records
-  //     for (const range of timeRanges) {
-  //       const { error: insertError } = await supabase
-  //         .from('availability')
-  //         .insert({
-  //           developerId: developerData.id,
-  //           dayOfWeek: selectedDay,
-  //           startTime: range.startTime,
-  //           endTime: range.endTime,
-  //         });
-
-  //       if (insertError) throw insertError;
-  //     }
-
-  //     // Refresh availability data
-  //     fetchAvailability();
-  //   } catch (error) {
-  //     console.error('Error saving availability:', error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+    try {
+      console.log('[handleSaveAvailability] Calling saveAvailability mutation...');
+      const saveResult = await saveAvailability({
+        day_of_week: selectedDay,
+        timeRanges,
+      });
+      console.log('[handleSaveAvailability] saveAvailability mutation completed. Result:', saveResult);
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: `Availability for ${DAYS_OF_WEEK[selectedDay]} saved successfully!`
+      });
+    } catch (e) {
+      const err = e as Error;
+      console.error('[handleSaveAvailability] Error during saveAvailability call:', err.message, err.stack);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: `Failed to save availability: ${err.message}`
+      });
+    }
+  };
 
   const toggleTimeSlot = (timeSlot: string) => {
     setSelectedTimeSlots(prev => ({
@@ -160,8 +127,8 @@ function DeveloperAvailabilityScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
-          <Text style={styles.title}>Set Your Availability</Text>
-          <Text style={styles.subtitle}>Let clients know when you're available</Text>
+          <Text style={styles.title}>Set Your First Call Availability</Text>
+          <Text style={styles.subtitle}>Let clients know when you're available for a first call</Text>
         </View>
 
         <View style={styles.daySelector}>
@@ -172,8 +139,9 @@ function DeveloperAvailabilityScreen() {
                 style={[
                   styles.dayButton,
                   selectedDay === index && styles.selectedDayButton,
+                  (isLoading || isSaving) && styles.disabledButton
                 ]}
-                onPress={() => setSelectedDay(index)}
+                onPress={() => !(isLoading || isSaving) && setSelectedDay(index)}
               >
                 <Text
                   style={[
@@ -191,14 +159,22 @@ function DeveloperAvailabilityScreen() {
         <View style={styles.timeSlotContainer}>
           <Text style={styles.sectionTitle}>{DAYS_OF_WEEK[selectedDay]}</Text>
           
-          {TIME_SLOTS.map((timeSlot) => (
+          {isLoading && <ActivityIndicator size="large" color={localColors.primary} style={styles.loadingIndicator} />}
+          {isError && availabilityError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Error fetching availability: {availabilityError.message}</Text>
+            </View>
+          )}
+
+          {!isLoading && !isError && TIME_SLOTS.map((timeSlot) => (
             <TouchableOpacity
               key={timeSlot}
               style={[
                 styles.timeSlot,
                 selectedTimeSlots[timeSlot] && styles.selectedTimeSlot,
+                (isLoading || isSaving) && styles.disabledButton
               ]}
-              onPress={() => toggleTimeSlot(timeSlot)}
+              onPress={() => !(isLoading || isSaving) && toggleTimeSlot(timeSlot)}
             >
               <Text
                 style={[
@@ -208,41 +184,21 @@ function DeveloperAvailabilityScreen() {
               >
                 {timeSlot}
               </Text>
-              {selectedTimeSlots[timeSlot] && (
-                <Ionicons name="checkmark" size={18} color="white" />
-              )}
             </TouchableOpacity>
           ))}
         </View>
 
         <TouchableOpacity
-          style={styles.saveButton}
-          // onPress={saveAvailability}
-          disabled={loading}
+          style={[styles.saveButton, (isLoading || isSaving) && styles.disabledButton ]}
+          onPress={handleSaveAvailability}
+          disabled={isLoading || isSaving}
         >
-          <Text style={styles.saveButtonText}>
-            {loading ? 'Saving...' : 'Save Availability'}
-          </Text>
+          {isSaving ? (
+            <ActivityIndicator size="small" color={localColors.primary} />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Availability</Text>
+          )}
         </TouchableOpacity>
-
-        <View style={styles.calendarContainer}>
-          <Text style={styles.sectionTitle}>Monthly View</Text>
-          <Text style={styles.calendarNote}>
-            Your weekly schedule will repeat each week
-          </Text>
-          <Calendar
-            markedDates={{
-              '2025-04-15': { selected: true, marked: true, selectedColor: '#4A80F0' },
-              '2025-04-22': { selected: true, marked: true, selectedColor: '#4A80F0' },
-              '2025-04-29': { selected: true, marked: true, selectedColor: '#4A80F0' },
-            }}
-            theme={{
-              selectedDayBackgroundColor: '#4A80F0',
-              todayTextColor: '#4A80F0',
-              arrowColor: '#4A80F0',
-            }}
-          />
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -251,95 +207,107 @@ function DeveloperAvailabilityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: localColors.background,
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: localColors.text,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 5,
+    color: localColors.textSecondary,
+    marginTop: spacing.xs,
   },
   daySelector: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
   dayButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     borderRadius: 20,
-    marginRight: 10,
-    backgroundColor: '#f0f0f0',
+    marginRight: spacing.md,
+    backgroundColor: localColors.card,
   },
   selectedDayButton: {
-    backgroundColor: '#4A80F0',
+    backgroundColor: localColors.primary,
   },
   dayButtonText: {
     fontWeight: '600',
-    color: '#666',
+    color: localColors.textSecondary,
   },
   selectedDayButtonText: {
-    color: 'white',
+    color: localColors.primary,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 15,
+    marginBottom: spacing.lg,
+    color: localColors.text,
   },
   timeSlotContainer: {
-    padding: 20,
+    padding: spacing.lg,
   },
   timeSlot: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: '#f9f9f9',
+    marginBottom: spacing.md,
+    backgroundColor: localColors.card,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: localColors.border,
   },
   selectedTimeSlot: {
-    backgroundColor: '#4A80F0',
-    borderColor: '#4A80F0',
+    backgroundColor: localColors.primary,
+    borderColor: localColors.primary,
   },
   timeSlotText: {
     fontSize: 16,
-    color: '#333',
+    color: localColors.text,
   },
   selectedTimeSlotText: {
-    color: 'white',
+    color: localColors.text,
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#4A80F0',
+    backgroundColor: localColors.primary,
     borderRadius: 8,
-    padding: 15,
-    margin: 20,
+    padding: spacing.lg,
+    margin: spacing.lg,
     alignItems: 'center',
   },
   saveButtonText: {
-    color: 'white',
+    color: localColors.text,
     fontSize: 16,
     fontWeight: '600',
   },
-  calendarContainer: {
-    padding: 20,
-    paddingTop: 0,
+  disabledButton: {
+    opacity: 0.5,
   },
-  calendarNote: {
-    color: '#666',
-    marginBottom: 15,
+  errorContainer: {
+    padding: spacing.lg,
+    marginHorizontal: spacing.lg,
+    backgroundColor: localColors.error || '#f8d7da',
+    borderColor: localColors.error || '#f5c6cb',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: spacing.md,
+  },
+  errorText: {
+    color: localColors.error || '#721c24',
     fontSize: 14,
   },
+  loadingIndicator: {
+    marginVertical: spacing.xl,
+  }
 });
 
 export default DeveloperAvailabilityScreen;

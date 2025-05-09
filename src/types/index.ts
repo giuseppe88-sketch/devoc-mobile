@@ -31,10 +31,13 @@ export interface Client {
 
 export interface Availability {
   id: string;
-  developerId: string;
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
-  startTime: string; // Format: "HH:MM" in 24-hour format
-  endTime: string; // Format: "HH:MM" in 24-hour format
+  developer_id: string;
+  day_of_week: number; // 0 = Sunday, 1 = Monday, etc.
+  slot_start_time: string; // Format: "HH:MM" in 24-hour format
+  slot_end_time: string; // Format: "HH:MM" in 24-hour format
+  availability_type: 'first_call' | 'general_work_block';
+  created_at?: string; // Optional: Timestamp of when the slot was created
+  updated_at?: string; // Optional: Timestamp of when the slot was last updated
 }
 
 export interface TimeSlot {

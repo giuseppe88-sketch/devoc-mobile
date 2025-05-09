@@ -11,6 +11,7 @@ import { supabase } from "./src/lib/supabase";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "styled-components/native";
 import { useColors, spacing } from "./src/theme";
+import Toast from 'react-native-toast-message';
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -43,36 +44,29 @@ function App(): ReactNode {
     };
   }, [setSession]);
 
-  const currentColors = useColors();
+  const currentColors = useColors('dark');
   const currentTheme = {
     colors: currentColors,
     spacing: spacing,
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={currentTheme}>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              {!session ? (
-                <Stack.Screen name="Auth" component={AuthNavigator} />
-              ) : (
-                <Stack.Screen name="Main" component={MainNavigator} />
-              )}
-            </Stack.Navigator>
-          </NavigationContainer>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" />
+            </View>
+          ) : (
+            <NavigationContainer>
+              {session && session.user ? <MainNavigator /> : <AuthNavigator />}
+            </NavigationContainer>
+          )}
+          <Toast />
         </ThemeProvider>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
 
