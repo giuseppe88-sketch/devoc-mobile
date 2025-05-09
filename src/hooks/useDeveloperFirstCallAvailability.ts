@@ -9,15 +9,17 @@ async function getDeveloperProfileId(userId: string): Promise<string | null> {
     .from('developer_profiles')
     .select('id') // We still want to select the profile's own ID
     .eq('id', userId) // Reverted: Query by the profile's own ID, which matches the user's auth ID
-    .single();
+    .maybeSingle();
 
   if (error) {
-    console.error('Error fetching developer profile ID:', error.message);
-    // Optionally, rethrow or handle more gracefully depending on requirements
-    // For now, returning null allows the dependent query to disable if ID isn't found
+    console.error(`Error fetching developer profile ID for user ${userId} (useDeveloperFirstCallAvailability): ${error.message}`, error);
     return null;
   }
-  return data?.id || null;
+  if (!data) {
+    console.warn(`No developer profile found in developer_profiles for user ID: ${userId} (useDeveloperFirstCallAvailability). This may be expected if the profile hasn't been created yet.`);
+    return null;
+  }
+  return data.id;
 }
 
 // Fetch function for useQuery
@@ -98,15 +100,20 @@ async function saveFirstCallAvailabilityMutationFn({
 }
 
 export function useDeveloperFirstCallAvailability() {
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
+
+  console.log(`[useDeveloperFirstCallAvailability] Hook execution: user?.id is ${user?.id}`);
 
   // Query to get developer_id first
   const { data: developerId, isLoading: isLoadingDeveloperId } = useQuery({
     queryKey: ['developerProfileId', user?.id],
-    queryFn: () => {
-      if (!user?.id) return Promise.resolve(null);
-      return getDeveloperProfileId(user.id);
+    queryFn: async () => {
+      if (!user?.id) {
+        return null;
+      }
+      const devId = await getDeveloperProfileId(user.id);
+      return devId;
     },
     enabled: !!user?.id,
     staleTime: Infinity, // Developer profile ID rarely changes for a logged-in user
@@ -126,6 +133,7 @@ export function useDeveloperFirstCallAvailability() {
       return fetchFirstCallAvailability(developerId);
     },
     enabled: !!developerId, // Only run if developerId is successfully fetched
+    initialData: [], // Ensure availabilitySlots is always an array
   });
 
   // Mutation for saving availability
@@ -150,7 +158,7 @@ export function useDeveloperFirstCallAvailability() {
   });
 
   return {
-    availabilitySlots: availabilitySlots || [], // Ensure it's always an array
+    availabilitySlots: availabilitySlots, // No longer need '|| []' due to initialData
     isLoading: isLoadingDeveloperId || isLoadingAvailability,
     isError: isAvailabilityError,
     error: availabilityErrorObject,
@@ -159,5 +167,6 @@ export function useDeveloperFirstCallAvailability() {
     // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
     isSaving: saveAvailabilityMutation.isPending,
     developerId, // Expose developerId if screen needs it (e.g., for initial check)
+    isLoadingDeveloperId, // Expose loading state for developerId
   };
 }

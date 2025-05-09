@@ -1,4 +1,5 @@
 import { Database } from './supabase';
+import { NavigatorScreenParams } from '@react-navigation/native';
 
 export interface User {
   id: string;
@@ -36,6 +37,8 @@ export interface Availability {
   slot_start_time: string; // Format: "HH:MM" in 24-hour format
   slot_end_time: string; // Format: "HH:MM" in 24-hour format
   availability_type: 'first_call' | 'general_work_block';
+  range_start_date?: string | null; // ISO date string, YYYY-MM-DD, for 'general_work_block'
+  range_end_date?: string | null;   // ISO date string, YYYY-MM-DD, for 'general_work_block'
   created_at?: string; // Optional: Timestamp of when the slot was created
   updated_at?: string; // Optional: Timestamp of when the slot was last updated
 }
@@ -108,3 +111,11 @@ export interface FetchedClientProfile extends ClientProfile {
   user_id: string; // Explicitly add the user id
 }
 // --- End Fetched Client Profile Type ---
+
+// Navigation param list for the main Tab navigator when user is a Developer
+export type DeveloperMainTabParamList = {
+  Dashboard: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList>; // Navigates to ProfileStackNavigator
+  Availability: undefined;
+  // Bookings: undefined; // If DeveloperBookingsScreen is added to tabs
+};
