@@ -26,7 +26,7 @@ async function getDeveloperProfileId(userId: string): Promise<string | null> {
 async function fetchGeneralAvailability(developerId: string): Promise<Availability[]> {
   const { data, error } = await supabase
     .from('availabilities')
-    .select('*')
+    .select('id, developer_id, availability_type, range_start_date, range_end_date, day_of_week, slot_start_time, slot_end_time, created_at, updated_at')
     .eq('developer_id', developerId)
     .eq('availability_type', 'general_work_block')
     .order('range_start_date', { ascending: true });
@@ -35,11 +35,17 @@ async function fetchGeneralAvailability(developerId: string): Promise<Availabili
     console.error('Error fetching general availability:', error.message);
     throw new Error(`Failed to fetch general availability: ${error.message}`);
   }
-  // Ensure the date fields are strings, or null, as expected by the Availability type
   return (data || []).map(item => ({
-    ...item,
+    id: item.id,
+    developer_id: item.developer_id,
+    availability_type: item.availability_type,
     range_start_date: item.range_start_date ? String(item.range_start_date) : null,
     range_end_date: item.range_end_date ? String(item.range_end_date) : null,
+    day_of_week: item.day_of_week,
+    slot_start_time: item.slot_start_time,
+    slot_end_time: item.slot_end_time,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
   }));
 }
 
@@ -85,6 +91,41 @@ async function saveGeneralAvailabilityMutationFn({
   }
 }
 
+// Type for the delete mutation input
+export interface DeleteGeneralAvailabilityParams {
+  availabilityId: string | number; // Match the type of your 'id' column
+}
+
+// Internal type for the actual delete mutation function, including developerId
+interface InternalDeleteParams extends DeleteGeneralAvailabilityParams {
+  developerId: string;
+}
+
+// Delete function for useMutation
+async function deleteGeneralAvailabilityMutationFn({
+  availabilityId,
+  developerId,
+}: InternalDeleteParams): Promise<void> {
+  if (!developerId) {
+    console.error('[deleteGeneralAvailabilityMutationFn] Critical: developerId is missing.');
+    throw new Error('Developer ID is missing, cannot delete general availability.');
+  }
+
+  console.log(`Attempting to delete availability ID: ${availabilityId} for developer: ${developerId}`);
+
+  const { error: deleteError } = await supabase
+    .from('availabilities')
+    .delete()
+    .match({ id: availabilityId, developer_id: developerId, availability_type: 'general_work_block' }); // Match ID, developer, and type
+
+  if (deleteError) {
+    console.error(`Error deleting general availability ID ${availabilityId}:`, deleteError.message);
+    throw new Error(`Failed to delete general availability: ${deleteError.message}`);
+  }
+
+  console.log(`Successfully deleted availability ID: ${availabilityId}`);
+}
+
 export function useDeveloperGeneralAvailability() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
@@ -113,7 +154,9 @@ export function useDeveloperGeneralAvailability() {
     enabled: !!developerId && !isLoadingDeveloperId,
     initialData: [], // Ensure availabilitySlots is always an array
   });
-    // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
+
+  // Save Mutation
+  // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
   const { mutateAsync: saveAvailability, isPending: isSaving } = useMutation<void, Error, SaveGeneralAvailabilityParams>({
     mutationFn: (params: SaveGeneralAvailabilityParams) => {
       if (!developerId) {
@@ -132,11 +175,34 @@ export function useDeveloperGeneralAvailability() {
     },
   });
 
+  // Delete Mutation
+  // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
+  const { mutateAsync: deleteAvailability, isPending: isDeleting } = useMutation<void, Error, DeleteGeneralAvailabilityParams>({
+    mutationFn: (params: DeleteGeneralAvailabilityParams) => {
+      if (!developerId) {
+        console.error('Attempted to delete general availability without developerId.');
+        return Promise.reject(new Error('Developer ID not available.'));
+      }
+      return deleteGeneralAvailabilityMutationFn({ ...params, developerId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', developerId] });
+      console.log('Successfully deleted, invalidated query.');
+      // Optionally: Reset any local state in the component if needed after delete
+    },
+    onError: (error) => {
+      console.error('Failed to delete general availability:', error.message);
+      // Potentially show an error toast/message here
+    },
+  });
+
   return {
     availabilitySlots: availabilitySlots, // No longer need '|| []' due to initialData
     isLoading: isLoadingDeveloperId || isLoadingAvailability,
     isSaving,
     saveAvailability,
+    isDeleting, // Add isDeleting state
+    deleteAvailability, // Add delete function
     refetchAvailability: refetch,
     developerId,
     isLoadingDeveloperId,

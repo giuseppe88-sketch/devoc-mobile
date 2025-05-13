@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/auth-store';
 import { Availability } from '../../types';
 import { useDeveloperFirstCallAvailability, SaveFirstCallAvailabilityParams } from '../../hooks/useDeveloperFirstCallAvailability';
-import { useDeveloperGeneralAvailability, SaveGeneralAvailabilityParams } from '../../hooks/useDeveloperGeneralAvailability'; 
+import { useDeveloperGeneralAvailability, SaveGeneralAvailabilityParams, DeleteGeneralAvailabilityParams } from '../../hooks/useDeveloperGeneralAvailability'; 
 import { colors as themeColors, spacing } from '../../theme';
 import { useNavigation } from '@react-navigation/native';
 import { Button } from 'react-native';
@@ -36,6 +36,8 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
     availabilitySlots: generalWorkSlots,
     isLoading: isLoadingGeneralWork,
     isSaving: isSavingGeneralWork,
+    isDeleting: isDeletingGeneralWork,
+    deleteAvailability: deleteGeneralWork,
     saveAvailability: saveGeneralWork,
     developerId: generalWorkDeveloperId, 
   } = useDeveloperGeneralAvailability();
@@ -45,8 +47,11 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
   const [rangeStartDate, setRangeStartDate] = useState<string | null>(null); 
   const [rangeEndDate, setRangeEndDate] = useState<string | null>(null);   
 
+  const [selectedGeneralSlotId, setSelectedGeneralSlotId] = useState<string | number | null>(null);
+
   const isLoading = isLoadingFirstCall || isLoadingGeneralWork;
   const isSaving = isSavingFirstCall || isSavingGeneralWork;
+  const isDeleting = isDeletingGeneralWork;
 
   const developerId = firstCallDeveloperId || generalWorkDeveloperId;
 
@@ -108,18 +113,43 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
   };
 
   const handleDayPress = (day: DateData) => {
-    if (!rangeStartDate || (rangeStartDate && rangeEndDate)) {
-      setRangeStartDate(day.dateString);
-      setRangeEndDate(null);
-    } else if (day.dateString >= rangeStartDate) {
-      setRangeEndDate(day.dateString);
+    const clickedDate = day.dateString;
+    const existingSlot = generalWorkSlots.find(slot => isDateInSlot(clickedDate, slot));
+
+    if (existingSlot && existingSlot.id && existingSlot.range_start_date && existingSlot.range_end_date) {
+      if (selectedGeneralSlotId === existingSlot.id) {
+        setRangeStartDate(null);
+        setRangeEndDate(null);
+        setSelectedGeneralSlotId(null);
+        console.log(`Deselected existing slot ID: ${existingSlot.id}`);
+      } else {
+        setRangeStartDate(existingSlot.range_start_date);
+        setRangeEndDate(existingSlot.range_end_date);
+        setSelectedGeneralSlotId(existingSlot.id);
+        console.log(`Selected existing slot ID: ${existingSlot.id} [${existingSlot.range_start_date} - ${existingSlot.range_end_date}]`);
+      }
     } else {
-      setRangeStartDate(day.dateString);
-      setRangeEndDate(null);
+      setSelectedGeneralSlotId(null);
+      if (!rangeStartDate || (rangeStartDate && rangeEndDate)) {
+        setRangeStartDate(clickedDate);
+        setRangeEndDate(null);
+        console.log(`Started new range selection: ${clickedDate}`);
+      } else if (clickedDate >= rangeStartDate) {
+        setRangeEndDate(clickedDate);
+        console.log(`Set end date for new range: ${clickedDate}`);
+      } else {
+        setRangeStartDate(clickedDate);
+        setRangeEndDate(null);
+        console.log(`Reset range selection to start: ${clickedDate}`);
+      }
     }
   };
 
   const handleSaveGeneralAvailability = async () => {
+    if (selectedGeneralSlotId) {
+       Toast.show({ type: 'info', text1: 'Info', text2: 'Editing ranges not yet supported. Delete and recreate.' });
+       return;
+    }
     if (!developerId) {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Developer profile not found.' });
       return;
@@ -128,85 +158,132 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
       Toast.show({ type: 'error', text1: 'Error', text2: 'Please select a start and end date for the range.' });
       return;
     }
-
     const params: SaveGeneralAvailabilityParams = {
       range_start_date: rangeStartDate,
       range_end_date: rangeEndDate,
     };
-
     try {
       await saveGeneralWork(params);
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'General availability range saved successfully!',
-      });
-      setRangeStartDate(null); 
+      Toast.show({ type: 'success', text1: 'Success', text2: 'General availability range saved successfully!' });
+      setRangeStartDate(null);
       setRangeEndDate(null);
+      setSelectedGeneralSlotId(null); // Reset state
     } catch (error) {
       console.error('Failed to save general availability:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-      Toast.show({
-        type: 'error',
-        text1: 'Save Failed',
-        text2: `Could not save general availability: ${errorMessage}`,
-      });
+      Toast.show({ type: 'error', text1: 'Save Failed', text2: `Could not save general availability: ${errorMessage}` });
+    }
+  };
+
+  const handleDeleteGeneralAvailability = async () => {
+    if (!selectedGeneralSlotId) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'No range selected to delete.' });
+      return;
+    }
+     if (!developerId) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Developer profile not found.' });
+      return;
+    }
+    console.log(`Attempting deletion for slot ID: ${selectedGeneralSlotId}`);
+    const params: DeleteGeneralAvailabilityParams = { availabilityId: selectedGeneralSlotId };
+    try {
+      await deleteGeneralWork(params);
+      Toast.show({ type: 'success', text1: 'Success', text2: 'General availability range deleted successfully!' });
+      setRangeStartDate(null);
+      setRangeEndDate(null);
+      setSelectedGeneralSlotId(null); // Reset state
+    } catch (error) {
+      console.error('Failed to delete general availability:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+      Toast.show({ type: 'error', text1: 'Delete Failed', text2: `Could not delete general availability: ${errorMessage}` });
     }
   };
 
   const getMarkedDatesForCalendar = () => {
-    const marked: { [key: string]: any } = {};
-    
-    if (rangeStartDate) {
-      marked[rangeStartDate] = { startingDay: true, color: localColors.primary, textColor: 'white' };
-      if (rangeEndDate) {
-        marked[rangeEndDate] = { endingDay: true, color: localColors.primary, textColor: 'white' };
-        let current = new Date(rangeStartDate);
-        const end = new Date(rangeEndDate);
-        current.setDate(current.getDate() + 1); 
-        while (current < end) {
-          const isoDate = current.toISOString().split('T')[0];
-          marked[isoDate] = { color: localColors.primary, textColor: 'white', disabled: true, disableTouchEvent: true };
-          current.setDate(current.getDate() + 1);
-        }
-      } else {
-        marked[rangeStartDate] = { selected: true, startingDay: true, color: localColors.primary, textColor: 'white', endingDay: true };
-      }
-    }
+    const marked: { [key: string]: { color?: string; textColor?: string; startingDay?: boolean; endingDay?: boolean; marked?: boolean; dotColor?: string; } } = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    // Mark existing general work slots
     generalWorkSlots.forEach(slot => {
       if (slot.range_start_date && slot.range_end_date) {
-        let current = new Date(slot.range_start_date);
-        const end = new Date(slot.range_end_date);
-        
-        marked[slot.range_start_date] = {
-          ...(marked[slot.range_start_date] || {}),
-          startingDay: true, 
-          color: marked[slot.range_start_date]?.color || localColors.accent, 
-          textColor: 'white',
-        };
+        let currentDate = new Date(slot.range_start_date);
+        currentDate.setHours(12, 0, 0, 0); // Avoid timezone issues crossing midnight
+        const endDate = new Date(slot.range_end_date);
+        endDate.setHours(12, 0, 0, 0);
 
-        marked[slot.range_end_date] = {
-          ...(marked[slot.range_end_date] || {}),
-          endingDay: true, 
-          color: marked[slot.range_end_date]?.color || localColors.accent, 
-          textColor: 'white',
-        };
+        while (currentDate <= endDate) {
+          const dateString = currentDate.toISOString().split('T')[0];
+          const isSelectedExisting = selectedGeneralSlotId === slot.id; // Check if this existing slot is the one selected
+          marked[dateString] = {
+            ...marked[dateString], // Keep other markings like 'selected' if applicable
+            color: isSelectedExisting ? localColors.warning : localColors.secondary, // Different color if selected
+            textColor: localColors.text, // Ensure text is readable
+            startingDay: dateString === slot.range_start_date,
+            endingDay: dateString === slot.range_end_date,
+            marked: true,
+            dotColor: isSelectedExisting ? localColors.warning : localColors.secondary,
+          };
+          if (dateString === slot.range_start_date) marked[dateString].startingDay = true;
+          if (dateString === slot.range_end_date) marked[dateString].endingDay = true;
 
-        current.setDate(current.getDate() + 1);
-        while (current < end) {
-          const isoDate = current.toISOString().split('T')[0];
-          if (!marked[isoDate] || !marked[isoDate].selected) { 
-             marked[isoDate] = { color: localColors.accent, textColor: 'white', disabled: true, disableTouchEvent: true };
-          }
-          current.setDate(current.getDate() + 1);
-        }
-        if (slot.range_start_date === slot.range_end_date && (!marked[slot.range_start_date] || !marked[slot.range_start_date].selected)) {
-          marked[slot.range_start_date] = { startingDay: true, endingDay: true, color: localColors.accent, textColor: 'white' };
+          currentDate.setDate(currentDate.getDate() + 1);
         }
       }
     });
+
+    // Mark newly selected range if not selecting an existing one
+    if (!selectedGeneralSlotId && rangeStartDate && rangeEndDate) {
+      let currentDate = new Date(rangeStartDate);
+      currentDate.setHours(12, 0, 0, 0);
+      const endDate = new Date(rangeEndDate);
+      endDate.setHours(12, 0, 0, 0);
+
+      while (currentDate <= endDate) {
+        const dateString = currentDate.toISOString().split('T')[0];
+         // If the date is already marked by an existing slot, don't overwrite it
+        if (!marked[dateString] || !marked[dateString].dotColor || marked[dateString].dotColor !== localColors.secondary) {
+             marked[dateString] = {
+                ...marked[dateString],
+                color: localColors.primary, // Color for new range selection
+                textColor: localColors.text,
+                startingDay: dateString === rangeStartDate,
+                endingDay: dateString === rangeEndDate,
+                marked: true,
+                dotColor: localColors.primary,
+            };
+            if (dateString === rangeStartDate) marked[dateString].startingDay = true;
+            if (dateString === rangeEndDate) marked[dateString].endingDay = true;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    } else if (!selectedGeneralSlotId && rangeStartDate) { // Mark single start date if end not selected
+      marked[rangeStartDate] = {
+        ...marked[rangeStartDate],
+         color: localColors.primary, // Color for new range selection
+         textColor: localColors.text,
+         startingDay: true,
+         endingDay: true,
+         marked: true,
+         dotColor: localColors.primary,
+      };
+    }
+
     return marked;
+  };
+
+  const isDateInSlot = (dateStr: string, slot: Availability): boolean => {
+    if (!slot.range_start_date || !slot.range_end_date) return false;
+    // Ensure consistent comparison by parsing as local dates (assuming calendar uses local)
+    const date = new Date(dateStr);
+    const start = new Date(slot.range_start_date);
+    const end = new Date(slot.range_end_date);
+    // Adjust for timezone offset if necessary, or ensure all are treated as UTC if stored that way
+    // For simplicity, assuming direct YYYY-MM-DD comparison works for local context here.
+    date.setHours(0, 0, 0, 0); // Normalize time part for date comparison
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    return date >= start && date <= end;
   };
 
   // Guard for developer profile loading
@@ -355,11 +432,21 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
 
         <TouchableOpacity 
           onPress={handleSaveGeneralAvailability} 
-          style={[styles.saveButton, (!rangeStartDate || !rangeEndDate || isSavingGeneralWork) && styles.disabledButton]} 
-          disabled={!rangeStartDate || !rangeEndDate || isSavingGeneralWork}
+          style={[styles.saveButton, (!rangeStartDate || !rangeEndDate || isSavingGeneralWork || selectedGeneralSlotId) && styles.disabledButton]} 
+          disabled={!rangeStartDate || !rangeEndDate || isSavingGeneralWork || !!selectedGeneralSlotId} 
         >
-          {isSavingGeneralWork ? <ActivityIndicator color={localColors.text} /> : <Text style={styles.saveButtonText}>Save Date Range</Text>}
+          {isSavingGeneralWork ? <ActivityIndicator color={localColors.background} /> : <Text style={styles.saveButtonText}>Save New Range</Text>}
         </TouchableOpacity>
+
+        {selectedGeneralSlotId && ( // Only show if an existing slot is selected
+          <TouchableOpacity
+            onPress={handleDeleteGeneralAvailability}
+            style={[styles.deleteButton, isDeleting && styles.disabledButton]}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <ActivityIndicator color={localColors.text} /> : <Text style={styles.deleteButtonText}>Delete Selected Range</Text>}
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.subSectionTitle}>Your Saved General Availability Ranges:</Text>
         {isLoadingGeneralWork && <ActivityIndicator color={localColors.primary} />}
@@ -374,7 +461,6 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
               <Text style={styles.generalAvailabilityText}>
                 From: {item.range_start_date} To: {item.range_end_date}
               </Text>
-              {/* TODO: Add a delete button here */}
             </View>
           )}
         />
@@ -465,7 +551,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: localColors.text,
+    color: localColors.background, // Changed for contrast
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    backgroundColor: localColors.error, // Use theme error color
+    borderRadius: 8,
+    padding: spacing.lg,
+    marginHorizontal: spacing.lg, // Align with save button
+    marginTop: spacing.md,      // Add some space above
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: themeColors.dark.text, // Ensure text is readable on error background
     fontSize: 16,
     fontWeight: '600',
   },
