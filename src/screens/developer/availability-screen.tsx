@@ -39,8 +39,7 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
     isDeleting: isDeletingGeneralWork,
     deleteAvailability: deleteGeneralWork,
     saveAvailability: saveGeneralWork,
-    developerId: generalWorkDeveloperId, 
-  } = useDeveloperGeneralAvailability();
+    developerId: generalWorkDeveloperId,   } = useDeveloperGeneralAvailability();
 
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
 
@@ -95,7 +94,7 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
     };
 
     try {
-      await saveFirstCall(params);
+      await saveFirstCall([params]);
       Toast.show({
         type: 'success',
         text1: 'Success',
@@ -295,7 +294,7 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
       </View>
     );
   }
-
+console.log("devId",developerId)
   // Guard for missing developer profile
   if (!developerId) {
     return (
@@ -432,7 +431,7 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
 
         <TouchableOpacity 
           onPress={handleSaveGeneralAvailability} 
-          style={[styles.saveButton, (!rangeStartDate || !rangeEndDate || isSavingGeneralWork || selectedGeneralSlotId) && styles.disabledButton]} 
+          style={[styles.saveButton, (!rangeStartDate || !rangeEndDate || isSavingGeneralWork || selectedGeneralSlotId) ? styles.disabledButton : null]} 
           disabled={!rangeStartDate || !rangeEndDate || isSavingGeneralWork || !!selectedGeneralSlotId} 
         >
           {isSavingGeneralWork ? <ActivityIndicator color={localColors.background} /> : <Text style={styles.saveButtonText}>Save New Range</Text>}
@@ -441,7 +440,7 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
         {selectedGeneralSlotId && ( // Only show if an existing slot is selected
           <TouchableOpacity
             onPress={handleDeleteGeneralAvailability}
-            style={[styles.deleteButton, isDeleting && styles.disabledButton]}
+            style={[styles.deleteButton, isDeleting ? styles.disabledButton : null]}
             disabled={isDeleting}
           >
             {isDeleting ? <ActivityIndicator color={localColors.text} /> : <Text style={styles.deleteButtonText}>Delete Selected Range</Text>}

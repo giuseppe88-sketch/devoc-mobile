@@ -22,8 +22,14 @@ async function getDeveloperProfileId(userId: string): Promise<string | null> {
   return data.id;
 }
 
+// Interface for the hook's props
+interface UseDeveloperFirstCallAvailabilityProps {
+  targetDeveloperId?: string;
+}
+
 // Fetch function for useQuery
 async function fetchFirstCallAvailability(developerId: string): Promise<Availability[]> {
+  console.log(`[fetchFirstCallAvailability] Fetching for developerId: ${developerId}`);
   const { data, error } = await supabase
     .from('availabilities')
     .select('*')
@@ -36,7 +42,16 @@ async function fetchFirstCallAvailability(developerId: string): Promise<Availabi
     console.error('Error fetching first call availability:', error.message);
     throw new Error(`Failed to fetch availability: ${error.message}`);
   }
-  return data || [];
+  return (data || []).map(item => ({
+    id: item.id,
+    developer_id: item.developer_id,
+    availability_type: item.availability_type,
+    range_start_date: item.range_start_date ? String(item.range_start_date) : null, // Ensure string or null
+    range_end_date: item.range_end_date ? String(item.range_end_date) : null,     // Ensure string or null
+    day_of_week: item.day_of_week,
+    slot_start_time: item.slot_start_time,
+    slot_end_time: item.slot_end_time,
+  }));
 }
 
 // Type for the save mutation input (what the screen will pass)
@@ -46,127 +61,165 @@ export interface SaveFirstCallAvailabilityParams {
 }
 
 // Internal type for the actual mutation function, including developerId
-interface InternalSaveParams extends SaveFirstCallAvailabilityParams {
+interface InternalSaveParams {
+  slots: SaveFirstCallAvailabilityParams[];
   developerId: string;
 }
 
 // Save function for useMutation
 async function saveFirstCallAvailabilityMutationFn({
+  slots, // Corrected: expects an array of slots
   developerId,
-  day_of_week,
-  timeRanges,
-}: InternalSaveParams): Promise<void> {
+}: InternalSaveParams): Promise<Availability[]> { // Adjusted return type for consistency with useMutation generic
   console.log('[saveFirstCallAvailabilityMutationFn] Attempting to save. Received developerId:', developerId);
-  console.log('[saveFirstCallAvailabilityMutationFn] Day of week:', day_of_week);
-  console.log('[saveFirstCallAvailabilityMutationFn] Time ranges:', JSON.stringify(timeRanges, null, 2));
+  console.log('[saveFirstCallAvailabilityMutationFn] Slots:', JSON.stringify(slots, null, 2));
 
   if (!developerId) {
     console.error('[saveFirstCallAvailabilityMutationFn] Critical: developerId is missing. Aborting save operation.');
     throw new Error('Developer ID is missing, cannot save availability. Please ensure you are properly logged in and your profile is set up.');
   }
 
-  // Delete existing slots for the day and type
-  const { error: deleteError } = await supabase
-    .from('availabilities')
-    .delete()
-    .eq('developer_id', developerId)
-    .eq('day_of_week', day_of_week)
-    .eq('availability_type', 'first_call');
+  // 1. Determine the days of the week being updated from the input slots.
+  const daysToUpdate = [...new Set(slots.map(slot => slot.day_of_week))];
 
-  if (deleteError) {
-    console.error('Error deleting existing availability:', deleteError.message);
-    throw new Error(`Failed to delete existing availability: ${deleteError.message}`);
-  }
-
-  // Insert new slots if any are provided
-  if (timeRanges.length > 0) {
-    const newSlotsToInsert = timeRanges.map(range => ({
-      developer_id: developerId,
-      day_of_week: day_of_week,
-      slot_start_time: range.slot_start_time,
-      slot_end_time: range.slot_end_time,
-      availability_type: 'first_call' as const, // Ensure literal type
-    }));
-
-    const { error: insertError } = await supabase
+  // 2. Delete existing 'first_call' availabilities for this developer *only for the days being updated*.
+  if (daysToUpdate.length > 0) {
+    console.log(`[saveFirstCallAvailabilityMutationFn] Deleting existing 'first_call' availabilities for developer ${developerId} on days: ${daysToUpdate.join(', ')}`);
+    const { error: deleteError } = await supabase
       .from('availabilities')
-      .insert(newSlotsToInsert);
+      .delete()
+      .eq('developer_id', developerId)
+      .eq('availability_type', 'first_call')
+      .in('day_of_week', daysToUpdate);
 
-    if (insertError) {
-      console.error('Error inserting new availability:', insertError.message);
-      throw new Error(`Failed to insert new availability: ${insertError.message}`);
+    if (deleteError) {
+      console.error(`[saveFirstCallAvailabilityMutationFn] Error deleting existing availabilities for days ${daysToUpdate.join(', ')}: ${deleteError.message}`);
+      throw new Error(`Failed to clear existing availabilities for specified days: ${deleteError.message}`);
     }
+    console.log(`[saveFirstCallAvailabilityMutationFn] Successfully deleted existing 'first_call' availabilities for developer ${developerId} on days: ${daysToUpdate.join(', ')}`);
+  } else {
+    console.log('[saveFirstCallAvailabilityMutationFn] No specific days found in input slots to delete. This might mean the input `slots` array was empty. No deletion performed based on day_of_week.');
+    // If slots is empty, it means the intention is to clear the specified days.
+    // If daysToUpdate is empty because slots was empty, then it implies clearing for the days represented by the empty slots array.
+    // The current logic will then proceed to insert nothing, which is correct if the slots for given days are cleared by the user.
   }
+
+
+  // 2. If no new slots are provided, we're done.
+  if (!slots || slots.length === 0) {
+    console.log('[saveFirstCallAvailabilityMutationFn] No new slots provided. Operation complete after deletion.');
+    return []; // Return empty array as no new slots were inserted
+  }
+
+  // 3. Prepare new availability records for insertion
+  const newAvailabilityRecords: Omit<Availability, 'id' | 'created_at' | 'updated_at'>[] = [];
+  slots.forEach(slot => {
+    slot.timeRanges.forEach(range => {
+      newAvailabilityRecords.push({
+        developer_id: developerId,
+        availability_type: 'first_call' as const,
+        day_of_week: slot.day_of_week,
+        slot_start_time: range.slot_start_time,
+        slot_end_time: range.slot_end_time,
+        range_start_date: null, // Not applicable for 'first_call'
+        range_end_date: null,   // Not applicable for 'first_call'
+      });
+    });
+  });
+
+  // 4. Bulk insert the new availability records if any
+  if (newAvailabilityRecords.length === 0) {
+    console.log('[saveFirstCallAvailabilityMutationFn] No valid new time ranges to insert.');
+    return [];
+  }
+
+  const { data: insertedData, error: insertError } = await supabase
+    .from('availabilities')
+    .insert(newAvailabilityRecords)
+    .select(); // Select the inserted rows to return them
+
+  if (insertError) {
+    console.error('[saveFirstCallAvailabilityMutationFn] Error inserting new availabilities:', insertError.message);
+    throw new Error(`Failed to insert new availabilities: ${insertError.message}`);
+  }
+
+  console.log('[saveFirstCallAvailabilityMutationFn] Successfully saved new availabilities. Inserted data:', JSON.stringify(insertedData, null, 2));
+  return (insertedData as Availability[]) || []; // Ensure correct typing for return
 }
 
-export function useDeveloperFirstCallAvailability() {
+export function useDeveloperFirstCallAvailability({ targetDeveloperId }: UseDeveloperFirstCallAvailabilityProps = {}) {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
-  console.log(`[useDeveloperFirstCallAvailability] Hook execution: user?.id is ${user?.id}`);
+  console.log(`[useDeveloperFirstCallAvailability] Hook execution: user?.id is ${user?.id}, targetDeveloperId is ${targetDeveloperId}`);
 
-  // Query to get developer_id first
-  const { data: developerId, isLoading: isLoadingDeveloperId } = useQuery({
-    queryKey: ['developerProfileId', user?.id],
+  const { data: loggedInUserDeveloperId, isLoading: isLoadingDeveloperId } = useQuery({
+    queryKey: ['developerProfileIdForFirstCall', user?.id], // Unique queryKey part
     queryFn: async () => {
       if (!user?.id) {
+        console.log('[useDeveloperFirstCallAvailability] No user.id, cannot fetch loggedInUserDeveloperId');
         return null;
       }
       const devId = await getDeveloperProfileId(user.id);
+      console.log(`[useDeveloperFirstCallAvailability] Fetched loggedInUserDeveloperId: ${devId} for user ${user.id}`);
       return devId;
     },
-    enabled: !!user?.id,
-    staleTime: Infinity, // Developer profile ID rarely changes for a logged-in user
+    enabled: !!user?.id && !targetDeveloperId, // Only run if no targetDeveloperId is provided
+    staleTime: Infinity,
   });
 
-  // Main query for availability, dependent on developerId
-  const {
-    data: availabilitySlots,
-    isLoading: isLoadingAvailability,
-    isError: isAvailabilityError,
-    error: availabilityErrorObject, // Store the actual error object
-    refetch: refetchAvailability,
-  } = useQuery<Availability[], Error>({
-    queryKey: ['developerFirstCallAvailability', developerId],
+  const developerIdToUse = targetDeveloperId || loggedInUserDeveloperId;
+
+  console.log(`[useDeveloperFirstCallAvailability] developerIdToUse for fetching availability: ${developerIdToUse}`);
+
+  const { data: availabilitySlots, isLoading: isLoadingAvailability, refetch, error } = useQuery<Availability[], Error>({
+    queryKey: ['developerFirstCallAvailability', developerIdToUse],
     queryFn: () => {
-      if (!developerId) return Promise.resolve([]);
-      return fetchFirstCallAvailability(developerId);
+      if (!developerIdToUse) {
+        console.log('[useDeveloperFirstCallAvailability] No developerIdToUse, resolving with empty array.');
+        return Promise.resolve([]);
+      }
+      console.log(`[useDeveloperFirstCallAvailability] Fetching first call availability for developerId: ${developerIdToUse}`);
+      return fetchFirstCallAvailability(developerIdToUse);
     },
-    enabled: !!developerId, // Only run if developerId is successfully fetched
-    initialData: [], // Ensure availabilitySlots is always an array
+    enabled: !!developerIdToUse && (targetDeveloperId ? true : !isLoadingDeveloperId),
+    initialData: [],
   });
 
-  // Mutation for saving availability
-  const saveAvailabilityMutation = useMutation<
-    void,
-    Error,
-    SaveFirstCallAvailabilityParams // This is what the component calls mutate with
-  >({
-    mutationFn: async (params) => {
-      if (!developerId) {
-        throw new Error('Developer ID not available. Cannot save availability.');
+  console.log(`[useDeveloperFirstCallAvailability] Availability query: isLoading=${isLoadingAvailability}, data=${JSON.stringify(availabilitySlots?.length)} slots, error=${error?.message}`);
+
+  const { mutateAsync: saveAvailability, isLoading: isSaving } = useMutation<Availability[], Error, SaveFirstCallAvailabilityParams[], { previousAvailability: Availability[] | undefined }>({
+    mutationFn: (newSlots: SaveFirstCallAvailabilityParams[]) => {
+      const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
+      if (!finalDeveloperId) {
+        console.error('Attempted to save first call availability without finalDeveloperId.');
+        return Promise.reject(new Error('Developer ID not available.'));
       }
-      return saveFirstCallAvailabilityMutationFn({ ...params, developerId });
+      return saveFirstCallAvailabilityMutationFn({ slots: newSlots, developerId: finalDeveloperId });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['developerFirstCallAvailability', developerId] });
+    onMutate: async (newSlots: SaveFirstCallAvailabilityParams[]) => {
+      await queryClient.cancelQueries({ queryKey: ['developerFirstCallAvailability', targetDeveloperId || loggedInUserDeveloperId] });
+      const previousAvailability = queryClient.getQueryData<Availability[]>(['developerFirstCallAvailability', targetDeveloperId || loggedInUserDeveloperId]);
+      return { previousAvailability };
     },
-    onError: (error) => {
-      // Error is already logged in the mutationFn, but can add UI feedback here
-      console.error('Mutation level error:', error.message);
+    onError: (err: Error, newSlots: SaveFirstCallAvailabilityParams[], context?: { previousAvailability: Availability[] | undefined }) => {
+      console.error('Failed to save first call availability:', err.message);
+      if (context?.previousAvailability) {
+        queryClient.setQueryData(['developerFirstCallAvailability', targetDeveloperId || loggedInUserDeveloperId], context.previousAvailability);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['developerFirstCallAvailability', targetDeveloperId || loggedInUserDeveloperId] });
     },
   });
 
   return {
-    availabilitySlots: availabilitySlots, // No longer need '|| []' due to initialData
-    isLoading: isLoadingDeveloperId || isLoadingAvailability,
-    isError: isAvailabilityError,
-    error: availabilityErrorObject,
-    refetchAvailability,
-    saveAvailability: saveAvailabilityMutation.mutateAsync,
-    // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
-    isSaving: saveAvailabilityMutation.isPending,
-    developerId, // Expose developerId if screen needs it (e.g., for initial check)
-    isLoadingDeveloperId, // Expose loading state for developerId
+    availabilitySlots,
+    isLoading: targetDeveloperId ? isLoadingAvailability : (isLoadingDeveloperId || isLoadingAvailability),
+    isSaving,
+    saveAvailability,
+    refetch,
+    error,
+    developerId: developerIdToUse, // Expose the determined developer ID
   };
 }

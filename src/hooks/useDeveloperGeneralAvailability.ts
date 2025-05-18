@@ -126,47 +126,66 @@ async function deleteGeneralAvailabilityMutationFn({
   console.log(`Successfully deleted availability ID: ${availabilityId}`);
 }
 
-export function useDeveloperGeneralAvailability() {
+// Interface for the hook's props
+interface UseDeveloperGeneralAvailabilityProps {
+  targetDeveloperId?: string;
+}
+
+export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDeveloperGeneralAvailabilityProps = {}) {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
-  console.log(`[useDeveloperGeneralAvailability] Hook execution: user?.id is ${user?.id}`);
+  console.log(`[useDeveloperGeneralAvailability] Hook execution: user?.id is ${user?.id}, targetDeveloperId is ${targetDeveloperId}`);
 
-  const { data: developerId, isLoading: isLoadingDeveloperId } = useQuery({
+  // Fetch developerId for the logged-in user only if targetDeveloperId is not provided
+  const { data: loggedInUserDeveloperId, isLoading: isLoadingDeveloperId } = useQuery({
     queryKey: ['developerProfileId', user?.id],
     queryFn: async () => {
       if (!user?.id) {
+        console.log('[useDeveloperGeneralAvailability] No user.id, cannot fetch loggedInUserDeveloperId');
         return null;
       }
       const devId = await getDeveloperProfileId(user.id);
+      console.log(`[useDeveloperGeneralAvailability] Fetched loggedInUserDeveloperId: ${devId} for user ${user.id}`);
       return devId;
     },
-    enabled: !!user?.id,
-    staleTime: Infinity, // Developer ID is unlikely to change during a session
+    enabled: !!user?.id && !targetDeveloperId, // Only run if no targetDeveloperId is provided
+    staleTime: Infinity,
   });
 
-  const { data: availabilitySlots, isLoading: isLoadingAvailability, refetch } = useQuery<Availability[], Error>({
-    queryKey: ['developerGeneralAvailability', developerId],
+  // Determine the actual developerId to use for fetching availability
+  const developerIdToUse = targetDeveloperId || loggedInUserDeveloperId;
+
+  console.log(`[useDeveloperGeneralAvailability] developerIdToUse for fetching availability: ${developerIdToUse}`);
+
+  const { data: availabilitySlots, isLoading: isLoadingAvailability, refetch, error } = useQuery<Availability[], Error>({
+    queryKey: ['developerGeneralAvailability', developerIdToUse], // Use the determined ID in queryKey
     queryFn: () => {
-      if (!developerId) return Promise.resolve([]);
-      return fetchGeneralAvailability(developerId);
+      if (!developerIdToUse) {
+        console.log('[useDeveloperGeneralAvailability] No developerIdToUse, resolving with empty array.');
+        return Promise.resolve([]);
+      }
+      console.log(`[useDeveloperGeneralAvailability] Fetching general availability for developerId: ${developerIdToUse}`);
+      return fetchGeneralAvailability(developerIdToUse);
     },
-    enabled: !!developerId && !isLoadingDeveloperId,
-    initialData: [], // Ensure availabilitySlots is always an array
+    enabled: !!developerIdToUse && (targetDeveloperId ? true : !isLoadingDeveloperId), // Enable if developerIdToUse is present and (targetId exists OR loggedInId is loaded)
+    initialData: [],
   });
+
+  console.log(`[useDeveloperGeneralAvailability] Availability query: isLoading=${isLoadingAvailability}, data=${JSON.stringify(availabilitySlots?.length)} slots, error=${error?.message}`);
 
   // Save Mutation
-  // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
-  const { mutateAsync: saveAvailability, isPending: isSaving } = useMutation<void, Error, SaveGeneralAvailabilityParams>({
+  const { mutateAsync: saveAvailability, isLoading: isSaving } = useMutation<void, Error, SaveGeneralAvailabilityParams>({
     mutationFn: (params: SaveGeneralAvailabilityParams) => {
-      if (!developerId) {
-        console.error('Attempted to save general availability without developerId.');
+      const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
+      if (!finalDeveloperId) {
+        console.error('Attempted to save general availability without finalDeveloperId.');
         return Promise.reject(new Error('Developer ID not available.'));
       }
-      return saveGeneralAvailabilityMutationFn({ ...params, developerId });
+      return saveGeneralAvailabilityMutationFn({ ...params, developerId: finalDeveloperId });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', developerId] });
+      queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', targetDeveloperId || loggedInUserDeveloperId] });
       // Potentially show a success toast/message here
     },
     onError: (error) => {
@@ -176,17 +195,17 @@ export function useDeveloperGeneralAvailability() {
   });
 
   // Delete Mutation
-  // @ts-expect-error TS2339: 'isPending' is the correct property for TanStack Query v5 mutations
-  const { mutateAsync: deleteAvailability, isPending: isDeleting } = useMutation<void, Error, DeleteGeneralAvailabilityParams>({
+  const { mutateAsync: deleteAvailability, isLoading: isDeleting } = useMutation<void, Error, DeleteGeneralAvailabilityParams>({
     mutationFn: (params: DeleteGeneralAvailabilityParams) => {
-      if (!developerId) {
-        console.error('Attempted to delete general availability without developerId.');
+      const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
+      if (!finalDeveloperId) {
+        console.error('Attempted to delete general availability without finalDeveloperId.');
         return Promise.reject(new Error('Developer ID not available.'));
       }
-      return deleteGeneralAvailabilityMutationFn({ ...params, developerId });
+      return deleteGeneralAvailabilityMutationFn({ ...params, developerId: finalDeveloperId });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', developerId] });
+      queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', targetDeveloperId || loggedInUserDeveloperId] });
       console.log('Successfully deleted, invalidated query.');
       // Optionally: Reset any local state in the component if needed after delete
     },
@@ -197,14 +216,14 @@ export function useDeveloperGeneralAvailability() {
   });
 
   return {
-    availabilitySlots: availabilitySlots, // No longer need '|| []' due to initialData
-    isLoading: isLoadingDeveloperId || isLoadingAvailability,
+    availabilitySlots: availabilitySlots, 
+    isLoading: targetDeveloperId ? isLoadingAvailability : (isLoadingDeveloperId || isLoadingAvailability),
     isSaving,
+    isDeleting,
     saveAvailability,
-    isDeleting, // Add isDeleting state
-    deleteAvailability, // Add delete function
-    refetchAvailability: refetch,
-    developerId,
-    isLoadingDeveloperId,
+    deleteAvailability,
+    refetch,
+    error, // Expose error for consumers to handle
+    developerId: developerIdToUse, // Expose the determined developer ID
   };
 }
