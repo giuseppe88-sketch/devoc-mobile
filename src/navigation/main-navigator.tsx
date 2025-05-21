@@ -22,14 +22,24 @@ import EditClientProfileScreen from '../screens/client/edit-profile-screen';
 import { DeveloperDetailScreen } from '../screens/client/developer-detail-screen'; 
 
 import { ProfileStackParamList, ClientProfileStackParamList } from "../types"; // Import shared types
+import { NavigatorScreenParams } from '@react-navigation/native'; // Import this
 import { colors as themeColors, spacing } from '../theme'; 
 
 // Assuming dark theme for navigation elements
 const colors = themeColors.dark;
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<AppTabParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
 const ClientProfileStack = createNativeStackNavigator<ClientProfileStackParamList>(); // Create Client Profile Stack
+
+// NEW: Define the ParamList for the main Tab navigator
+export type AppTabParamList = {
+  Dashboard: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
+  Availability?: undefined; 
+  Bookings?: undefined; 
+  Browse?: NavigatorScreenParams<BrowseStackParamList>; 
+};
 
 // Define Param List for the new Browse Stack
 export type BrowseStackParamList = {
@@ -169,7 +179,7 @@ function MainNavigator() {
   if (!user || loadingProfile) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#333333' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size={50} color="#0000ff" />
       </View>
     );
   }

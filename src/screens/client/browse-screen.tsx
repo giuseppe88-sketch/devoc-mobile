@@ -167,7 +167,7 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size={50} color={colors.primary} />
         <Text style={styles.loadingText}>Loading Developers...</Text>
       </SafeAreaView>
     );

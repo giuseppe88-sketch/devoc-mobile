@@ -52,7 +52,7 @@ export function DeveloperDetailScreen() {
   if (isScreenLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={localColors.primary} />
+        <ActivityIndicator size={50} color={localColors.primary} />
       </View>
     );
   }

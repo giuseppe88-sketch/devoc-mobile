@@ -1,35 +1,55 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
-import { Calendar, DateData } from 'react-native-calendars'; 
-import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../stores/auth-store';
-import { Availability } from '../../types';
-import { useDeveloperFirstCallAvailability, SaveFirstCallAvailabilityParams } from '../../hooks/useDeveloperFirstCallAvailability';
-import { useDeveloperGeneralAvailability, SaveGeneralAvailabilityParams, DeleteGeneralAvailabilityParams } from '../../hooks/useDeveloperGeneralAvailability'; 
-import { colors as themeColors, spacing } from '../../theme';
-import { useNavigation } from '@react-navigation/native';
-import { Button } from 'react-native';
-import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { DeveloperMainTabParamList } from '../../types';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  FlatList,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+import { Calendar, DateData } from "react-native-calendars";
+import { supabase } from "../../lib/supabase";
+import { useAuthStore } from "../../stores/auth-store";
+import { Availability } from "../../types";
+import {
+  useDeveloperFirstCallAvailability,
+  SaveFirstCallAvailabilityParams,
+} from "../../hooks/useDeveloperFirstCallAvailability";
+import {
+  useDeveloperGeneralAvailability,
+  SaveGeneralAvailabilityParams,
+  DeleteGeneralAvailabilityParams,
+} from "../../hooks/useDeveloperGeneralAvailability";
+import { colors as themeColors, spacing } from "../../theme";
+import { useNavigation } from "@react-navigation/native";
+import { Button } from "react-native";
+import { MaterialCommunityIcons as Icon } from "@expo/vector-icons";
+import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+import type { AppTabParamList } from "../../navigation/main-navigator"; // Adjust path if needed
 
-type DeveloperAvailabilityScreenProps = BottomTabScreenProps<DeveloperMainTabParamList, 'Availability'>;
+type DeveloperAvailabilityScreenProps = BottomTabScreenProps<
+  AppTabParamList,
+  "Availability"
+>;
 
 const localColors = themeColors.dark;
 
-function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreenProps) {
+function DeveloperAvailabilityScreen({
+  navigation,
+}: DeveloperAvailabilityScreenProps) {
   const { user } = useAuthStore();
 
-  const [selectedDay, setSelectedDay] = useState<number>(1); 
+  const [selectedDay, setSelectedDay] = useState<number>(1);
 
   const {
     availabilitySlots: firstCallSlots,
     isLoading: isLoadingFirstCall,
     isSaving: isSavingFirstCall,
     saveAvailability: saveFirstCall,
-    developerId: firstCallDeveloperId, 
+    developerId: firstCallDeveloperId,
   } = useDeveloperFirstCallAvailability();
 
   const {
@@ -39,14 +59,17 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
     isDeleting: isDeletingGeneralWork,
     deleteAvailability: deleteGeneralWork,
     saveAvailability: saveGeneralWork,
-    developerId: generalWorkDeveloperId,   } = useDeveloperGeneralAvailability();
+    developerId: generalWorkDeveloperId,
+  } = useDeveloperGeneralAvailability();
 
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
 
-  const [rangeStartDate, setRangeStartDate] = useState<string | null>(null); 
-  const [rangeEndDate, setRangeEndDate] = useState<string | null>(null);   
+  const [rangeStartDate, setRangeStartDate] = useState<string | null>(null);
+  const [rangeEndDate, setRangeEndDate] = useState<string | null>(null);
 
-  const [selectedGeneralSlotId, setSelectedGeneralSlotId] = useState<string | number | null>(null);
+  const [selectedGeneralSlotId, setSelectedGeneralSlotId] = useState<
+    string | number | null
+  >(null);
 
   const isLoading = isLoadingFirstCall || isLoadingGeneralWork;
   const isSaving = isSavingFirstCall || isSavingGeneralWork;
@@ -56,16 +79,16 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
 
   useEffect(() => {
     const newSelectedTimeSlots: string[] = [];
-    
+
     if (firstCallSlots) {
       firstCallSlots
-        .filter(slot => slot.day_of_week === selectedDay)
-        .forEach(slot => {
-          const startHour = parseInt(slot.slot_start_time.split(':')[0]);
-          const endHour = parseInt(slot.slot_end_time.split(':')[0]);
-          
+        .filter((slot) => slot.day_of_week === selectedDay)
+        .forEach((slot) => {
+          const startHour = parseInt(slot.slot_start_time.split(":")[0]);
+          const endHour = parseInt(slot.slot_end_time.split(":")[0]);
+
           for (let hour = startHour; hour < endHour; hour++) {
-            const timeSlot = `${hour.toString().padStart(2, '0')}:00`;
+            const timeSlot = `${hour.toString().padStart(2, "0")}:00`;
             newSelectedTimeSlots.push(timeSlot);
           }
         });
@@ -76,16 +99,19 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
   const handleSaveAvailability = async () => {
     if (!developerId) {
       Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Developer profile not found. Cannot save availability.',
+        type: "error",
+        text1: "Error",
+        text2: "Developer profile not found. Cannot save availability.",
       });
       return;
     }
 
-    const timeRangesToSave = selectedTimeSlots.map(slot => ({
+    const timeRangesToSave = selectedTimeSlots.map((slot) => ({
       slot_start_time: slot,
-      slot_end_time: `${String(parseInt(slot.split(':')[0], 10) + 1).padStart(2, '0')}:00`,
+      slot_end_time: `${String(parseInt(slot.split(":")[0], 10) + 1).padStart(
+        2,
+        "0"
+      )}:00`,
     }));
 
     const params: SaveFirstCallAvailabilityParams = {
@@ -96,16 +122,17 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
     try {
       await saveFirstCall([params]);
       Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'Weekly availability saved successfully!',
+        type: "success",
+        text1: "Success",
+        text2: "Weekly availability saved successfully!",
       });
     } catch (error) {
-      console.error('Failed to save weekly availability:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+      console.error("Failed to save weekly availability:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
       Toast.show({
-        type: 'error',
-        text1: 'Save Failed',
+        type: "error",
+        text1: "Save Failed",
         text2: `Could not save weekly availability: ${errorMessage}`,
       });
     }
@@ -113,9 +140,16 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
 
   const handleDayPress = (day: DateData) => {
     const clickedDate = day.dateString;
-    const existingSlot = generalWorkSlots.find(slot => isDateInSlot(clickedDate, slot));
+    const existingSlot = generalWorkSlots.find((slot) =>
+      isDateInSlot(clickedDate, slot)
+    );
 
-    if (existingSlot && existingSlot.id && existingSlot.range_start_date && existingSlot.range_end_date) {
+    if (
+      existingSlot &&
+      existingSlot.id &&
+      existingSlot.range_start_date &&
+      existingSlot.range_end_date
+    ) {
       if (selectedGeneralSlotId === existingSlot.id) {
         setRangeStartDate(null);
         setRangeEndDate(null);
@@ -125,7 +159,9 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
         setRangeStartDate(existingSlot.range_start_date);
         setRangeEndDate(existingSlot.range_end_date);
         setSelectedGeneralSlotId(existingSlot.id);
-        console.log(`Selected existing slot ID: ${existingSlot.id} [${existingSlot.range_start_date} - ${existingSlot.range_end_date}]`);
+        console.log(
+          `Selected existing slot ID: ${existingSlot.id} [${existingSlot.range_start_date} - ${existingSlot.range_end_date}]`
+        );
       }
     } else {
       setSelectedGeneralSlotId(null);
@@ -146,15 +182,27 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
 
   const handleSaveGeneralAvailability = async () => {
     if (selectedGeneralSlotId) {
-       Toast.show({ type: 'info', text1: 'Info', text2: 'Editing ranges not yet supported. Delete and recreate.' });
-       return;
+      Toast.show({
+        type: "info",
+        text1: "Info",
+        text2: "Editing ranges not yet supported. Delete and recreate.",
+      });
+      return;
     }
     if (!developerId) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Developer profile not found.' });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Developer profile not found.",
+      });
       return;
     }
     if (!rangeStartDate || !rangeEndDate) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Please select a start and end date for the range.' });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please select a start and end date for the range.",
+      });
       return;
     }
     const params: SaveGeneralAvailabilityParams = {
@@ -163,48 +211,85 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
     };
     try {
       await saveGeneralWork(params);
-      Toast.show({ type: 'success', text1: 'Success', text2: 'General availability range saved successfully!' });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "General availability range saved successfully!",
+      });
       setRangeStartDate(null);
       setRangeEndDate(null);
       setSelectedGeneralSlotId(null); // Reset state
     } catch (error) {
-      console.error('Failed to save general availability:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-      Toast.show({ type: 'error', text1: 'Save Failed', text2: `Could not save general availability: ${errorMessage}` });
+      console.error("Failed to save general availability:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
+      Toast.show({
+        type: "error",
+        text1: "Save Failed",
+        text2: `Could not save general availability: ${errorMessage}`,
+      });
     }
   };
 
   const handleDeleteGeneralAvailability = async () => {
     if (!selectedGeneralSlotId) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'No range selected to delete.' });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No range selected to delete.",
+      });
       return;
     }
-     if (!developerId) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Developer profile not found.' });
+    if (!developerId) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Developer profile not found.",
+      });
       return;
     }
     console.log(`Attempting deletion for slot ID: ${selectedGeneralSlotId}`);
-    const params: DeleteGeneralAvailabilityParams = { availabilityId: selectedGeneralSlotId };
+    const params: DeleteGeneralAvailabilityParams = {
+      availabilityId: selectedGeneralSlotId,
+    };
     try {
       await deleteGeneralWork(params);
-      Toast.show({ type: 'success', text1: 'Success', text2: 'General availability range deleted successfully!' });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "General availability range deleted successfully!",
+      });
       setRangeStartDate(null);
       setRangeEndDate(null);
       setSelectedGeneralSlotId(null); // Reset state
     } catch (error) {
-      console.error('Failed to delete general availability:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
-      Toast.show({ type: 'error', text1: 'Delete Failed', text2: `Could not delete general availability: ${errorMessage}` });
+      console.error("Failed to delete general availability:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
+      Toast.show({
+        type: "error",
+        text1: "Delete Failed",
+        text2: `Could not delete general availability: ${errorMessage}`,
+      });
     }
   };
 
   const getMarkedDatesForCalendar = () => {
-    const marked: { [key: string]: { color?: string; textColor?: string; startingDay?: boolean; endingDay?: boolean; marked?: boolean; dotColor?: string; } } = {};
+    const marked: {
+      [key: string]: {
+        color?: string;
+        textColor?: string;
+        startingDay?: boolean;
+        endingDay?: boolean;
+        marked?: boolean;
+        dotColor?: string;
+      };
+    } = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // Mark existing general work slots
-    generalWorkSlots.forEach(slot => {
+    generalWorkSlots.forEach((slot) => {
       if (slot.range_start_date && slot.range_end_date) {
         let currentDate = new Date(slot.range_start_date);
         currentDate.setHours(12, 0, 0, 0); // Avoid timezone issues crossing midnight
@@ -212,19 +297,25 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
         endDate.setHours(12, 0, 0, 0);
 
         while (currentDate <= endDate) {
-          const dateString = currentDate.toISOString().split('T')[0];
+          const dateString = currentDate.toISOString().split("T")[0];
           const isSelectedExisting = selectedGeneralSlotId === slot.id; // Check if this existing slot is the one selected
           marked[dateString] = {
             ...marked[dateString], // Keep other markings like 'selected' if applicable
-            color: isSelectedExisting ? localColors.warning : localColors.secondary, // Different color if selected
+            color: isSelectedExisting
+              ? localColors.warning
+              : localColors.secondary, // Different color if selected
             textColor: localColors.text, // Ensure text is readable
             startingDay: dateString === slot.range_start_date,
             endingDay: dateString === slot.range_end_date,
             marked: true,
-            dotColor: isSelectedExisting ? localColors.warning : localColors.secondary,
+            dotColor: isSelectedExisting
+              ? localColors.warning
+              : localColors.secondary,
           };
-          if (dateString === slot.range_start_date) marked[dateString].startingDay = true;
-          if (dateString === slot.range_end_date) marked[dateString].endingDay = true;
+          if (dateString === slot.range_start_date)
+            marked[dateString].startingDay = true;
+          if (dateString === slot.range_end_date)
+            marked[dateString].endingDay = true;
 
           currentDate.setDate(currentDate.getDate() + 1);
         }
@@ -239,32 +330,38 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
       endDate.setHours(12, 0, 0, 0);
 
       while (currentDate <= endDate) {
-        const dateString = currentDate.toISOString().split('T')[0];
-         // If the date is already marked by an existing slot, don't overwrite it
-        if (!marked[dateString] || !marked[dateString].dotColor || marked[dateString].dotColor !== localColors.secondary) {
-             marked[dateString] = {
-                ...marked[dateString],
-                color: localColors.primary, // Color for new range selection
-                textColor: localColors.text,
-                startingDay: dateString === rangeStartDate,
-                endingDay: dateString === rangeEndDate,
-                marked: true,
-                dotColor: localColors.primary,
-            };
-            if (dateString === rangeStartDate) marked[dateString].startingDay = true;
-            if (dateString === rangeEndDate) marked[dateString].endingDay = true;
+        const dateString = currentDate.toISOString().split("T")[0];
+        // If the date is already marked by an existing slot, don't overwrite it
+        if (
+          !marked[dateString] ||
+          !marked[dateString].dotColor ||
+          marked[dateString].dotColor !== localColors.secondary
+        ) {
+          marked[dateString] = {
+            ...marked[dateString],
+            color: localColors.primary, // Color for new range selection
+            textColor: localColors.text,
+            startingDay: dateString === rangeStartDate,
+            endingDay: dateString === rangeEndDate,
+            marked: true,
+            dotColor: localColors.primary,
+          };
+          if (dateString === rangeStartDate)
+            marked[dateString].startingDay = true;
+          if (dateString === rangeEndDate) marked[dateString].endingDay = true;
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }
-    } else if (!selectedGeneralSlotId && rangeStartDate) { // Mark single start date if end not selected
+    } else if (!selectedGeneralSlotId && rangeStartDate) {
+      // Mark single start date if end not selected
       marked[rangeStartDate] = {
         ...marked[rangeStartDate],
-         color: localColors.primary, // Color for new range selection
-         textColor: localColors.text,
-         startingDay: true,
-         endingDay: true,
-         marked: true,
-         dotColor: localColors.primary,
+        color: localColors.primary, // Color for new range selection
+        textColor: localColors.text,
+        startingDay: true,
+        endingDay: true,
+        marked: true,
+        dotColor: localColors.primary,
       };
     }
 
@@ -288,30 +385,53 @@ function DeveloperAvailabilityScreen({ navigation }: DeveloperAvailabilityScreen
   // Guard for developer profile loading
   if (isLoadingFirstCall || isLoadingGeneralWork) {
     return (
-      <View style={[styles.centeredStatusContainer, { backgroundColor: localColors.background }]}>
-        <ActivityIndicator size="large" color={localColors.primary} />
-        <Text style={[styles.statusText, { color: localColors.text }]}>Loading developer profile...</Text>
+      <View
+        style={[
+          styles.centeredStatusContainer,
+          { backgroundColor: localColors.background },
+        ]}
+      >
+        <ActivityIndicator size={50} color={localColors.primary} />
+        <Text style={[styles.statusText, { color: localColors.text }]}>
+          Loading developer profile...
+        </Text>
       </View>
     );
   }
-console.log("devId",developerId)
+  console.log("devId", developerId);
   // Guard for missing developer profile
   if (!developerId) {
     return (
-      <View style={[styles.centeredStatusContainer, { backgroundColor: localColors.background }]}>
-        <Icon name="account-alert-outline" size={48} color={localColors.error} style={{ marginBottom: 16 }} />
-        <Text style={[styles.statusText, { color: localColors.text, textAlign: 'center', marginBottom: 20 }]}>
-          Please complete your developer profile before setting your availability.
+      <View
+        style={[
+          styles.centeredStatusContainer,
+          { backgroundColor: localColors.background },
+        ]}
+      >
+        <Icon
+          name="account-alert-outline"
+          size={48}
+          color={localColors.error}
+          style={{ marginBottom: 16 }}
+        />
+        <Text
+          style={[
+            styles.statusText,
+            { color: localColors.text, textAlign: "center", marginBottom: 20 },
+          ]}
+        >
+          Please complete your developer profile before setting your
+          availability.
         </Text>
         <Button
           title="Go to Edit Profile"
           onPress={() => {
-            navigation.navigate('Profile', { screen: 'DeveloperProfile' });
-            Toast.show({
-              type: 'info',
-              text1: 'Navigating to Profile Edit',
-              text2: 'Please ensure your profile is complete.',
-            });
+            navigation.navigate("Profile", { screen: "DeveloperProfile" });
+            // Toast.show({
+            //   type: "info",
+            //   text1: "Navigating to Profile Edit",
+            //   text2: "Please ensure your profile is complete.",
+            // });
           }}
           color={localColors.primary}
         />
@@ -322,7 +442,11 @@ console.log("devId",developerId)
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={localColors.primary} style={styles.loadingIndicator} />
+        <ActivityIndicator
+          size={50}
+          color={localColors.primary}
+          style={styles.loadingIndicator}
+        />
       </SafeAreaView>
     );
   }
@@ -332,20 +456,32 @@ console.log("devId",developerId)
       <ScrollView>
         <View style={styles.header}>
           <Text style={styles.title}>Set Your Availability</Text>
-          <Text style={styles.subtitle}>Let clients know when you're available for a first call</Text>
+          <Text style={styles.subtitle}>
+            Let clients know when you're available for a first call
+          </Text>
         </View>
 
         <View style={styles.daySelector}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, index) => (
+            {[
+              "Sunday",
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+            ].map((day, index) => (
               <TouchableOpacity
                 key={index}
                 style={[
                   styles.dayButton,
                   selectedDay === index && styles.selectedDayButton,
-                  (isLoading || isSaving) && styles.disabledButton
+                  (isLoading || isSaving) && styles.disabledButton,
                 ]}
-                onPress={() => !(isLoading || isSaving) && setSelectedDay(index)}
+                onPress={() =>
+                  !(isLoading || isSaving) && setSelectedDay(index)
+                }
               >
                 <Text
                   style={[
@@ -361,22 +497,41 @@ console.log("devId",developerId)
         </View>
 
         <View style={styles.timeSlotContainer}>
-          <Text style={styles.sectionTitle}>Set Your Weekly First Call Availability</Text>
-          
-          {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'].map((timeSlot) => (
+          <Text style={styles.sectionTitle}>
+            Set Your Weekly First Call Availability
+          </Text>
+
+          {[
+            "08:00",
+            "09:00",
+            "10:00",
+            "11:00",
+            "12:00",
+            "13:00",
+            "14:00",
+            "15:00",
+            "16:00",
+            "17:00",
+            "18:00",
+            "19:00",
+          ].map((timeSlot) => (
             <TouchableOpacity
               key={timeSlot}
               style={[
                 styles.timeSlot,
                 selectedTimeSlots.includes(timeSlot) && styles.selectedTimeSlot,
-                (isLoading || isSaving) && styles.disabledButton
+                (isLoading || isSaving) && styles.disabledButton,
               ]}
-              onPress={() => !(isLoading || isSaving) && setSelectedTimeSlots(prev => [...prev, timeSlot])}
+              onPress={() =>
+                !(isLoading || isSaving) &&
+                setSelectedTimeSlots((prev) => [...prev, timeSlot])
+              }
             >
               <Text
                 style={[
                   styles.timeSlotText,
-                  selectedTimeSlots.includes(timeSlot) && styles.selectedTimeSlotText,
+                  selectedTimeSlots.includes(timeSlot) &&
+                    styles.selectedTimeSlotText,
                 ]}
               >
                 {timeSlot}
@@ -385,16 +540,26 @@ console.log("devId",developerId)
           ))}
         </View>
 
-        <TouchableOpacity onPress={handleSaveAvailability} style={[styles.saveButton, isSaving && styles.disabledButton]} disabled={isSaving || selectedTimeSlots.length === 0}>
-          {isSavingFirstCall ? <ActivityIndicator color={localColors.text} /> : <Text style={styles.saveButtonText}>Save Weekly Slots</Text>}
+        <TouchableOpacity
+          onPress={handleSaveAvailability}
+          style={[styles.saveButton, isSaving && styles.disabledButton]}
+          disabled={isSaving || selectedTimeSlots.length === 0}
+        >
+          {isSavingFirstCall ? (
+            <ActivityIndicator color={localColors.text} />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Weekly Slots</Text>
+          )}
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>Set Your General Work Availability (Date Ranges)</Text>
+        <Text style={styles.sectionTitle}>
+          Set Your General Work Availability (Date Ranges)
+        </Text>
         <Calendar
           style={styles.calendar}
-          current={new Date().toISOString().split('T')[0]} 
+          current={new Date().toISOString().split("T")[0]}
           onDayPress={handleDayPress}
-          markingType={'period'}
+          markingType={"period"}
           markedDates={getMarkedDatesForCalendar()}
           theme={{
             backgroundColor: localColors.background,
@@ -411,48 +576,79 @@ console.log("devId",developerId)
             disabledArrowColor: localColors.subtle,
             monthTextColor: localColors.text,
             indicatorColor: localColors.primary,
-            textDayFontFamily: 'System',
-            textMonthFontFamily: 'System',
-            textDayHeaderFontFamily: 'System',
-            textDayFontWeight: '300',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '300',
+            textDayFontFamily: "System",
+            textMonthFontFamily: "System",
+            textDayHeaderFontFamily: "System",
+            textDayFontWeight: "300",
+            textMonthFontWeight: "bold",
+            textDayHeaderFontWeight: "300",
             textDayFontSize: 16,
             textMonthFontSize: 16,
             textDayHeaderFontSize: 14,
           }}
         />
-        
+
         {rangeStartDate && (
           <Text style={styles.infoText}>
-            Selected Range: {rangeStartDate} {rangeEndDate ? `to ${rangeEndDate}` : ''}
+            Selected Range: {rangeStartDate}{" "}
+            {rangeEndDate ? `to ${rangeEndDate}` : ""}
           </Text>
         )}
 
-        <TouchableOpacity 
-          onPress={handleSaveGeneralAvailability} 
-          style={[styles.saveButton, (!rangeStartDate || !rangeEndDate || isSavingGeneralWork || selectedGeneralSlotId) ? styles.disabledButton : null]} 
-          disabled={!rangeStartDate || !rangeEndDate || isSavingGeneralWork || !!selectedGeneralSlotId} 
+        <TouchableOpacity
+          onPress={handleSaveGeneralAvailability}
+          style={[
+            styles.saveButton,
+            !rangeStartDate ||
+            !rangeEndDate ||
+            isSavingGeneralWork ||
+            selectedGeneralSlotId
+              ? styles.disabledButton
+              : null,
+          ]}
+          disabled={
+            !rangeStartDate ||
+            !rangeEndDate ||
+            isSavingGeneralWork ||
+            !!selectedGeneralSlotId
+          }
         >
-          {isSavingGeneralWork ? <ActivityIndicator color={localColors.background} /> : <Text style={styles.saveButtonText}>Save New Range</Text>}
+          {isSavingGeneralWork ? (
+            <ActivityIndicator color={localColors.background} />
+          ) : (
+            <Text style={styles.saveButtonText}>Save New Range</Text>
+          )}
         </TouchableOpacity>
 
         {selectedGeneralSlotId && ( // Only show if an existing slot is selected
           <TouchableOpacity
             onPress={handleDeleteGeneralAvailability}
-            style={[styles.deleteButton, isDeleting ? styles.disabledButton : null]}
+            style={[
+              styles.deleteButton,
+              isDeleting ? styles.disabledButton : null,
+            ]}
             disabled={isDeleting}
           >
-            {isDeleting ? <ActivityIndicator color={localColors.text} /> : <Text style={styles.deleteButtonText}>Delete Selected Range</Text>}
+            {isDeleting ? (
+              <ActivityIndicator color={localColors.text} />
+            ) : (
+              <Text style={styles.deleteButtonText}>Delete Selected Range</Text>
+            )}
           </TouchableOpacity>
         )}
 
-        <Text style={styles.subSectionTitle}>Your Saved General Availability Ranges:</Text>
-        {isLoadingGeneralWork && <ActivityIndicator color={localColors.primary} />}
-        {generalWorkSlots.length === 0 && !isLoadingGeneralWork && (
-          <Text style={styles.infoText}>No general availability ranges saved yet.</Text>
+        <Text style={styles.subSectionTitle}>
+          Your Saved General Availability Ranges:
+        </Text>
+        {isLoadingGeneralWork && (
+          <ActivityIndicator color={localColors.primary} />
         )}
-        <FlatList 
+        {generalWorkSlots.length === 0 && !isLoadingGeneralWork && (
+          <Text style={styles.infoText}>
+            No general availability ranges saved yet.
+          </Text>
+        )}
+        <FlatList
           data={generalWorkSlots}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
@@ -463,7 +659,6 @@ console.log("devId",developerId)
             </View>
           )}
         />
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -480,7 +675,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: localColors.text,
   },
   subtitle: {
@@ -503,7 +698,7 @@ const styles = StyleSheet.create({
     backgroundColor: localColors.primary,
   },
   dayButtonText: {
-    fontWeight: '600',
+    fontWeight: "600",
     color: localColors.textSecondary,
   },
   selectedDayButtonText: {
@@ -511,7 +706,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: spacing.lg,
     color: localColors.text,
   },
@@ -519,9 +714,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   timeSlot: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: 8,
@@ -540,32 +735,32 @@ const styles = StyleSheet.create({
   },
   selectedTimeSlotText: {
     color: localColors.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButton: {
     backgroundColor: localColors.primary,
     borderRadius: 8,
     padding: spacing.lg,
     margin: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   saveButtonText: {
     color: localColors.background, // Changed for contrast
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   deleteButton: {
     backgroundColor: localColors.error, // Use theme error color
     borderRadius: 8,
     padding: spacing.lg,
     marginHorizontal: spacing.lg, // Align with save button
-    marginTop: spacing.md,      // Add some space above
-    alignItems: 'center',
+    marginTop: spacing.md, // Add some space above
+    alignItems: "center",
   },
   deleteButtonText: {
     color: themeColors.dark.text, // Ensure text is readable on error background
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   disabledButton: {
     opacity: 0.5,
@@ -595,16 +790,16 @@ const styles = StyleSheet.create({
   infoText: {
     color: localColors.textSecondary,
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     marginVertical: spacing.md,
   },
   subSectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: localColors.text,
     marginTop: spacing.lg,
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg, 
+    paddingHorizontal: spacing.lg,
   },
   generalAvailabilityItem: {
     backgroundColor: localColors.card,
@@ -621,8 +816,8 @@ const styles = StyleSheet.create({
   },
   centeredStatusContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   statusText: {

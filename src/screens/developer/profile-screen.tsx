@@ -51,7 +51,7 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
   if (isLoading) {
     return (
         <SafeAreaView style={styles.container}>
-          <ActivityIndicator size="large" color={colors.primary} style={styles.centered} />
+          <ActivityIndicator size={50} color={colors.primary} style={styles.centered} />
         </SafeAreaView>
     );
   }

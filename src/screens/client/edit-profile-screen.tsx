@@ -137,7 +137,7 @@ function EditClientProfileScreen() {
   if (isFetching) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size={50} color={colors.primary} />
         <Text style={styles.loadingText}>Loading Profile...</Text>
       </View>
     );

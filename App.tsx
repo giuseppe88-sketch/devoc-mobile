@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
 import AuthNavigator from "./src/navigation/auth-navigator";
 import MainNavigator from "./src/navigation/main-navigator";
 import { useAuthStore } from "./src/stores/auth-store";
@@ -11,7 +11,13 @@ import { supabase } from "./src/lib/supabase";
 import type { ReactNode } from "react";
 import { ThemeProvider } from "styled-components/native";
 import { useColors, spacing } from "./src/theme";
-import Toast from 'react-native-toast-message';
+import RNToast from 'react-native-toast-message';
+import type { ComponentType } from 'react';
+
+// Cast to ComponentType<any> to bypass type checking issues with React 19
+// This is a common workaround when library types are not fully compatible
+// with new React versions (like React 19 RC).
+const Toast = RNToast as ComponentType<any>;
 
 const Stack = createNativeStackNavigator();
 const queryClient = new QueryClient();
@@ -56,7 +62,7 @@ function App(): ReactNode {
         <ThemeProvider theme={currentTheme}>
           {loading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" />
+              <ActivityIndicator size={50} />
             </View>
           ) : (
             <NavigationContainer>

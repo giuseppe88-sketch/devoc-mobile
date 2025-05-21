@@ -174,7 +174,7 @@ function EditDeveloperProfileScreen() {
   if (isLoading) { 
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.light.primary} />
+        <ActivityIndicator size={50} color={colors.light.primary} />
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
