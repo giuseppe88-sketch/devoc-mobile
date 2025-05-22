@@ -17,7 +17,12 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.devoc.mobile"
+      "bundleIdentifier": "com.devoc.mobile",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -40,7 +45,7 @@
     },
     "newArchEnabled": true,
     "extra": {
-      "EXPO_PUBLIC_SUPABASE_URL": "http://127.0.0.1:54321",
+      "EXPO_PUBLIC_SUPABASE_URL": "http://192.168.0.10:54321",
       "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
       "eas": {
         "projectId": "d3cfae8d-fc5f-401a-ab44-b4cbad6c30bf"
@@ -48,6 +53,7 @@
     },
     "plugins": [
       "expo-dev-client"
-    ],    "owner": "giuseppe88"
+    ],
+    "owner": "giuseppe88"
   }
 }

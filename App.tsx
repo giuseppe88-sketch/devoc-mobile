@@ -29,6 +29,7 @@ function App(): ReactNode {
   const setLoading = (isLoading: boolean) =>
     useAuthStore.setState({ loading: isLoading });
 
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
