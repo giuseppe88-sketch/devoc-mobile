@@ -112,10 +112,41 @@ export interface FetchedClientProfile extends ClientProfile {
 }
 // --- End Fetched Client Profile Type ---
 
+// Define Param List for the Browse Stack (used in Client tabs)
+export type BrowseStackParamList = {
+  ClientBrowse: undefined; // The list screen doesn't need params
+  DeveloperDetail: { developerId: string }; // The detail screen needs the ID
+};
+
 // Navigation param list for the main Tab navigator when user is a Developer
 export type DeveloperMainTabParamList = {
   Dashboard: undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList>; // Navigates to ProfileStackNavigator
   Availability: undefined;
   // Bookings: undefined; // If DeveloperBookingsScreen is added to tabs
+};
+
+// Navigation param list for the main Tab navigator when user is a Client
+export type ClientMainTabParamList = {
+  Dashboard: undefined;
+  Browse: NavigatorScreenParams<BrowseStackParamList>; 
+  Profile: NavigatorScreenParams<ClientProfileStackParamList>;
+  // Bookings: undefined; // If ClientBookingsScreen is added to tabs
+};
+
+// Combined ParamList for the main Tab navigator, encompassing all possible tabs
+// This allows a single Tab.Navigator to be typed correctly, even if screens are conditional.
+export type AllMainTabsParamList = {
+  // Common screens or screens that might change target based on role
+  Dashboard: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
+  
+  // Developer-specific screens (optional if not present for clients)
+  Availability?: undefined; 
+  
+  // Client-specific screens (optional if not present for developers)
+  Browse?: NavigatorScreenParams<BrowseStackParamList>;
+  
+  // Common optional screens
+  // Bookings?: undefined; // Example if bookings were shared or role-specific optional
 };

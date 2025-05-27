@@ -42,6 +42,7 @@ export async function saveProfileAction(
         console.error('User update error:', userUpdateError);
         return { success: false, message: `Failed to update user profile: ${userUpdateError.message}` };
       }
+      // console.log('Public users table update success'); // Optional: add success log if needed
     }
 
     // 2. Upsert into developer_profiles using the Edge Function

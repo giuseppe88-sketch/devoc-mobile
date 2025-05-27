@@ -175,7 +175,7 @@ export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDevelo
   console.log(`[useDeveloperGeneralAvailability] Availability query: isLoading=${isLoadingAvailability}, data=${JSON.stringify(availabilitySlots?.length)} slots, error=${error?.message}`);
 
   // Save Mutation
-  const { mutateAsync: saveAvailability, isLoading: isSaving } = useMutation<void, Error, SaveGeneralAvailabilityParams>({
+  const { mutateAsync: saveAvailability, isPending: isSaving } = useMutation<void, Error, SaveGeneralAvailabilityParams>({
     mutationFn: (params: SaveGeneralAvailabilityParams) => {
       const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
       if (!finalDeveloperId) {
@@ -195,7 +195,7 @@ export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDevelo
   });
 
   // Delete Mutation
-  const { mutateAsync: deleteAvailability, isLoading: isDeleting } = useMutation<void, Error, DeleteGeneralAvailabilityParams>({
+  const { mutateAsync: deleteAvailability, isPending: isDeleting } = useMutation<void, Error, DeleteGeneralAvailabilityParams>({
     mutationFn: (params: DeleteGeneralAvailabilityParams) => {
       const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
       if (!finalDeveloperId) {

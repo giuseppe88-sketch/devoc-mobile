@@ -17,11 +17,16 @@ interface ProfileData {
   hourly_rate?: number;
   location?: string;
   years_of_experience?: number;
+  portfolio_image_url?: string; // Added portfolio image URL
 }
 
 console.log('"upsert-developer-profile" function initialized');
 
 Deno.serve(async (req) => {
+  console.log('--- Edge Function Environment ---');
+  console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL'));
+  console.log('SUPABASE_ANON_KEY:', Deno.env.get('SUPABASE_ANON_KEY') ? 'Exists' : 'Not Found'); // Don't log the key itself for security, just its presence
+  console.log('---------------------------------');
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -95,6 +100,7 @@ Deno.serve(async (req) => {
       hourly_rate: profileData.hourly_rate ?? null,
       location: profileData.location ?? null,
       years_of_experience: profileData.years_of_experience ?? null,
+      portfolio_image_url: profileData.portfolio_image_url ?? null, // Added portfolio image URL
     };
 
     // --- Upsert Profile Data (Replaced with Select then Insert/Update) ---

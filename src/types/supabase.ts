@@ -7,57 +7,44 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       availabilities: {
         Row: {
+          availability_type: string
           created_at: string
-          day_of_week: number
+          day_of_week: number | null
           developer_id: string
-          end_time: string
           id: string
-          start_time: string
+          range_end_date: string | null
+          range_start_date: string | null
+          slot_end_time: string | null
+          slot_start_time: string | null
+          updated_at: string | null
         }
         Insert: {
+          availability_type?: string
           created_at?: string
-          day_of_week: number
+          day_of_week?: number | null
           developer_id: string
-          end_time: string
           id?: string
-          start_time: string
+          range_end_date?: string | null
+          range_start_date?: string | null
+          slot_end_time?: string | null
+          slot_start_time?: string | null
+          updated_at?: string | null
         }
         Update: {
+          availability_type?: string
           created_at?: string
-          day_of_week?: number
+          day_of_week?: number | null
           developer_id?: string
-          end_time?: string
           id?: string
-          start_time?: string
+          range_end_date?: string | null
+          range_start_date?: string | null
+          slot_end_time?: string | null
+          slot_start_time?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -169,6 +156,7 @@ export type Database = {
           id: string
           location: string | null
           phone_number: string | null
+          portfolio_image_url: string | null
           portfolio_url: string | null
           rating: number | null
           skills: string[] | null
@@ -182,6 +170,7 @@ export type Database = {
           id: string
           location?: string | null
           phone_number?: string | null
+          portfolio_image_url?: string | null
           portfolio_url?: string | null
           rating?: number | null
           skills?: string[] | null
@@ -195,6 +184,7 @@ export type Database = {
           id?: string
           location?: string | null
           phone_number?: string | null
+          portfolio_image_url?: string | null
           portfolio_url?: string | null
           rating?: number | null
           skills?: string[] | null
@@ -418,11 +408,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-

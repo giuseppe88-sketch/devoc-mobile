@@ -21,32 +21,22 @@ import { ClientProfileScreen } from '../screens/client/profile-screen';
 import EditClientProfileScreen from '../screens/client/edit-profile-screen'; 
 import { DeveloperDetailScreen } from '../screens/client/developer-detail-screen'; 
 
-import { ProfileStackParamList, ClientProfileStackParamList } from "../types"; // Import shared types
-import { NavigatorScreenParams } from '@react-navigation/native'; // Import this
+import { 
+  ProfileStackParamList, 
+  ClientProfileStackParamList, 
+  BrowseStackParamList, // Import BrowseStackParamList
+  AllMainTabsParamList   // Import AllMainTabsParamList
+} from "../types"; // Import shared types
 import { colors as themeColors, spacing } from '../theme'; 
 
 // Assuming dark theme for navigation elements
 const colors = themeColors.dark;
 
-const Tab = createBottomTabNavigator<AppTabParamList>();
+const Tab = createBottomTabNavigator<AllMainTabsParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
 const ClientProfileStack = createNativeStackNavigator<ClientProfileStackParamList>(); // Create Client Profile Stack
 
-// NEW: Define the ParamList for the main Tab navigator
-export type AppTabParamList = {
-  Dashboard: undefined;
-  Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
-  Availability?: undefined; 
-  Bookings?: undefined; 
-  Browse?: NavigatorScreenParams<BrowseStackParamList>; 
-};
-
-// Define Param List for the new Browse Stack
-export type BrowseStackParamList = {
-  ClientBrowse: undefined; // The list screen doesn't need params
-  DeveloperDetail: { developerId: string }; // The detail screen needs the ID
-};
-
+// BrowseStackParamList is now imported from ../types
 const BrowseStack = createNativeStackNavigator<BrowseStackParamList>(); // Create Browse Stack
 
 // Profile Stack Navigator Component
@@ -198,8 +188,8 @@ function MainNavigator() {
             iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'Availability') {
             iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'Bookings') {
-            iconName = focused ? 'list' : 'list-outline';
+          // } else if (route.name === 'Bookings') { // Bookings tab is not currently active
+          //   iconName = focused ? 'list' : 'list-outline';
           } else if (route.name === 'Browse') {
             iconName = focused ? 'search' : 'search-outline';
           }

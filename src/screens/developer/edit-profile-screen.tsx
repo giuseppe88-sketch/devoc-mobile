@@ -1,5 +1,10 @@
 // @ts-ignore -- Temporarily ignore missing type for React 19 RC hook
-import React, { useState, useEffect, useActionState, startTransition } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useActionState,
+  startTransition,
+} from "react";
 import {
   ScrollView,
   View,
@@ -8,29 +13,35 @@ import {
   Button,
   StyleSheet,
   Alert,
-  ActivityIndicator, 
-  Platform, 
-} from 'react-native';
-import { useQueryClient } from '@tanstack/react-query'; 
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack'; 
-import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../stores/auth-store';
-import { useDeveloperProfile } from '../../hooks/useDeveloperProfile'; 
-import { colors, spacing } from '../../theme'; 
-import { saveProfileAction, UserProfileData } from '../../actions/profile-actions';
-import type { ActionState } from '../../actions/profile-actions'; 
-import type { DeveloperProfile } from '../../types'; 
-import type { ProfileStackParamList } from '../../types'; 
+  ActivityIndicator,
+  Platform,
+  Image, // Added for displaying portfolio image
+} from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { supabase } from "@/lib/supabase";
+import { decode } from "base64-arraybuffer";
+import { useAuthStore } from "../../stores/auth-store";
+import { useDeveloperProfile } from "../../hooks/useDeveloperProfile";
+import { colors, spacing } from "../../theme";
+import {
+  saveProfileAction,
+  UserProfileData,
+} from "../../actions/profile-actions";
+import type { ActionState } from "../../actions/profile-actions";
+import type { DeveloperProfile } from "../../types";
+import type { ProfileStackParamList } from "../../types";
+import * as ImagePicker from "expo-image-picker"; // Added for image picking
 
 // Define the type for the form data passed to the action
-type ProfileFormData = Partial<Omit<DeveloperProfile, 'user_id'>>; 
+type ProfileFormData = Partial<Omit<DeveloperProfile, "user_id">>;
 
-// --- Component --- 
+// --- Component ---
 
 type EditProfileNavigationProp = StackNavigationProp<
   ProfileStackParamList,
-  'EditDeveloperProfile'
+  "EditDeveloperProfile"
 >;
 
 function EditDeveloperProfileScreen() {
@@ -39,7 +50,11 @@ function EditDeveloperProfileScreen() {
   const queryClient = useQueryClient(); // Get query client instance
 
   // --- Data Fetching using Custom Hook ---
-  const { data: profileData, isLoading, error: fetchError } = useDeveloperProfile(user?.id);
+  const {
+    data: profileData,
+    isLoading,
+    error: fetchError,
+  } = useDeveloperProfile(user?.id);
 
   // --- Types ---
   // Interface for the consolidated form state
@@ -50,6 +65,7 @@ function EditDeveloperProfileScreen() {
     skills: string;
     focusAreas: string;
     portfolioUrl: string;
+    portfolioImageUrl: string | null; // Added for portfolio image
     githubUrl: string;
     hourlyRate: string;
     location: string;
@@ -59,19 +75,21 @@ function EditDeveloperProfileScreen() {
 
   // State for form fields using a single state object
   const initialFormState: EditProfileFormState = {
-    name: '',
+    name: "",
     avatarUrl: null,
-    bio: '',
-    skills: '',
-    focusAreas: '',
-    portfolioUrl: '',
-    githubUrl: '',
-    hourlyRate: '',
-    location: '',
-    yearsOfExperience: '',
-    phoneNumber: '',
+    bio: "",
+    skills: "",
+    focusAreas: "",
+    portfolioUrl: "",
+    portfolioImageUrl: null, // Added for portfolio image
+    githubUrl: "",
+    hourlyRate: "",
+    location: "",
+    yearsOfExperience: "",
+    phoneNumber: "",
   };
-  const [formState, setFormState] = useState<EditProfileFormState>(initialFormState);
+  const [formState, setFormState] =
+    useState<EditProfileFormState>(initialFormState);
 
   // Generic handler for updating form state
   const handleInputChange = <K extends keyof EditProfileFormState>(
@@ -88,24 +106,32 @@ function EditDeveloperProfileScreen() {
   // state: holds the result of the last action { success, message }
   // submitAction: function to call to trigger the action
   // isPending: boolean indicating if the action is currently running
-  const [state, submitAction, isPending] = useActionState<ActionState | null, { user_id: string, userData: Partial<UserProfileData>, devData: ProfileFormData }>(saveProfileAction, null);
+  const [state, submitAction, isPending] = useActionState<
+    ActionState | null,
+    {
+      user_id: string;
+      userData: Partial<UserProfileData>;
+      devData: ProfileFormData;
+    }
+  >(saveProfileAction, null);
 
   // Effect to populate form state when profile data loads or changes
   useEffect(() => {
     if (profileData) {
       // Populate state from the combined profile data fetched by the hook
       setFormState({
-        name: profileData.name || '',
+        name: profileData.name || "",
         avatarUrl: profileData.avatar_url || null,
-        bio: profileData.bio || '',
-        skills: profileData.skills?.join(', ') || '',
-        focusAreas: profileData.focus_areas?.join(', ') || '',
-        portfolioUrl: profileData.portfolio_url || '',
-        githubUrl: profileData.github_url || '',
-        hourlyRate: profileData.hourly_rate?.toString() || '',
-        location: profileData.location || '',
-        yearsOfExperience: profileData.years_of_experience?.toString() || '',
-        phoneNumber: profileData.phone_number || '',
+        bio: profileData.bio || "",
+        skills: profileData.skills?.join(", ") || "",
+        focusAreas: profileData.focus_areas?.join(", ") || "",
+        portfolioUrl: profileData.portfolio_url || "",
+        portfolioImageUrl: profileData.portfolio_image_url || null, // Added for portfolio image
+        githubUrl: profileData.github_url || "",
+        hourlyRate: profileData.hourly_rate?.toString() || "",
+        location: profileData.location || "",
+        yearsOfExperience: profileData.years_of_experience?.toString() || "",
+        phoneNumber: profileData.phone_number || "",
       });
     }
   }, [profileData]); // Depend on the data from the hook
@@ -113,10 +139,12 @@ function EditDeveloperProfileScreen() {
   // Effect to handle action result (success/failure feedback and navigation)
   useEffect(() => {
     if (state?.message) {
-      Alert.alert(state.success ? 'Success' : 'Error', state.message);
+      Alert.alert(state.success ? "Success" : "Error", state.message);
       if (state.success) {
         // Invalidate the query cache for the profile on success
-        queryClient.invalidateQueries({ queryKey: ['developerProfile', user?.id] });
+        queryClient.invalidateQueries({
+          queryKey: ["developerProfile", user?.id],
+        });
         navigation.goBack();
       }
     }
@@ -125,7 +153,7 @@ function EditDeveloperProfileScreen() {
   const handleSave = () => {
     if (!user) return;
 
-    // --- Prepare Data for Action --- 
+    // --- Prepare Data for Action ---
     // User data from 'users' table
     const userDataToUpdate: Partial<UserProfileData> = {
       full_name: formState.name.trim(),
@@ -133,17 +161,31 @@ function EditDeveloperProfileScreen() {
       // avatar_url is handled by ImagePickerComponent directly via its upload function
       // We only update it here if a NEW url was generated/provided NOT via the picker
       // If ImagePicker handles the upload AND update, remove avatar_url here.
-      ...(formState.avatarUrl && !formState.avatarUrl.startsWith('data:') ? { avatar_url: formState.avatarUrl } : {}),
+      ...(formState.avatarUrl && !formState.avatarUrl.startsWith("data:")
+        ? { avatar_url: formState.avatarUrl }
+        : {}),
+      // portfolio_image_url will be updated if a new image is picked and uploaded
+      // It's handled similarly to avatar_url if we implement a separate uploader for it
+      // For now, assuming formState.portfolioImageUrl holds the URL to be saved.
     };
 
     // Developer profile specific data for 'developer_profiles' table/function
     const developerProfileDataToUpsert: ProfileFormData = {
       phone_number: formState.phoneNumber.trim() || undefined,
-      skills: formState.skills.split(',').map(s => s.trim()).filter(s => s),
-      focus_areas: formState.focusAreas.split(',').map(s => s.trim()).filter(s => s),
+      skills: formState.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s),
+      focus_areas: formState.focusAreas
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s),
       portfolio_url: formState.portfolioUrl.trim() || undefined,
+      portfolio_image_url: formState.portfolioImageUrl || undefined, // Added for portfolio image
       github_url: formState.githubUrl.trim() || undefined,
-      hourly_rate: formState.hourlyRate ? parseFloat(formState.hourlyRate) : undefined,
+      hourly_rate: formState.hourlyRate
+        ? parseFloat(formState.hourlyRate)
+        : undefined,
       location: formState.location.trim() || undefined,
       years_of_experience: formState.yearsOfExperience
         ? parseInt(formState.yearsOfExperience, 10)
@@ -152,10 +194,10 @@ function EditDeveloperProfileScreen() {
 
     // Wrap the action dispatch in startTransition
     startTransition(() => {
-      submitAction({ 
-        user_id: user.id, 
-        userData: userDataToUpdate, 
-        devData: developerProfileDataToUpsert 
+      submitAction({
+        user_id: user.id,
+        userData: userDataToUpdate,
+        devData: developerProfileDataToUpsert,
       });
     });
   };
@@ -163,15 +205,120 @@ function EditDeveloperProfileScreen() {
   // Handle image selection/upload
   const handleImagePicked = (newAvatarUrl: string | null) => {
     console.log("New avatar URL set:", newAvatarUrl);
-    handleInputChange('avatarUrl', newAvatarUrl); // Update state object
+    handleInputChange("avatarUrl", newAvatarUrl); // Update state object
     // NOTE: The ImagePickerComponent likely handles the UPLOAD.
     // Decide if the ImagePicker should ALSO update the 'users' table
     // or if we rely on the main save action. For simplicity here,
     // let's assume the main save action will handle it if avatarUrl changes.
   };
 
-  // --- Render Logic --- 
-  if (isLoading) { 
+
+  const handlePickPortfolioImage = async () => {
+    if (!user) {
+      Alert.alert("Error", "User not authenticated.");
+      return;
+    }
+
+    // Request permissions
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert(
+        "Permission Required",
+        "You've refused to allow this app to access your photos!"
+      );
+      return;
+    }
+
+    // Launch image picker
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"], // Correct new format
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.7, // Let's try a slightly higher quality, can be adjusted
+      base64: true, // Crucial for getting base64 data
+    });
+
+    if (pickerResult.canceled) {
+      return;
+    }
+
+    if (pickerResult.assets && pickerResult.assets.length > 0) {
+      const asset = pickerResult.assets[0];
+      console.log("Selected portfolio image asset:", {
+        uri: asset.uri,
+        mimeType: asset.mimeType,
+        fileSize: asset.fileSize,
+        width: asset.width,
+        height: asset.height,
+      });
+
+      // Ensure a reasonable extension
+      let fileExt = "jpg";
+      if (asset.mimeType && asset.mimeType.startsWith("image/")) {
+        fileExt = asset.mimeType.split("/")[1];
+      }
+
+      const filePath = `public/${user.id}/portfolio/${Date.now()}.${fileExt}`;
+
+      try {
+        // For React Native, Supabase recommends using ArrayBuffer from base64 data
+        // console.log("Decoding base64 image data..."); // Less verbose now that it's working
+        if (!asset.base64) {
+          Alert.alert("Error", "Failed to get base64 data for the image.");
+          console.error("Asset does not contain base64 data. Picker options: ", { mediaTypes: ['images'], allowsEditing: true, aspect: [16, 9], quality: 0.7, base64: true });
+          return;
+        }
+
+        const arrayBuffer = decode(asset.base64);
+
+        console.log("Portfolio image ArrayBuffer size:", arrayBuffer.byteLength, "(Original asset size:", asset.fileSize, ")");
+
+
+        // Critical check - if blob is empty, stop here
+        if (arrayBuffer.byteLength === 0) {
+          console.error("ArrayBuffer is empty! This is the problem.");
+          Alert.alert("Error", "Image conversion failed - ArrayBuffer is empty");
+          return;
+        }
+
+        // Upload image to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("portfolio-images")
+          .upload(filePath, arrayBuffer, {
+            contentType: asset.mimeType || "image/png",
+            upsert: true,
+          });
+
+        if (uploadError) {
+          
+          throw uploadError;
+        }
+
+        console.log("Upload successful:", uploadData);
+
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from("portfolio-images")
+          .getPublicUrl(filePath);
+
+        if (publicUrlData?.publicUrl) {
+          handleInputChange("portfolioImageUrl", publicUrlData.publicUrl);
+          Alert.alert("Success", "Portfolio image updated!");
+        } else {
+          Alert.alert("Error", "Could not get public URL for the image.");
+        }
+      } catch (e: any) {
+        console.error("Error uploading portfolio image:", e);
+        Alert.alert(
+          "Upload Error",
+          e.message || "Failed to upload portfolio image."
+        );
+      }
+    }
+  };
+  // --- Render Logic ---
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size={50} color={colors.light.primary} />
@@ -185,7 +332,9 @@ function EditDeveloperProfileScreen() {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Error loading profile:</Text>
-        <Text style={styles.errorText}>{(fetchError as Error).message || 'Unknown error'}</Text>
+        <Text style={styles.errorText}>
+          {(fetchError as Error).message || "Unknown error"}
+        </Text>
         {/* TODO: Add a retry button here? */}
       </View>
     );
@@ -193,7 +342,7 @@ function EditDeveloperProfileScreen() {
 
   // If not loading and no error, render the form
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
       keyboardShouldPersistTaps="handled"
@@ -208,7 +357,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.name}
-        onChangeText={(text) => handleInputChange('name', text)}
+        onChangeText={(text) => handleInputChange("name", text)}
         placeholder="Your full name"
         placeholderTextColor={colors.light.placeholder}
         autoCapitalize="words"
@@ -217,8 +366,8 @@ function EditDeveloperProfileScreen() {
       <Text style={styles.label}>Avatar URL</Text>
       <TextInput
         style={styles.input}
-        value={formState.avatarUrl ?? ''} // Handle null case
-        onChangeText={(text) => handleInputChange('avatarUrl', text || null)} // Set to null if empty
+        value={formState.avatarUrl ?? ""} // Handle null case
+        onChangeText={(text) => handleInputChange("avatarUrl", text || null)} // Set to null if empty
         placeholder="https://example.com/avatar.png"
         keyboardType="url"
         autoCapitalize="none"
@@ -228,7 +377,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={[styles.input, styles.textArea]}
         value={formState.bio}
-        onChangeText={(text) => handleInputChange('bio', text)}
+        onChangeText={(text) => handleInputChange("bio", text)}
         placeholder="Tell us a bit about yourself"
         placeholderTextColor={colors.light.placeholder}
         multiline
@@ -239,7 +388,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.phoneNumber}
-        onChangeText={(text) => handleInputChange('phoneNumber', text)}
+        onChangeText={(text) => handleInputChange("phoneNumber", text)}
         placeholder="(Optional) Your phone number"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="phone-pad"
@@ -249,7 +398,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.skills}
-        onChangeText={(text) => handleInputChange('skills', text)}
+        onChangeText={(text) => handleInputChange("skills", text)}
         placeholder="e.g., React Native, TypeScript, Node.js"
         placeholderTextColor={colors.light.placeholder}
       />
@@ -258,7 +407,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.focusAreas}
-        onChangeText={(text) => handleInputChange('focusAreas', text)}
+        onChangeText={(text) => handleInputChange("focusAreas", text)}
         placeholder="e.g., Mobile Development, UI/UX Design"
         placeholderTextColor={colors.light.placeholder}
       />
@@ -267,18 +416,33 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.portfolioUrl}
-        onChangeText={(text) => handleInputChange('portfolioUrl', text)}
+        onChangeText={(text) => handleInputChange("portfolioUrl", text)}
         placeholder="(Optional) Link to your portfolio"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="url"
         autoCapitalize="none"
       />
 
+      <Text style={styles.label}>Portfolio Image</Text>
+      {formState.portfolioImageUrl ? (
+        <Image
+          source={{ uri: formState.portfolioImageUrl }}
+          style={styles.portfolioImagePreview}
+        />
+      ) : (
+        <Text style={styles.placeholderText}>No image selected</Text>
+      )}
+      <Button
+        title="Pick Portfolio Image"
+        onPress={handlePickPortfolioImage}
+        color={colors.light.primary}
+      />
+
       <Text style={styles.label}>GitHub URL</Text>
       <TextInput
         style={styles.input}
         value={formState.githubUrl}
-        onChangeText={(text) => handleInputChange('githubUrl', text)}
+        onChangeText={(text) => handleInputChange("githubUrl", text)}
         placeholder="(Optional) Link to your GitHub profile"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="url"
@@ -289,7 +453,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.hourlyRate}
-        onChangeText={(text) => handleInputChange('hourlyRate', text)}
+        onChangeText={(text) => handleInputChange("hourlyRate", text)}
         placeholder="(Optional) e.g., 75"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="numeric"
@@ -299,7 +463,7 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.location}
-        onChangeText={(text) => handleInputChange('location', text)}
+        onChangeText={(text) => handleInputChange("location", text)}
         placeholder="(Optional) e.g., San Francisco, CA or Remote"
         placeholderTextColor={colors.light.placeholder}
       />
@@ -308,21 +472,20 @@ function EditDeveloperProfileScreen() {
       <TextInput
         style={styles.input}
         value={formState.yearsOfExperience}
-        onChangeText={(text) => handleInputChange('yearsOfExperience', text)}
+        onChangeText={(text) => handleInputChange("yearsOfExperience", text)}
         placeholder="(Optional) e.g., 5"
         placeholderTextColor={colors.light.placeholder}
         keyboardType="numeric"
       />
 
       <View style={styles.buttonContainer}>
-        <Button 
-          title={isPending ? "Saving..." : "Save Profile"} 
-          onPress={handleSave} 
+        <Button
+          title={isPending ? "Saving..." : "Save Profile"}
+          onPress={handleSave}
           disabled={isPending}
-          color={colors.light.primary} 
+          color={colors.light.primary}
         />
       </View>
-      
     </ScrollView>
   );
 }
@@ -330,15 +493,15 @@ function EditDeveloperProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background, 
+    backgroundColor: colors.light.background,
   },
   contentContainer: {
     padding: spacing.md, // Use theme spacing
   },
-  loadingContainer: { 
+  loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.light.background,
   },
   loadingText: {
@@ -346,42 +509,58 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.light.textSecondary,
   },
-  errorContainer: { 
+  errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: spacing.md,
     backgroundColor: colors.light.background,
   },
-  errorText: { 
-    color: colors.light.error, 
-    textAlign: 'center',
+  errorText: {
+    color: colors.light.error,
+    textAlign: "center",
     marginBottom: spacing.sm,
     fontSize: 16,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600', // Bolder labels
+    fontWeight: "600", // Bolder labels
     marginBottom: spacing.xs,
-    color: colors.light.text, 
+    color: colors.light.text,
   },
   input: {
     backgroundColor: colors.light.card, // Subtle background for input
     borderWidth: 1,
-    borderColor: colors.light.border, 
+    borderColor: colors.light.border,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm, 
-    borderRadius: spacing.xs, 
+    paddingVertical: spacing.sm,
+    borderRadius: spacing.xs,
     fontSize: 16,
-    marginBottom: spacing.md, 
-    color: colors.light.text, 
+    marginBottom: spacing.md,
+    color: colors.light.text,
   },
   textArea: {
     minHeight: 100, // Make textarea taller
-    textAlignVertical: 'top', // Align text to top
+    textAlignVertical: "top", // Align text to top
   },
   buttonContainer: {
     marginTop: spacing.lg, // Add space above button
+    paddingBottom: spacing.lg, // Ensure space for the button at the bottom
+  },
+  portfolioImagePreview: {
+    width: "100%", // Make it responsive within its container
+    aspectRatio: 16 / 9, // Maintain aspect ratio
+    height: undefined, // Height will be calculated based on width and aspectRatio
+    resizeMode: "cover",
+    marginBottom: spacing.md,
+    borderRadius: spacing.sm,
+    backgroundColor: colors.light.subtle, // Placeholder background
+  },
+  placeholderText: {
+    textAlign: "center",
+    marginVertical: spacing.md,
+    color: colors.light.placeholder,
+    fontStyle: "italic",
   },
 });
 

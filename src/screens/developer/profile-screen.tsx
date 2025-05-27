@@ -166,6 +166,18 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                  )}
                </View>
                <View style={styles.detailItem}>
+                 <Text style={styles.label}>Portfolio Image</Text>
+                 {profileData?.portfolio_image_url ? (
+                   <Image
+                     source={{ uri: profileData.portfolio_image_url }}
+                     style={styles.portfolioImage}
+                     onError={(e) => console.log('Failed to load portfolio image:', e.nativeEvent.error)}
+                   />
+                 ) : (
+                   <Text style={styles.notSetText}>Not set</Text>
+                 )}
+               </View>
+               <View style={styles.detailItem}>
                  <Text style={styles.label}>Location</Text>
                  <Text style={styles.value}>{profileData?.location || <Text style={styles.notSetText}>Not set</Text>}</Text>
                </View>
@@ -239,6 +251,14 @@ const styles = StyleSheet.create({
     fontSize: 17, 
     color: colors.text, 
     lineHeight: 24, 
+  },
+  portfolioImage: {
+    width: '100%',
+    height: 250,
+    resizeMode: 'cover',
+    borderRadius: spacing.md, // Corrected to use spacing.md
+    marginTop: spacing.sm,    // Corrected to use spacing.sm
+    backgroundColor: colors.border, // Corrected to use colors.border
   },
   linkText: { 
     color: colors.primary, 

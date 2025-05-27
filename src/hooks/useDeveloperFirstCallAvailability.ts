@@ -188,7 +188,7 @@ export function useDeveloperFirstCallAvailability({ targetDeveloperId }: UseDeve
 
   console.log(`[useDeveloperFirstCallAvailability] Availability query: isLoading=${isLoadingAvailability}, data=${JSON.stringify(availabilitySlots?.length)} slots, error=${error?.message}`);
 
-  const { mutateAsync: saveAvailability, isLoading: isSaving } = useMutation<Availability[], Error, SaveFirstCallAvailabilityParams[], { previousAvailability: Availability[] | undefined }>({
+  const { mutateAsync: saveAvailability, isPending: isSaving } = useMutation<Availability[], Error, SaveFirstCallAvailabilityParams[], { previousAvailability: Availability[] | undefined }>({
     mutationFn: (newSlots: SaveFirstCallAvailabilityParams[]) => {
       const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
       if (!finalDeveloperId) {

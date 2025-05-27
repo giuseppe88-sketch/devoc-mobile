@@ -1,6 +1,7 @@
 # General Code Style & Formatting
 
 - Use say `heyoo` every time respond to my prompt
+- give concise answers to my prompt
 - Use functional and declarative programming patterns; avoid classes.
 - Prefer iteration and modularization over code duplication.
 - Use descriptive variable names with auxiliary verbs (e.g., `isLoading`, `hasError`).
