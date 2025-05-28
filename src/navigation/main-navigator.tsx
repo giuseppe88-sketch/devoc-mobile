@@ -11,6 +11,7 @@ import DeveloperDashboardScreen from '../screens/developer/dashboard-screen';
 import DeveloperProfileScreen from '../screens/developer/profile-screen';
 import EditDeveloperProfileScreen from '../screens/developer/edit-profile-screen';
 import DeveloperAvailabilityScreen from '../screens/developer/availability-screen';
+import AccountScreen from '../screens/account/account-screen'; // Import AccountScreen
 // import DeveloperBookingsScreen from '../screens/developer/bookings-screen';
 
 // Client Screens
@@ -69,6 +70,13 @@ function ProfileStackNavigator() {
         options={{ 
           // Replace title text with an icon
           headerTitle: () => <Ionicons name="create-outline" size={26} color={colors.text} />, 
+        }}
+      />
+      <ProfileStack.Screen 
+        name="AccountScreen" 
+        component={AccountScreen} 
+        options={{
+          headerTitle: () => <Ionicons name="settings-outline" size={24} color={colors.text} />,
         }} 
       />
     </ProfileStack.Navigator>
@@ -192,6 +200,8 @@ function MainNavigator() {
           //   iconName = focused ? 'list' : 'list-outline';
           } else if (route.name === 'Browse') {
             iconName = focused ? 'search' : 'search-outline';
+          } else if (route.name === 'Account') {
+            iconName = focused ? 'settings' : 'settings-outline';
           }
 
           // Restore original size prop
@@ -235,6 +245,15 @@ function MainNavigator() {
           <Tab.Screen name="Profile" component={ClientProfileStackNavigator} options={{ headerShown: false }} />
         </>
       )}
+      {/* Universal Account Tab */}
+      <Tab.Screen 
+        name="Account" 
+        component={AccountScreen} 
+        options={{
+          // If AccountScreen has its own header, you might want to hide the Tab Navigator's header for this screen
+          // headerShown: false, 
+        }}
+      />
     </Tab.Navigator>
   );
 }

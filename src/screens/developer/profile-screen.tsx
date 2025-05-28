@@ -99,9 +99,14 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
         {/* Header (Title + Edit Button) */}
         <View style={styles.header}>
           <Text style={styles.title}>Your Profile</Text>
-          <TouchableOpacity onPress={handleEditPress} style={styles.editButton}>
-            <Ionicons name="create-outline" size={28} color={colors.secondary} />
-          </TouchableOpacity>
+          <View style={styles.headerIconsContainer}>
+            <TouchableOpacity onPress={handleEditPress} style={styles.headerButton}>
+              <Ionicons name="create-outline" size={28} color={colors.secondary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('AccountScreen')} style={styles.headerButton}>
+              <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {profileData && (
@@ -233,8 +238,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
   },
-  editButton: {
-    padding: spacing.sm,
+  headerIconsContainer: {
+    flexDirection: 'row',
+  },
+  headerButton: {
+    marginLeft: spacing.md, // Add some space between icons
   },
   identitySection: {
     alignItems: 'center',

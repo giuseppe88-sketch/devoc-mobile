@@ -84,6 +84,7 @@ export type EditDeveloperProfileRouteParams = {
 export type ProfileStackParamList = {
   DeveloperProfile: undefined; // No parameters expected for the main profile view
   EditDeveloperProfile: EditDeveloperProfileRouteParams; // Use the existing type for edit screen params
+  AccountScreen: undefined; // Screen for account settings, e.g., logout
 };
 
 // --- Add Client Profile Types ---
@@ -140,7 +141,8 @@ export type AllMainTabsParamList = {
   // Common screens or screens that might change target based on role
   Dashboard: undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
-  
+  Account: undefined; // Universal Account/Settings Tab
+
   // Developer-specific screens (optional if not present for clients)
   Availability?: undefined; 
   
