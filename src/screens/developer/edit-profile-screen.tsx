@@ -158,15 +158,7 @@ function EditDeveloperProfileScreen() {
     const userDataToUpdate: Partial<UserProfileData> = {
       full_name: formState.name.trim(),
       bio: formState.bio.trim(),
-      // avatar_url is handled by ImagePickerComponent directly via its upload function
-      // We only update it here if a NEW url was generated/provided NOT via the picker
-      // If ImagePicker handles the upload AND update, remove avatar_url here.
-      ...(formState.avatarUrl && !formState.avatarUrl.startsWith("data:")
-        ? { avatar_url: formState.avatarUrl }
-        : {}),
-      // portfolio_image_url will be updated if a new image is picked and uploaded
-      // It's handled similarly to avatar_url if we implement a separate uploader for it
-      // For now, assuming formState.portfolioImageUrl holds the URL to be saved.
+      avatar_url: formState.avatarUrl || undefined,
     };
 
     // Developer profile specific data for 'developer_profiles' table/function
@@ -201,17 +193,6 @@ function EditDeveloperProfileScreen() {
       });
     });
   };
-
-  // Handle image selection/upload
-  const handleImagePicked = (newAvatarUrl: string | null) => {
-    console.log("New avatar URL set:", newAvatarUrl);
-    handleInputChange("avatarUrl", newAvatarUrl); // Update state object
-    // NOTE: The ImagePickerComponent likely handles the UPLOAD.
-    // Decide if the ImagePicker should ALSO update the 'users' table
-    // or if we rely on the main save action. For simplicity here,
-    // let's assume the main save action will handle it if avatarUrl changes.
-  };
-
 
   const handlePickPortfolioImage = async () => {
     if (!user) {
@@ -266,19 +247,36 @@ function EditDeveloperProfileScreen() {
         // console.log("Decoding base64 image data..."); // Less verbose now that it's working
         if (!asset.base64) {
           Alert.alert("Error", "Failed to get base64 data for the image.");
-          console.error("Asset does not contain base64 data. Picker options: ", { mediaTypes: ['images'], allowsEditing: true, aspect: [16, 9], quality: 0.7, base64: true });
+          console.error(
+            "Asset does not contain base64 data. Picker options: ",
+            {
+              mediaTypes: ["images"],
+              allowsEditing: true,
+              aspect: [16, 9],
+              quality: 0.7,
+              base64: true,
+            }
+          );
           return;
         }
 
         const arrayBuffer = decode(asset.base64);
 
-        console.log("Portfolio image ArrayBuffer size:", arrayBuffer.byteLength, "(Original asset size:", asset.fileSize, ")");
-
+        console.log(
+          "Portfolio image ArrayBuffer size:",
+          arrayBuffer.byteLength,
+          "(Original asset size:",
+          asset.fileSize,
+          ")"
+        );
 
         // Critical check - if blob is empty, stop here
         if (arrayBuffer.byteLength === 0) {
           console.error("ArrayBuffer is empty! This is the problem.");
-          Alert.alert("Error", "Image conversion failed - ArrayBuffer is empty");
+          Alert.alert(
+            "Error",
+            "Image conversion failed - ArrayBuffer is empty"
+          );
           return;
         }
 
@@ -291,7 +289,6 @@ function EditDeveloperProfileScreen() {
           });
 
         if (uploadError) {
-          
           throw uploadError;
         }
 
@@ -314,6 +311,85 @@ function EditDeveloperProfileScreen() {
           "Upload Error",
           e.message || "Failed to upload portfolio image."
         );
+      }
+    }
+  };
+
+  const handlePickAvatarImage = async () => {
+    if (!user) {
+      Alert.alert("Error", "User not authenticated.");
+      return;
+    }
+
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert(
+        "Permission Required",
+        "You've refused to allow this app to access your photos!"
+      );
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Square aspect ratio for avatars
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (pickerResult.canceled) {
+      return;
+    }
+
+    if (pickerResult.assets && pickerResult.assets.length > 0) {
+      const asset = pickerResult.assets[0];
+
+      let fileExt = "png"; // Default to png
+      if (asset.mimeType && asset.mimeType.startsWith("image/")) {
+        fileExt = asset.mimeType.split("/")[1];
+      }
+      
+      const filePath = `public/${user.id}/avatar/avatar.${fileExt}`;
+
+      try {
+        if (!asset.base64) {
+          Alert.alert("Error", "Failed to get base64 data for the image.");
+          return;
+        }
+        const arrayBuffer = decode(asset.base64);
+
+        if (arrayBuffer.byteLength === 0) {
+          Alert.alert("Error", "Image conversion failed - ArrayBuffer is empty");
+          return;
+        }
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("avatars") // Use 'avatars' bucket
+          .upload(filePath, arrayBuffer, {
+            contentType: asset.mimeType || `image/${fileExt}`,
+            upsert: true, // Important to overwrite existing avatar
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+
+        if (publicUrlData?.publicUrl) {
+          const newAvatarUrl = `${publicUrlData.publicUrl}?t=${new Date().getTime()}`;
+          handleInputChange("avatarUrl", newAvatarUrl);
+          Alert.alert("Success", "Avatar updated!");
+        } else {
+          Alert.alert("Error", "Could not get public URL for the avatar.");
+        }
+      } catch (e: any) {
+        console.error("Error uploading avatar:", e);
+        Alert.alert("Upload Error", e.message || "Failed to upload avatar.");
       }
     }
   };
@@ -363,15 +439,23 @@ function EditDeveloperProfileScreen() {
         autoCapitalize="words"
       />
 
-      <Text style={styles.label}>Avatar URL</Text>
-      <TextInput
-        style={styles.input}
-        value={formState.avatarUrl ?? ""} // Handle null case
-        onChangeText={(text) => handleInputChange("avatarUrl", text || null)} // Set to null if empty
-        placeholder="https://example.com/avatar.png"
-        keyboardType="url"
-        autoCapitalize="none"
+      <Text style={styles.label}>Avatar</Text>
+      {formState.avatarUrl ? (
+        <Image
+          source={{ uri: formState.avatarUrl }}
+          style={styles.avatarPreview}
+        />
+      ) : (
+        <View style={styles.avatarPreview}>
+          <Text style={styles.placeholderText}>No avatar</Text>
+        </View>
+      )}
+      <Button
+        title="Change Avatar"
+        onPress={handlePickAvatarImage}
+        color={colors.light.primary}
       />
+      <View style={{ marginBottom: spacing.md }} />
 
       <Text style={styles.label}>Bio</Text>
       <TextInput
@@ -555,6 +639,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderRadius: spacing.sm,
     backgroundColor: colors.light.subtle, // Placeholder background
+  },
+  avatarPreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 50, // Circular avatar
+    marginBottom: spacing.sm,
+    alignSelf: "center",
+    backgroundColor: colors.light.subtle, // Placeholder background
+    justifyContent: "center", // For placeholder text
+    alignItems: "center",     // For placeholder text
   },
   placeholderText: {
     textAlign: "center",
