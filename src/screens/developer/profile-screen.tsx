@@ -70,223 +70,325 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
     );
   }
 
+  const renderDetailItem = (label: string, value: string | number | null | undefined, iconName?: keyof typeof Ionicons.glyphMap) => {
+    if (value === null || value === undefined || value === "") {
+      return (
+        <View style={styles.detailRow}>
+          <View style={styles.detailLeftContainer}>
+            {iconName && <Ionicons name={iconName} size={20} style={styles.detailIcon} />}
+            <Text style={styles.detailLabel}>{label}</Text>
+          </View>
+          <Text style={[styles.detailValue, styles.notSetText]}>Not set</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.detailRow}>
+        <View style={styles.detailLeftContainer}>
+          {iconName && <Ionicons name={iconName} size={20} style={styles.detailIcon} />}
+          <Text style={styles.detailLabel}>{label}</Text>
+        </View>
+        <Text style={styles.detailValue}>{value}</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContentContainer}>
+        {/* Header (Title + Edit Button) */}
         <View style={styles.header}>
           <Text style={styles.title}>Your Profile</Text>
           <TouchableOpacity onPress={handleEditPress} style={styles.editButton}>
-            <Ionicons name="create-outline" size={24} color={colors.secondary} />
+            <Ionicons name="create-outline" size={28} color={colors.secondary} />
           </TouchableOpacity>
         </View>
 
         {profileData && (
           <>
-            <View style={styles.avatarContainer}>
-                {profileData?.avatar_url ? (
-                  <Image source={{ uri: profileData.avatar_url }} style={styles.avatar} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={50} color={colors.textSecondary} />
+            {/* Identity Block */}
+            <View style={styles.identitySection}>
+              {profileData.avatar_url ? (
+                <Image source={{ uri: profileData.avatar_url }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons name="person-circle-outline" size={100} color={colors.textSecondary} />
+                </View>
+              )}
+              <Text style={styles.nameText}>{profileData.name || "N/A"}</Text>
+              {user?.email && <Text style={styles.emailText}>{user.email}</Text>}
+              <View style={styles.iconDetailRow}>
+                {profileData.rating !== null && profileData.rating !== undefined && (
+                  <View style={styles.iconDetailItem}>
+                    <Ionicons name="star" size={18} color={colors.star} />
+                    <Text style={styles.iconDetailText}>{profileData.rating.toFixed(1)}</Text>
                   </View>
                 )}
-             </View>
+                {profileData.github_url && (
+                  <TouchableOpacity onPress={() => handleLinkPress(profileData.github_url)} style={styles.iconDetailItem}>
+                    <Ionicons name="logo-github" size={18} color={colors.textSecondary} />
+                    <Text style={styles.iconDetailText}>GitHub</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
 
-             <View style={styles.detailsCard}>
-                <View style={styles.detailItem}>
-                   <Text style={styles.label}>Name</Text>
-                   <Text style={styles.value}>{profileData?.name || <Text style={styles.notSetText}>N/A</Text>}</Text>
-                 </View>
-                 <View style={styles.detailItem}>
-                   <Text style={styles.label}>Email</Text>
-                   <Text style={styles.value}>{user?.email || <Text style={styles.notSetText}>N/A</Text>}</Text>
-                 </View>
-                 <View style={styles.detailItem}>
-                   <Text style={styles.label}>Phone</Text>
-                   <Text style={styles.value}>{profileData?.phone_number || <Text style={styles.notSetText}>Not set</Text>}</Text>
-                 </View>
-                 <View style={styles.detailItem}>
-                   <Text style={styles.label}>Bio</Text>
-                   <Text style={styles.value}>{profileData?.bio || <Text style={styles.notSetText}>Not set</Text>}</Text>
-                 </View>
-                 <View style={styles.detailItem}>
-                   <Text style={styles.label}>Hourly Rate</Text>
-                   <Text style={styles.value}>{profileData?.hourly_rate ? `$${profileData.hourly_rate}/hr` : <Text style={styles.notSetText}>Not set</Text>}</Text>
-                 </View>
-                 <View style={styles.detailItem}>
-                   <Text style={styles.label}>Rating</Text>
-                   <Text style={styles.value}>
-                     {profileData?.rating !== null && profileData?.rating !== undefined 
-                       ? profileData.rating.toFixed(1) 
-                       : <Text style={styles.notSetText}>Not rated yet</Text>}
-                   </Text>
-                 </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>Focus Areas</Text>
-                 <View style={styles.listContainer}>
-                   {profileData?.focus_areas?.length ? (
-                     profileData.focus_areas.map((area: string, index: number) => (
-                       <View key={index} style={styles.badge}>
-                         <Text style={styles.badgeText}>{area}</Text>
-                       </View>
-                     ))
-                   ) : <Text style={styles.notSetText}>Not set</Text>}
-                 </View>
-               </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>Skills</Text>
-                 <View style={styles.listContainer}>
-                   {profileData?.skills?.length ? (
-                     profileData.skills.map((skill: string, index: number) => (
-                       <View key={index} style={styles.badge}>
-                         <Text style={styles.badgeText}>{skill}</Text>
-                       </View>
-                     ))
-                    ) : <Text style={styles.notSetText}>Not set</Text>}
-                 </View>
-               </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>Portfolio URL</Text>
-                 {profileData?.portfolio_url ? (
-                   <TouchableOpacity onPress={() => handleLinkPress(profileData.portfolio_url)}>
-                     <Text style={[styles.value, styles.linkText]}>{profileData.portfolio_url}</Text>
-                   </TouchableOpacity>
-                 ) : (
-                   <Text style={styles.notSetText}>Not set</Text>
-                 )}
-               </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>GitHub URL</Text>
-                 {profileData?.github_url ? (
-                   <TouchableOpacity onPress={() => handleLinkPress(profileData.github_url)}>
-                     <Text style={[styles.value, styles.linkText]}>{profileData.github_url}</Text>
-                   </TouchableOpacity>
-                 ) : (
-                   <Text style={styles.notSetText}>Not set</Text>
-                 )}
-               </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>Portfolio Image</Text>
-                 {profileData?.portfolio_image_url ? (
-                   <Image
-                     source={{ uri: profileData.portfolio_image_url }}
-                     style={styles.portfolioImage}
-                     onError={(e) => console.log('Failed to load portfolio image:', e.nativeEvent.error)}
-                   />
-                 ) : (
-                   <Text style={styles.notSetText}>Not set</Text>
-                 )}
-               </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>Location</Text>
-                 <Text style={styles.value}>{profileData?.location || <Text style={styles.notSetText}>Not set</Text>}</Text>
-               </View>
-               <View style={styles.detailItem}>
-                 <Text style={styles.label}>Years of Experience</Text>
-                 <Text style={styles.value}>{profileData?.years_of_experience ? `${profileData.years_of_experience} years` : <Text style={styles.notSetText}>Not set</Text>}</Text>
-               </View>
-             </View>
-           </>
-         )}
-       </ScrollView>
-     </SafeAreaView>
+            {/* Combined Focus Areas and Skills Section */}
+            {((profileData.focus_areas?.length ?? 0) > 0 || (profileData.skills?.length ?? 0) > 0) && (
+              <View style={styles.skillsFocusRowContainer}>
+                {/* Focus Areas Column */}
+                {(profileData.focus_areas?.length ?? 0) > 0 && (
+                  <View style={styles.skillsFocusColumn}>
+                    <Text style={styles.sectionTitleSmall}>Focus Areas</Text>
+                    <View style={styles.badgeContainer}>
+                      {profileData.focus_areas?.map((area, index) => (
+                        <View key={index} style={styles.badge}>
+                          <Text style={styles.badgeText}>{area}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Skills Column */}
+                {(profileData.skills?.length ?? 0) > 0 && (
+                  <View style={styles.skillsFocusColumn}>
+                    <Text style={styles.sectionTitleSmall}>Skills</Text>
+                    <View style={styles.badgeContainer}>
+                      {profileData.skills?.map((skill, index) => (
+                        <View key={index} style={styles.badge}>
+                          <Text style={styles.badgeText}>{skill}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Bio */}
+            {profileData.bio && (
+              <View style={styles.sectionContainer}>
+                {/* <Text style={styles.sectionTitle}>About Me</Text> */}
+                <Text style={styles.bioText}>{profileData.bio}</Text>
+              </View>
+            )}
+
+            {/* Portfolio */}
+            {(profileData.portfolio_image_url || profileData.portfolio_url) && (
+                <View style={styles.sectionContainer}>
+                    {/* <Text style={styles.sectionTitle}>Portfolio</Text> */}
+                    {profileData.portfolio_image_url ? (
+                    <TouchableOpacity onPress={() => handleLinkPress(profileData.portfolio_url)}>
+                        <Image
+                        source={{ uri: profileData.portfolio_image_url }}
+                        style={styles.portfolioImage}
+                        />
+                    </TouchableOpacity>
+                    ) : profileData.portfolio_url ? (
+                    <TouchableOpacity onPress={() => handleLinkPress(profileData.portfolio_url)}>
+                        <Text style={styles.linkText}>{profileData.portfolio_url}</Text>
+                    </TouchableOpacity>
+                    ) : null}
+                </View>
+            )}
+
+            {/* More Details Section */}
+            <View style={styles.sectionContainer}>
+              {/* <Text style={styles.sectionTitle}>More Details</Text> */}
+              {renderDetailItem("Hourly Rate", profileData.hourly_rate !== null && profileData.hourly_rate !== undefined ? `$${profileData.hourly_rate}/hr` : null, "cash-outline")}
+              {renderDetailItem("Phone", profileData.phone_number, "call-outline")}
+              {renderDetailItem("Location", profileData.location, "location-outline")}
+              {renderDetailItem("Years of Experience", profileData.years_of_experience ? `${profileData.years_of_experience} years` : null, "time-outline")}
+            </View>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { 
+    flex: 1, 
+    backgroundColor: colors.background 
+  },
+  scrollContentContainer: {
+    paddingBottom: spacing.xl, // Corrected: Ensure space at the bottom
+  },
+  centered: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingVertical: spacing.md, // Adjusted padding
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  title: {
+    fontSize: 26, // Slightly smaller title
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  editButton: {
+    padding: spacing.sm,
+  },
+  identitySection: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    marginHorizontal: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    marginBottom: spacing.lg,
   },
-  title: { fontSize: 28, fontWeight: 'bold', color: colors.text },
-  editButton: { padding: spacing.sm },
-  avatarContainer: { alignItems: 'center', marginVertical: spacing.lg }, 
   avatar: {
-    width: 120, 
-    height: 120, 
-    borderRadius: 60, 
-    borderWidth: 2,
-    borderColor: colors.secondary,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: spacing.md,
   },
   avatarPlaceholder: {
-    width: 120, height: 120, borderRadius: 60, backgroundColor: colors.card,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.card, // Corrected: A subtle background for placeholder
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  detailsCard: { 
-    borderRadius: spacing.md,
-    marginHorizontal: spacing.md,
-    padding: spacing.lg,
+  nameText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  emailText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: spacing.md, // Increased margin
+  },
+  iconDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    flexWrap: 'wrap', // Allow wrapping if content is too wide
+  },
+  iconDetailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing.sm, // Adjusted for potentially more items
+    marginBottom: spacing.xs, // For wrapping
+  },
+  iconDetailText: {
+    marginLeft: spacing.xs,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  detailTextSmall: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  sectionContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg, // Space between sections
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  badge: {
+    backgroundColor: colors.primary,
+    borderRadius: 15, // More rounded badges
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.md,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  badgeText: {
+    color: themeColors.dark.text, // Ensure contrast, assuming primary is light
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  skillsFocusRowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3, 
   },
-  detailsContainer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }, 
-  detailItem: {
-    borderWidth: 1,            
-    borderColor: colors.border,  
-    borderRadius: spacing.sm,  
-    padding: spacing.md,       
-    marginBottom: spacing.md,  
+  skillsFocusColumn: {
+    flex: 1,
+    marginHorizontal: spacing.xs, // Add small margin between columns
   },
-  label: { 
-    fontSize: 14, 
-    color: colors.textSecondary, 
-    marginBottom: spacing.xs, 
-    opacity: 0.8, 
+  sectionTitleSmall: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
-  value: { 
-    fontSize: 17, 
-    color: colors.text, 
-    lineHeight: 24, 
+  bioText: {
+    fontSize: 16,
+    lineHeight: 24, // Improved readability for bio
+    color: colors.textSecondary,
   },
   portfolioImage: {
     width: '100%',
-    height: 250,
-    resizeMode: 'cover',
-    borderRadius: spacing.md, // Corrected to use spacing.md
-    marginTop: spacing.sm,    // Corrected to use spacing.sm
-    backgroundColor: colors.border, // Corrected to use colors.border
+    aspectRatio: 16 / 9,
+    borderRadius: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.card, // Corrected: Placeholder bg
   },
-  linkText: { 
-    color: colors.primary, 
+  linkText: {
+    fontSize: 16,
+    color: colors.accent,
     textDecorationLine: 'underline',
   },
-  notSetText: { 
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    alignItems: 'center', // Corrected: Removed extra margin/border
+  },
+  detailLeftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailIcon: {
+    marginRight: spacing.sm,
+    color: colors.textSecondary,
+  },
+  detailLabel: {
     fontSize: 16,
     color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  detailValue: {
+    fontSize: 16,
+    color: colors.text,
+    textAlign: 'right',
+    flexShrink: 1, 
+  },
+  notSetText: {
     fontStyle: 'italic',
-    opacity: 0.7,
+    color: colors.textSecondary, 
   },
-  listContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.xs },
-  badge: {
-    backgroundColor: colors.subtle, 
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 15,
-    marginRight: spacing.sm, 
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.secondary, 
+  errorText: { 
+    color: colors.error, 
+    textAlign: 'center', 
+    margin: spacing.md, 
+    fontSize: 16 
   },
-  badgeText: { 
-    color: colors.text, 
-    fontSize: 13, 
-    fontWeight: '500' 
-  },
-  errorText: { color: colors.error, textAlign: 'center', margin: spacing.md, fontSize: 16 },
 });
 
 export default DeveloperProfileScreen;
