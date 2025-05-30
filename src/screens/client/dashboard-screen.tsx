@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../stores/auth-store';
+import { useBrowseDevelopers, DeveloperProfile } from '@/hooks/useBrowseDevelopers';
+import { ActivityIndicator } from 'react-native';
 import { colors as themeColors, spacing } from '../../theme';
 
 const colors = themeColors.light;
@@ -11,30 +13,15 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
   const { user } = useAuthStore();
   const name = user?.user_metadata?.name || 'Client';
 
-  // Mock data for developers
-  const featuredDevelopers = [
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      skills: ['React Native', 'TypeScript', 'Node.js'],
-      rating: 4.9,
-      image: 'https://randomuser.me/api/portraits/women/44.jpg',
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      skills: ['Flutter', 'Firebase', 'UI/UX'],
-      rating: 4.8,
-      image: 'https://randomuser.me/api/portraits/men/32.jpg',
-    },
-    {
-      id: '3',
-      name: 'Alex Rodriguez',
-      skills: ['iOS', 'Swift', 'SwiftUI'],
-      rating: 4.7,
-      image: 'https://randomuser.me/api/portraits/men/67.jpg',
-    },
-  ];
+  const { data: allDevelopers, isLoading: isLoadingDevelopers, error: errorDevelopers } = useBrowseDevelopers();
+
+  const featuredDevelopers = React.useMemo(() => {
+    if (!allDevelopers) return [];
+    return allDevelopers
+      .filter(dev => dev.rating !== null)
+      .sort((a, b) => (b.rating!) - (a.rating!)) // Sort by rating descending, non-null asserted due to filter
+      .slice(0, 5); // Show top 5 featured developers
+  }, [allDevelopers]);
 
   // Mock data for upcoming bookings
   const upcomingBookings = [
@@ -73,39 +60,50 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {featuredDevelopers.map((developer) => (
-              <TouchableOpacity
-                key={developer.id}
-                style={styles.developerCard}
-                onPress={() => {
-                  // Navigate to developer profile
-                }}
-              >
-                <Image
-                  source={{ uri: developer.image }}
-                  style={styles.developerImage}
-                />
-                <Text style={styles.developerName}>{developer.name}</Text>
-                <View style={styles.skillsContainer}>
-                  {developer.skills.slice(0, 2).map((skill, index) => (
-                    <View key={index} style={styles.skillBadge}>
-                      <Text style={styles.skillText}>{skill}</Text>
-                    </View>
-                  ))}
-                  {developer.skills.length > 2 && (
-                    <View style={styles.skillBadge}>
-                      <Text style={styles.skillText}>+{developer.skills.length - 2}</Text>
+          {isLoadingDevelopers ? (
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+          ) : errorDevelopers ? (
+            <Text style={styles.errorText}>Error loading developers: {errorDevelopers.message}</Text>
+          ) : featuredDevelopers.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {featuredDevelopers.map((developer: DeveloperProfile) => (
+                <TouchableOpacity
+                  key={developer.id}
+                  style={styles.developerCard}
+                  onPress={() => navigation.navigate('Browse', { screen: 'DeveloperDetail', params: { developerId: developer.id } })}
+                >
+                  <Image
+                    source={{ uri: developer.avatar_url || 'https://via.placeholder.com/100' }} // Use avatar_url and provide a fallback
+                    style={styles.developerImage}
+                  />
+                  <Text style={styles.developerName}>{developer.name}</Text>
+                  {developer.skills && developer.skills.length > 0 && (
+                    <View style={styles.skillsContainer}>
+                      {developer.skills.slice(0, 2).map((skill, index) => (
+                        <View key={index} style={styles.skillBadge}>
+                          <Text style={styles.skillText}>{skill}</Text>
+                        </View>
+                      ))}
+                      {developer.skills.length > 2 && (
+                        <View style={styles.skillBadge}>
+                          <Text style={styles.skillText}>+{developer.skills.length - 2}</Text>
+                        </View>
+                      )}
                     </View>
                   )}
-                </View>
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={16} color={colors.star} />
-                  <Text style={styles.ratingText}>{developer.rating}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  {developer.rating !== null && (
+                    <View style={styles.ratingContainer}>
+                      <Ionicons name="star" size={16} color={colors.star} />
+                      <Text style={styles.ratingText}>{developer.rating.toFixed(1)}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <Text style={styles.emptyStateText}>No featured developers available right now.</Text>
+          )}
+
         </View>
 
         <View style={styles.section}>
@@ -326,6 +324,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     marginHorizontal: spacing.lg,
+  },
+  errorText: {
+    color: colors.error,
+    textAlign: 'center',
+    marginVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   emptyStateText: {
     fontSize: 16,
