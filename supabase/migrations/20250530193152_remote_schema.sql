@@ -29,8 +29,11 @@ BEGIN
   -- If it's named 'user_id' or similar, adjust the query below.
   SELECT day_of_week, slot_start_time, slot_end_time
   INTO v_slot_day_of_week, v_slot_start_time, v_slot_end_time
-  FROM developer_first_call_availability
-  WHERE id = p_slot_id AND is_active = TRUE AND developer_id = p_developer_id 
+  FROM public.availabilities -- Corrected table name
+  WHERE id = p_slot_id 
+    AND developer_id = p_developer_id 
+    AND availability_type = 'first_call' -- Added type filter
+    AND is_active = TRUE
   FOR UPDATE;
 
   IF NOT FOUND THEN
@@ -56,9 +59,9 @@ BEGIN
   v_calculated_end_timestamp := v_target_date + v_slot_end_time;
 
   -- Mark the availability slot as inactive
-  UPDATE developer_first_call_availability
+  UPDATE public.availabilities -- Corrected table name
   SET is_active = FALSE
-  WHERE id = p_slot_id;
+  WHERE id = p_slot_id; -- p_slot_id is unique and already verified to be a 'first_call' type
 
   -- Create the booking
   INSERT INTO bookings (developer_id, client_id, start_time, end_time, status, notes)
