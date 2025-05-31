@@ -1,5 +1,5 @@
 // src/screens/client/developer-detail-screen.tsx
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,14 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native"; // Added useNavigation
 import { Ionicons } from "@expo/vector-icons";
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Added for navigation prop type
 
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
 import { useDeveloperFirstCallAvailability } from "@/hooks/useDeveloperFirstCallAvailability";
 import { useDeveloperGeneralAvailability } from "@/hooks/useDeveloperGeneralAvailability";
-import { DeveloperProfile } from "@/types"; // Availability type is implicitly used by hooks
+import { DeveloperProfile, BrowseStackParamList } from "@/types"; // Added BrowseStackParamList
 import { colors as themeColors, spacing } from "@/theme";
 
 const colors = themeColors.light; // Use light theme
@@ -27,6 +28,7 @@ const colors = themeColors.light; // Use light theme
 type DeveloperDetailRouteParams = {
   DeveloperDetail: {
     developerId: string;
+    // developerName is not passed as a param here, but fetched via useDeveloperProfile
   };
 };
 
@@ -35,7 +37,14 @@ type DeveloperDetailScreenRouteProp = RouteProp<
   "DeveloperDetail"
 >;
 
+// Define the type for the navigation prop for this screen
+type DeveloperDetailScreenNavigationProp = NativeStackNavigationProp<
+  BrowseStackParamList,
+  'DeveloperDetail'
+>;
+
 export function DeveloperDetailScreen() {
+  const navigation = useNavigation<DeveloperDetailScreenNavigationProp>();
   const route = useRoute<DeveloperDetailScreenRouteProp>();
   const { developerId } = route.params;
 
@@ -44,6 +53,40 @@ export function DeveloperDetailScreen() {
     isLoading: isLoadingProfile,
     error: errorProfile,
   } = useDeveloperProfile(developerId);
+
+  useLayoutEffect(() => {
+    // Ensure developer data is available before setting options that depend on it
+    if (developer) {
+      navigation.setOptions({
+        headerShown: true, // Ensure the header is visible
+        headerTitle: developer.name || 'Developer Details', // Use developer.name
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{ marginLeft: spacing.xsmall, padding: spacing.xxsmall }} // Adjusted spacing keys
+          >
+            <Ionicons name="arrow-back" size={26} color={colors.primary} />
+          </TouchableOpacity>
+        ),
+        headerBackTitleVisible: false, // Hides the default back button text on iOS
+      });
+    } else {
+      // Fallback for when developer data is not yet loaded
+      navigation.setOptions({
+        headerShown: true,
+        headerTitle: 'Loading Details...',
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{ marginLeft: spacing.xsmall, padding: spacing.xxsmall }}
+          >
+            <Ionicons name="arrow-back" size={26} color={colors.primary} />
+          </TouchableOpacity>
+        ),
+        headerBackTitleVisible: false,
+      });
+    }
+  }, [navigation, developer, colors, spacing]); // Added dependencies
   const {
     availabilitySlots: firstCallSlots,
     isLoading: isLoadingFirstCall,
@@ -265,6 +308,21 @@ export function DeveloperDetailScreen() {
           {renderDetailItem("LinkedIn", developer.linkedin_url, "logo-linkedin")} */}
         </View>
 
+        {/* Booking Button */}
+        <TouchableOpacity 
+          style={styles.bookButton}
+          onPress={() => {
+            if (developer) {
+              navigation.navigate('BookingScreen', { 
+                developerId: developer.id, 
+                developerName: developer.name || undefined 
+              });
+            }
+          }}
+        >
+          <Text style={styles.bookButtonText}>Book First Call</Text>
+        </TouchableOpacity>
+
         {/* Availability Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitleBig}>Availability</Text>
@@ -318,6 +376,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  bookButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: spacing.sm,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  bookButtonText: {
+    color: themeColors.dark.text, // Assuming primary button text is light on dark bg
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   scrollContentContainer: {
     paddingBottom: spacing.lg,

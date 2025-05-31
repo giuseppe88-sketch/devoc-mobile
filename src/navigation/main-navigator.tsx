@@ -21,6 +21,7 @@ import ClientBrowseScreen from "../screens/client/browse-screen";
 import { ClientProfileScreen } from "../screens/client/profile-screen";
 import EditClientProfileScreen from "../screens/client/edit-profile-screen";
 import { DeveloperDetailScreen } from "../screens/client/developer-detail-screen";
+import BookingScreen from "../screens/client/booking-screen"; // <-- Import BookingScreen
 
 import {
   ProfileStackParamList,
@@ -161,6 +162,11 @@ function BrowseStackNavigator() {
         name="DeveloperDetail"
         component={DeveloperDetailScreen}
         options={({ route }) => ({ title: "Developer Profile" })} // Example: Use params for dynamic title later if needed
+      />
+      <BrowseStack.Screen
+        name="BookingScreen"
+        component={BookingScreen}
+        options={{ title: "Book First Call" }}
       />
     </BrowseStack.Navigator>
   );

@@ -117,6 +117,7 @@ export interface FetchedClientProfile extends ClientProfile {
 export type BrowseStackParamList = {
   ClientBrowse: undefined; // The list screen doesn't need params
   DeveloperDetail: { developerId: string }; // The detail screen needs the ID
+  BookingScreen: { developerId: string; developerName?: string }; // Screen for booking a first call
 };
 
 // Navigation param list for the main Tab navigator when user is a Developer

@@ -15,7 +15,7 @@ import { colors as themeColors, spacing } from "@/theme";
 import { useBrowseDevelopers, DeveloperProfile } from "@/hooks/useBrowseDevelopers";
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import stack navigation type
-import { BrowseStackParamList } from '@/navigation/main-navigator'; // Import param list type
+import { BrowseStackParamList } from '@/types'; // Import param list type
 
 type Developer = DeveloperProfile;
 const colors = themeColors.light; // Revert back to light theme for client screen
