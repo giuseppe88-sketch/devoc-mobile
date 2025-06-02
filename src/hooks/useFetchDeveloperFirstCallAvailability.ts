@@ -14,6 +14,7 @@ async function fetchFirstCallAvailabilityByProfileId(developerProfileId: string 
     .select('*')
     .eq('developer_id', developerProfileId)
     .eq('availability_type', 'first_call')
+    .eq('is_active', true) // <-- Add this line to filter for active slots
     .order('day_of_week', { ascending: true })
     .order('slot_start_time', { ascending: true });
 

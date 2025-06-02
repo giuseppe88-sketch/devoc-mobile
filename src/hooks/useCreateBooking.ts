@@ -1,9 +1,9 @@
 // src/hooks/useCreateBooking.ts
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase'; // Assuming your Supabase client is exported from here
-import Toast from 'react-native-toast-message';
-import { useAuthStore } from '@/stores/auth-store'; // Import auth store
-import { Platform } from 'react-native';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase"; // Assuming your Supabase client is exported from here
+import Toast from "react-native-toast-message";
+import { useAuthStore } from "@/stores/auth-store"; // Import auth store
+import { Platform } from "react-native";
 
 interface BookFirstCallVariables {
   developerId: string;
@@ -13,8 +13,8 @@ interface BookFirstCallVariables {
 // Define the expected structure of the successful booking data returned by the Edge Function's RPC call
 interface BookingConfirmationData {
   booking_id: string;
-  booked_start_time: string;  // ISO string format from PostgreSQL TIMESTAMP
-  booked_end_time: string;    // ISO string format
+  booked_start_time: string; // ISO string format from PostgreSQL TIMESTAMP
+  booked_end_time: string; // ISO string format
   booking_status: string;
 }
 
@@ -30,23 +30,33 @@ const bookFirstCall = async ({
   slotId,
 }: BookFirstCallVariables): Promise<BookingConfirmationData> => {
   const { data, error: functionInvokeError } = await supabase.functions.invoke(
-    'create-booking',
+    "create-booking",
     {
       body: { developerId, slotId },
-    }
+    },
   );
 
   if (functionInvokeError) {
-    console.error('Supabase function invoke error (create-booking):', functionInvokeError.message);
-    const message = functionInvokeError.message || 'Failed to invoke create-booking function.';
+    console.error(
+      "Supabase function invoke error (create-booking):",
+      functionInvokeError.message,
+    );
+    const message = functionInvokeError.message ||
+      "Failed to invoke create-booking function.";
     throw new Error(message);
   }
 
   const responseData = data as EdgeFunctionResponse;
 
   if (!responseData.success || responseData.error || !responseData.booking) {
-    console.error('Edge function (create-booking) returned an error:', responseData.error || 'Unknown error from create-booking');
-    throw new Error(responseData.error || 'Create-booking function indicated failure. Please try again.');
+    console.error(
+      "Edge function (create-booking) returned an error:",
+      responseData.error || "Unknown error from create-booking",
+    );
+    throw new Error(
+      responseData.error ||
+        "Create-booking function indicated failure. Please try again.",
+    );
   }
 
   return responseData.booking;
@@ -61,8 +71,8 @@ export const useCreateBooking = () => {
       mutationFn: bookFirstCall,
       onSuccess: async (data, variables) => { // Make onSuccess async
         Toast.show({
-          type: 'success',
-          text1: 'Booking Confirmed!',
+          type: "success",
+          text1: "Booking Confirmed!",
           text2: `Your call at ${data.booked_start_time} is set.`,
         });
 
@@ -71,11 +81,11 @@ export const useCreateBooking = () => {
         // Invalidate queries to refetch data
         // 1. Developer's first call availability (they might have other slots, but this one is gone)
         queryClient.invalidateQueries({
-          queryKey: ['developerFirstCallAvailability', variables.developerId],
+          queryKey: ["developerFirstCallAvailability", variables.developerId],
         });
-        
+
         // 2. Potentially a list of the client's own bookings
-        queryClient.invalidateQueries({ queryKey: ['clientBookings'] }); // Adjust key as needed
+        queryClient.invalidateQueries({ queryKey: ["clientBookings"] }); // Adjust key as needed
 
         // 3. If you have a general availability query for the developer that might be affected
         // queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', variables.developerId] });
@@ -85,26 +95,32 @@ export const useCreateBooking = () => {
           try {
             // Fetch client's full name (assuming 'full_name' column in 'users' table)
             // This is a simplified fetch; consider enhancing useAuthStore or using a dedicated profile hook
-            const { data: clientProfile, error: clientProfileError } = await supabase
-              .from('users')
-              .select('full_name')
-              .eq('id', authUser.id)
-              .single();
+            const { data: clientProfile, error: clientProfileError } =
+              await supabase
+                .from("users")
+                .select("full_name")
+                .eq("id", authUser.id)
+                .single();
 
             // Fetch developer's full name and email
-            const { data: developerProfile, error: developerProfileError } = await supabase
-              .from('users') // Assuming developers are also in the 'users' table
-              .select('full_name, email')
-              .eq('id', variables.developerId)
-              .single();
+            const { data: developerProfile, error: developerProfileError } =
+              await supabase
+                .from("users") // Assuming developers are also in the 'users' table
+                .select("full_name, email")
+                .eq("id", variables.developerId)
+                .single();
 
             if (clientProfileError || developerProfileError) {
-              console.error("Error fetching profiles for email:", clientProfileError, developerProfileError);
+              console.error(
+                "Error fetching profiles for email:",
+                clientProfileError,
+                developerProfileError,
+              );
               // Optionally show a non-critical toast or log, but don't block booking success
               Toast.show({
-                type: 'info',
-                text1: 'Email Info',
-                text2: 'Could not fetch all details for email notification.',
+                type: "info",
+                text1: "Email Info",
+                text2: "Could not fetch all details for email notification.",
               });
               // Still proceed with booking success flow even if email details fail
             }
@@ -116,93 +132,107 @@ export const useCreateBooking = () => {
               try {
                 // Handle both ISO string and PostgreSQL timestamp formats
                 if (!data.booked_start_time) {
-                  console.error('No booked_start_time in booking data:', data);
-                  throw new Error('Missing booked_start_time');
+                  console.error("No booked_start_time in booking data:", data);
+                  throw new Error("Missing booked_start_time");
                 }
                 bookingDate = new Date(data.booked_start_time);
                 if (isNaN(bookingDate.getTime())) {
-                  throw new Error('Invalid date');
+                  throw new Error("Invalid date");
                 }
               } catch (error) {
-                console.error('Error parsing booking date:', error);
+                console.error("Error parsing booking date:", error);
                 // Fallback to current date/time if invalid
                 bookingDate = new Date();
               }
 
               // Format date: "Monday, June 2, 2025"
-              const formattedDate = bookingDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+              const formattedDate = bookingDate.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
               });
 
               // Format time: "10:00 AM PDT"
-              const formattedTime = bookingDate.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
+              const formattedTime = bookingDate.toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
                 hour12: true,
-                timeZoneName: 'short'
+                timeZoneName: "short",
               });
 
               // Log the date transformation for debugging
-              console.log('Original booking timestamp:', data.booked_start_time);
-              console.log('Parsed Date object:', bookingDate);
-              console.log('Formatted date:', formattedDate);
-              console.log('Formatted time:', formattedTime);
+              console.log(
+                "Original booking timestamp:",
+                data.booked_start_time,
+              );
+              console.log("Parsed Date object:", bookingDate);
+              console.log("Formatted date:", formattedDate);
+              console.log("Formatted time:", formattedTime);
 
-              console.log('Client Profile:', clientProfile);
-              console.log('Auth User:', authUser);
-              console.log('Developer Profile:', developerProfile);
+              console.log("Client Profile:", clientProfile);
+              console.log("Auth User:", authUser);
+              console.log("Developer Profile:", developerProfile);
 
               const emailPayload = {
-                clientName: clientProfile.full_name || 'Valued Client',
+                clientName: clientProfile.full_name || "Valued Client",
                 clientEmail: authUser.email,
-                developerName: developerProfile.full_name || 'The Developer',
+                developerName: developerProfile.full_name || "The Developer",
                 developerEmail: developerProfile.email,
                 bookingDate: formattedDate,
-                bookingTime: formattedTime
+                bookingTime: formattedTime,
               };
 
-              console.log('Email Payload:', emailPayload);
+              console.log("Email Payload:", emailPayload);
 
               const { error: emailError } = await supabase.functions.invoke(
-                'send-booking-email',
-                { body: emailPayload }
+                "send-booking-email",
+                { body: emailPayload },
               );
 
               if (emailError) {
-                console.error('Error invoking send-booking-email function:', emailError);
+                console.error(
+                  "Error invoking send-booking-email function:",
+                  emailError,
+                );
                 Toast.show({
-                  type: 'info', // Non-critical error for email sending
-                  text1: 'Notification Issue',
-                  text2: 'Could not send booking confirmation email.',
+                  type: "info", // Non-critical error for email sending
+                  text1: "Notification Issue",
+                  text2: "Could not send booking confirmation email.",
                 });
               } else {
-                console.log('Send-booking-email function invoked successfully.');
+                console.log(
+                  "Send-booking-email function invoked successfully.",
+                );
               }
             } else {
-              console.warn('Missing client or developer profile details for email notification.');
+              console.warn(
+                "Missing client or developer profile details for email notification.",
+              );
             }
           } catch (e) {
-            console.error('Unexpected error during email notification process:', e);
+            console.error(
+              "Unexpected error during email notification process:",
+              e,
+            );
             Toast.show({
-              type: 'info',
-              text1: 'Notification Issue',
-              text2: 'An unexpected error occurred while preparing email notifications.',
+              type: "info",
+              text1: "Notification Issue",
+              text2:
+                "An unexpected error occurred while preparing email notifications.",
             });
           }
         }
         // ---- End Email Notification ----
       },
       onError: (error: Error) => {
-        console.error('useCreateBooking mutation onError:', error.message);
+        console.error("useCreateBooking mutation onError:", error.message);
         Toast.show({
-          type: 'error',
-          text1: 'Booking Failed',
-          text2: error.message || 'Could not book the slot. Please try again.',
+          type: "error",
+          text1: "Booking Failed",
+          text2: error.message || "Could not book the slot. Please try again.",
         });
       },
-    }
+    },
   );
 };

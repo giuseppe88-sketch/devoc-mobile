@@ -3,7 +3,7 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "resend"; // Resolved by import_map.json (global or function-specific)
@@ -21,11 +21,15 @@ interface BookingDetails {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL_ADDRESS = "onboarding@resend.dev"; // For testing
 
-console.log(`[send-booking-email] Attempting to read RESEND_API_KEY. Value: ${RESEND_API_KEY ? 'Exists' : 'MISSING or empty'}`);
+console.log(
+  `[send-booking-email] Attempting to read RESEND_API_KEY. Value: ${
+    RESEND_API_KEY ? "Exists" : "MISSING or empty"
+  }`,
+);
 
 serve(async (req: Request) => {
-  console.log('[send-booking-email] Function invoked.');
-  console.log('[send-booking-email] All Deno Env Vars:', Deno.env.toObject()); // Log all environment variables
+  console.log("[send-booking-email] Function invoked.");
+  console.log("[send-booking-email] All Deno Env Vars:", Deno.env.toObject()); // Log all environment variables
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -38,7 +42,9 @@ serve(async (req: Request) => {
   }
 
   if (!RESEND_API_KEY) {
-    console.error('[send-booking-email] CRITICAL: RESEND_API_KEY is missing or empty.');
+    console.error(
+      "[send-booking-email] CRITICAL: RESEND_API_KEY is missing or empty.",
+    );
     console.error("RESEND_API_KEY is not set in environment variables.");
     return new Response(
       JSON.stringify({ error: "Internal server configuration error." }),
@@ -48,7 +54,7 @@ serve(async (req: Request) => {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         },
-      }
+      },
     );
   }
 
@@ -56,7 +62,10 @@ serve(async (req: Request) => {
 
   try {
     const bookingDetails: BookingDetails = (await req.json()) as BookingDetails;
-    console.log("[send-booking-email] Received booking details for processing:", JSON.stringify(bookingDetails, null, 2));
+    console.log(
+      "[send-booking-email] Received booking details for processing:",
+      JSON.stringify(bookingDetails, null, 2),
+    );
 
     // Validate payload
     if (
@@ -67,13 +76,16 @@ serve(async (req: Request) => {
       !bookingDetails.bookingDate ||
       !bookingDetails.bookingTime
     ) {
-      return new Response(JSON.stringify({ error: "Missing booking details" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+      return new Response(
+        JSON.stringify({ error: "Missing booking details" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
         },
-      });
+      );
     }
 
     // --- Email to Client ---
@@ -120,80 +132,115 @@ serve(async (req: Request) => {
     };
 
     // Send both emails
-    console.log('[send-booking-email] Attempting to send client email to:', emailToClient.to);
-    const { data: clientEmailData, error: clientEmailError } =
-      await resend.emails.send(emailToClient);
+    console.log(
+      "[send-booking-email] Attempting to send client email to:",
+      emailToClient.to,
+    );
+    const { data: clientEmailData, error: clientEmailError } = await resend
+      .emails.send(emailToClient);
     if (clientEmailError) {
-      console.error('[send-booking-email] Resend client email error:', clientEmailError);
-      console.error('[send-booking-email] Failed client email details:', {
+      console.error(
+        "[send-booking-email] Resend client email error:",
+        clientEmailError,
+      );
+      console.error("[send-booking-email] Failed client email details:", {
         to: emailToClient.to,
         subject: emailToClient.subject,
-        error: clientEmailError
+        error: clientEmailError,
       });
     } else {
-      console.log('[send-booking-email] Client confirmation email sent successfully:', {
-        to: emailToClient.to,
-        subject: emailToClient.subject,
-        id: clientEmailData?.id
-      });
+      console.log(
+        "[send-booking-email] Client confirmation email sent successfully:",
+        {
+          to: emailToClient.to,
+          subject: emailToClient.subject,
+          id: clientEmailData?.id,
+        },
+      );
     }
 
-    console.log('[send-booking-email] Attempting to send developer email to:', emailToDeveloper.to);
+    console.log(
+      "[send-booking-email] Attempting to send developer email to:",
+      emailToDeveloper.to,
+    );
     const { data: developerEmailData, error: developerEmailError } =
       await resend.emails.send(emailToDeveloper);
     if (developerEmailError) {
-      console.error('[send-booking-email] Resend developer email error:', developerEmailError);
-      console.error('[send-booking-email] Failed developer email details:', {
+      console.error(
+        "[send-booking-email] Resend developer email error:",
+        developerEmailError,
+      );
+      console.error("[send-booking-email] Failed developer email details:", {
         to: emailToDeveloper.to,
         subject: emailToDeveloper.subject,
-        error: developerEmailError
+        error: developerEmailError,
       });
       // If both emails failed, return error
       if (clientEmailError && developerEmailError) {
         return new Response(
           JSON.stringify({
-            error: 'Failed to send emails',
+            error: "Failed to send emails",
             clientError: clientEmailError,
-            developerError: developerEmailError
+            developerError: developerEmailError,
           }),
           {
             status: 500,
             headers: {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
             },
-          }
+          },
         );
       }
     } else {
-      console.log('[send-booking-email] Developer notification email sent successfully:', {
-        to: emailToDeveloper.to,
-        subject: emailToDeveloper.subject,
-        id: developerEmailData?.id
-      });
-    }
-    
-    // If at least one email succeeded or no errors at all
-    if ((clientEmailData || developerEmailData) && !(clientEmailError && developerEmailError)) {
-         return new Response(JSON.stringify({ message: "Booking emails processed." }), {
-            status: 200,
-            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-        });
-    } else { // Both failed
-         return new Response(JSON.stringify({ error: "Failed to send all emails." }), {
-            status: 500,
-            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-        });
+      console.log(
+        "[send-booking-email] Developer notification email sent successfully:",
+        {
+          to: emailToDeveloper.to,
+          subject: emailToDeveloper.subject,
+          id: developerEmailData?.id,
+        },
+      );
     }
 
+    // If at least one email succeeded or no errors at all
+    if (
+      (clientEmailData || developerEmailData) &&
+      !(clientEmailError && developerEmailError)
+    ) {
+      return new Response(
+        JSON.stringify({ message: "Booking emails processed." }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
+      );
+    } else { // Both failed
+      return new Response(
+        JSON.stringify({ error: "Failed to send all emails." }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        },
+      );
+    }
   } catch (error) {
     console.error("Error processing request:", error);
     let errorMessage = "An unknown error occurred during email processing.";
     if (error instanceof Error) {
       errorMessage = error.message;
-    } else if (typeof error === 'string') {
+    } else if (typeof error === "string") {
       errorMessage = error;
-    } else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    } else if (
+      typeof error === "object" && error !== null && "message" in error &&
+      typeof error.message === "string"
+    ) {
       errorMessage = error.message; // Handle cases where error is an object with a message property
     }
     return new Response(JSON.stringify({ error: errorMessage }), {
