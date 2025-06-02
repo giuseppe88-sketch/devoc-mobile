@@ -12,7 +12,7 @@ async function fetchDeveloperProfile(
   const [, userId] = queryKey;
   if (!userId) return null;
 
-  console.log(`Fetching combined profile for user ID: ${userId}`);
+  // console.log(`Fetching combined profile for user ID: ${userId}`); // Commented out
 
   try {
     // Fetch from developer_profiles
@@ -23,7 +23,7 @@ async function fetchDeveloperProfile(
       .single();
 
     if (devError && devStatus !== 406) { // 406 = row not found, maybe ok
-      console.error("Error fetching developer profile data:", devError);
+      // console.error("Error fetching developer profile data:", devError); // Commented out
       // Decide how to handle partial failure - maybe return partial data or throw
       // For now, we log and continue, user profile might still exist
     }
@@ -37,7 +37,7 @@ async function fetchDeveloperProfile(
         .single();
 
     if (userError && userStatus !== 406) { // 406 = row not found
-      console.error("Error fetching user profile data:", userError);
+      // console.error("Error fetching user profile data:", userError); // Commented out
       // Decide handling - log and continue for now
     }
 
@@ -53,14 +53,14 @@ async function fetchDeveloperProfile(
     // If both fetches returned null (status 406), combinedProfile will just have user_id
     // Check if we actually got any data beyond the user_id
     if (!userData && !devData) {
-      console.log("No profile data found for user ID:", userId);
+      // console.log("No profile data found for user ID:", userId); // Commented out
       return null; // Return null if neither profile exists
     }
 
-    console.log("Combined profile data fetched:", combinedProfile);
+    // console.log("Combined profile data fetched:", combinedProfile); // Commented out
     return combinedProfile;
   } catch (error) {
-    console.error("Critical error during combined profile fetch:", error);
+    // console.error("Critical error during combined profile fetch:", error); // Commented out
     // Re-throw or handle as appropriate for useQuery
     if (error instanceof Error) throw error;
     throw new Error("Failed to fetch profile data");

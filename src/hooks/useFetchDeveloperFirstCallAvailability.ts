@@ -5,7 +5,7 @@ import { Availability } from '../types';
 // Fetch function for useQuery
 async function fetchFirstCallAvailabilityByProfileId(developerProfileId: string | undefined): Promise<Availability[]> {
   if (!developerProfileId) {
-    console.warn('[fetchFirstCallAvailabilityByProfileId] developerProfileId is missing, returning empty array.');
+    // console.warn('[fetchFirstCallAvailabilityByProfileId] developerProfileId is missing, returning empty array.'); // Commented out
     return [];
   }
 
@@ -18,7 +18,7 @@ async function fetchFirstCallAvailabilityByProfileId(developerProfileId: string 
     .order('slot_start_time', { ascending: true });
 
   if (error) {
-    console.error(`Error fetching first call availability for profile ${developerProfileId}:`, error.message);
+    // console.error(`Error fetching first call availability for profile ${developerProfileId}:`, error.message); // Commented out
     throw new Error(`Failed to fetch availability for profile ${developerProfileId}: ${error.message}`);
   }
   return data || [];

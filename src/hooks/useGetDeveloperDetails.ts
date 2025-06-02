@@ -67,7 +67,7 @@ const fetchDeveloperDetails = async (
     .single();
 
   if (error) {
-    console.error("Error fetching developer details:", error);
+    // console.error("Error fetching developer details:", error); // Commented out
     throw new Error(error.message || "Failed to fetch developer details");
   }
   if (!data) {
@@ -97,10 +97,9 @@ const fetchDeveloperDetails = async (
 
 // Explicitly type the hook parameters and the useQuery call
 export function useGetDeveloperDetails(developerId: string | null | undefined) {
-  return useQuery<DeveloperProfile, Error>(
-    // Attempting v4 syntax: useQuery(queryKey, queryFn, options)
-    ["developerDetails", developerId], // Query Key (1st argument)
-    async (): Promise<DeveloperProfile> => { // Query Function (2nd argument)
+  return useQuery<DeveloperProfile, Error>({
+    queryKey: ["developerDetails", developerId],
+    queryFn: async (): Promise<DeveloperProfile> => {
       if (!developerId) {
         // Should not happen if enabled is working, but belts and suspenders
         return Promise.reject(new Error("Developer ID is required"));
@@ -108,10 +107,8 @@ export function useGetDeveloperDetails(developerId: string | null | undefined) {
       // Fetch the details using the existing async function
       return await fetchDeveloperDetails(developerId);
     },
-    { // Options object (3rd argument)
-      enabled: !!developerId, // Only run the query if developerId is truthy
-      staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
-      cacheTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes (v4 name)
-    }
-  );
+    enabled: !!developerId, // Only run the query if developerId is truthy
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes (v5 name)
+  });
 }

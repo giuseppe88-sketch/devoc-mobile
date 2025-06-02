@@ -66,12 +66,12 @@ const fetchBrowseDevelopers = async (): Promise<DeveloperProfile[]> => {
     `);
 
   if (error) {
-    console.error("Error fetching developers:", error);
+    // console.error("Error fetching developers:", error); // Commented out to reduce noise
     throw new Error(`Failed to fetch developers: ${error.message}`);
   }
 
   if (!data) {
-    console.warn("No developer data returned from Supabase despite no error.");
+    // console.warn("No developer data returned from Supabase despite no error."); // Commented out to reduce noise
     return [];
   }
 

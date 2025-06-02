@@ -12,11 +12,11 @@ async function getDeveloperProfileId(userId: string): Promise<string | null> {
     .maybeSingle();
 
   if (error) {
-    console.error(`Error fetching developer profile ID for user ${userId} (useDeveloperGeneralAvailability): ${error.message}`, error);
+    // console.error(`Error fetching developer profile ID for user ${userId} (useDeveloperGeneralAvailability): ${error.message}`, error); // Commented out
     return null;
   }
   if (!data) {
-    console.warn(`No developer profile found in developer_profiles for user ID: ${userId} (useDeveloperGeneralAvailability). This may be expected if the profile hasn't been created yet.`);
+    // console.warn(`No developer profile found in developer_profiles for user ID: ${userId} (useDeveloperGeneralAvailability). This may be expected if the profile hasn't been created yet.`); // Commented out
     return null;
   }
   return data.id;
@@ -32,7 +32,7 @@ async function fetchGeneralAvailability(developerId: string): Promise<Availabili
     .order('range_start_date', { ascending: true });
 
   if (error) {
-    console.error('Error fetching general availability:', error.message);
+    // console.error('Error fetching general availability:', error.message); // Commented out
     throw new Error(`Failed to fetch general availability: ${error.message}`);
   }
   return (data || []).map(item => ({
@@ -67,7 +67,7 @@ async function saveGeneralAvailabilityMutationFn({
   range_end_date,
 }: InternalSaveParams): Promise<void> {
   if (!developerId) {
-    console.error('[saveGeneralAvailabilityMutationFn] Critical: developerId is missing.');
+    // console.error('[saveGeneralAvailabilityMutationFn] Critical: developerId is missing.'); // Commented out
     throw new Error('Developer ID is missing, cannot save general availability.');
   }
 
@@ -86,7 +86,7 @@ async function saveGeneralAvailabilityMutationFn({
     .insert([newGeneralAvailabilitySlot]);
 
   if (insertError) {
-    console.error('Error inserting new general availability:', insertError.message);
+    // console.error('Error inserting new general availability:', insertError.message); // Commented out
     throw new Error(`Failed to insert new general availability: ${insertError.message}`);
   }
 }
@@ -107,11 +107,11 @@ async function deleteGeneralAvailabilityMutationFn({
   developerId,
 }: InternalDeleteParams): Promise<void> {
   if (!developerId) {
-    console.error('[deleteGeneralAvailabilityMutationFn] Critical: developerId is missing.');
+    // console.error('[deleteGeneralAvailabilityMutationFn] Critical: developerId is missing.'); // Commented out
     throw new Error('Developer ID is missing, cannot delete general availability.');
   }
 
-  console.log(`Attempting to delete availability ID: ${availabilityId} for developer: ${developerId}`);
+  // console.log(`Attempting to delete availability ID: ${availabilityId} for developer: ${developerId}`); // Commented out
 
   const { error: deleteError } = await supabase
     .from('availabilities')
@@ -119,11 +119,11 @@ async function deleteGeneralAvailabilityMutationFn({
     .match({ id: availabilityId, developer_id: developerId, availability_type: 'general_work_block' }); // Match ID, developer, and type
 
   if (deleteError) {
-    console.error(`Error deleting general availability ID ${availabilityId}:`, deleteError.message);
+    // console.error(`Error deleting general availability ID ${availabilityId}:`, deleteError.message); // Commented out
     throw new Error(`Failed to delete general availability: ${deleteError.message}`);
   }
 
-  console.log(`Successfully deleted availability ID: ${availabilityId}`);
+  // console.log(`Successfully deleted availability ID: ${availabilityId}`); // Commented out
 }
 
 // Interface for the hook's props
@@ -135,18 +135,18 @@ export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDevelo
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
-  console.log(`[useDeveloperGeneralAvailability] Hook execution: user?.id is ${user?.id}, targetDeveloperId is ${targetDeveloperId}`);
+  // console.log(`[useDeveloperGeneralAvailability] Hook execution: user?.id is ${user?.id}, targetDeveloperId is ${targetDeveloperId}`); // Commented out
 
   // Fetch developerId for the logged-in user only if targetDeveloperId is not provided
   const { data: loggedInUserDeveloperId, isLoading: isLoadingDeveloperId } = useQuery({
     queryKey: ['developerProfileId', user?.id],
     queryFn: async () => {
       if (!user?.id) {
-        console.log('[useDeveloperGeneralAvailability] No user.id, cannot fetch loggedInUserDeveloperId');
+        // console.log('[useDeveloperGeneralAvailability] No user.id, cannot fetch loggedInUserDeveloperId'); // Commented out
         return null;
       }
       const devId = await getDeveloperProfileId(user.id);
-      console.log(`[useDeveloperGeneralAvailability] Fetched loggedInUserDeveloperId: ${devId} for user ${user.id}`);
+      // console.log(`[useDeveloperGeneralAvailability] Fetched loggedInUserDeveloperId: ${devId} for user ${user.id}`); // Commented out
       return devId;
     },
     enabled: !!user?.id && !targetDeveloperId, // Only run if no targetDeveloperId is provided
@@ -156,30 +156,30 @@ export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDevelo
   // Determine the actual developerId to use for fetching availability
   const developerIdToUse = targetDeveloperId || loggedInUserDeveloperId;
 
-  console.log(`[useDeveloperGeneralAvailability] developerIdToUse for fetching availability: ${developerIdToUse}`);
+  // console.log(`[useDeveloperGeneralAvailability] developerIdToUse for fetching availability: ${developerIdToUse}`); // Commented out
 
   const { data: availabilitySlots, isLoading: isLoadingAvailability, refetch, error } = useQuery<Availability[], Error>({
     queryKey: ['developerGeneralAvailability', developerIdToUse], // Use the determined ID in queryKey
     queryFn: () => {
       if (!developerIdToUse) {
-        console.log('[useDeveloperGeneralAvailability] No developerIdToUse, resolving with empty array.');
+        // console.log('[useDeveloperGeneralAvailability] No developerIdToUse, resolving with empty array.'); // Commented out
         return Promise.resolve([]);
       }
-      console.log(`[useDeveloperGeneralAvailability] Fetching general availability for developerId: ${developerIdToUse}`);
+      // console.log(`[useDeveloperGeneralAvailability] Fetching general availability for developerId: ${developerIdToUse}`); // Commented out
       return fetchGeneralAvailability(developerIdToUse);
     },
     enabled: !!developerIdToUse && (targetDeveloperId ? true : !isLoadingDeveloperId), // Enable if developerIdToUse is present and (targetId exists OR loggedInId is loaded)
     initialData: [],
   });
 
-  console.log(`[useDeveloperGeneralAvailability] Availability query: isLoading=${isLoadingAvailability}, data=${JSON.stringify(availabilitySlots?.length)} slots, error=${error?.message}`);
+  // console.log(`[useDeveloperGeneralAvailability] Availability query: isLoading=${isLoadingAvailability}, data=${JSON.stringify(availabilitySlots?.length)} slots, error=${error?.message}`); // Commented out
 
   // Save Mutation
   const { mutateAsync: saveAvailability, isPending: isSaving } = useMutation<void, Error, SaveGeneralAvailabilityParams>({
     mutationFn: (params: SaveGeneralAvailabilityParams) => {
       const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
       if (!finalDeveloperId) {
-        console.error('Attempted to save general availability without finalDeveloperId.');
+        // console.error('Attempted to save general availability without finalDeveloperId.'); // Commented out
         return Promise.reject(new Error('Developer ID not available.'));
       }
       return saveGeneralAvailabilityMutationFn({ ...params, developerId: finalDeveloperId });
@@ -189,7 +189,7 @@ export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDevelo
       // Potentially show a success toast/message here
     },
     onError: (error) => {
-      console.error('Failed to save general availability:', error.message);
+      // console.error('Failed to save general availability:', error.message); // Commented out
       // Potentially show an error toast/message here
     },
   });
@@ -199,18 +199,18 @@ export function useDeveloperGeneralAvailability({ targetDeveloperId }: UseDevelo
     mutationFn: (params: DeleteGeneralAvailabilityParams) => {
       const finalDeveloperId = targetDeveloperId || loggedInUserDeveloperId;
       if (!finalDeveloperId) {
-        console.error('Attempted to delete general availability without finalDeveloperId.');
+        // console.error('Attempted to delete general availability without finalDeveloperId.'); // Commented out
         return Promise.reject(new Error('Developer ID not available.'));
       }
       return deleteGeneralAvailabilityMutationFn({ ...params, developerId: finalDeveloperId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['developerGeneralAvailability', targetDeveloperId || loggedInUserDeveloperId] });
-      console.log('Successfully deleted, invalidated query.');
+      // console.log('Successfully deleted, invalidated query.'); // Commented out
       // Optionally: Reset any local state in the component if needed after delete
     },
     onError: (error) => {
-      console.error('Failed to delete general availability:', error.message);
+      // console.error('Failed to delete general availability:', error.message); // Commented out
       // Potentially show an error toast/message here
     },
   });
