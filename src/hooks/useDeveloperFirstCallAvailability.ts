@@ -51,6 +51,7 @@ async function fetchFirstCallAvailability(developerId: string): Promise<Availabi
     day_of_week: item.day_of_week,
     slot_start_time: item.slot_start_time,
     slot_end_time: item.slot_end_time,
+    is_active: item.is_active, // Added to fulfill the Availability type
   }));
 }
 
@@ -123,6 +124,7 @@ async function saveFirstCallAvailabilityMutationFn({
         slot_end_time: range.slot_end_time,
         range_start_date: null, // Not applicable for 'first_call'
         range_end_date: null,   // Not applicable for 'first_call'
+        is_active: true, // New slots are active by default
       });
     });
   });

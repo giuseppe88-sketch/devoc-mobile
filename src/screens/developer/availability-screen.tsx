@@ -3,6 +3,8 @@ import {
   View,
   Text,
   StyleSheet,
+  ViewStyle,
+  TextStyle,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -52,7 +54,10 @@ function DeveloperAvailabilityScreen({
   } = useDeveloperFirstCallAvailability();
   
   // This state holds the selections made by the user in the UI, per day
-  const [selectedFirstCallSlotsByDay, setSelectedFirstCallSlotsByDay] = useState<Record<number, string[]>>({});
+  const [selectedFirstCallSlotsByDay, setSelectedFirstCallSlotsByDay] = useState<
+    Record<number, string[]>
+  >({});
+  const [firstCallSlotActiveStatusByDay, setFirstCallSlotActiveStatusByDay] = useState<Record<number, Record<string, boolean>>>({});
 
   // State for General Work Availability
   const {
@@ -98,7 +103,29 @@ function DeveloperAvailabilityScreen({
       // To prevent overwriting user's un-saved changes when firstCallSlots refetches (e.g. after save),
       // we might need a more sophisticated merge or only set if selectedFirstCallSlotsByDay is empty.
       // For now, this will re-initialize from DB on every fetch of firstCallSlots.
+            const initialSlotStatusByDay: Record<number, Record<string, boolean>> = {};
+      firstCallSlots.forEach((slot) => {
+        if (slot.day_of_week === undefined || slot.day_of_week === null) return;
+        if (!initialSlotsByDay[slot.day_of_week]) {
+          initialSlotsByDay[slot.day_of_week] = [];
+        }
+        if (!initialSlotStatusByDay[slot.day_of_week]) { // Initialize for status map
+          initialSlotStatusByDay[slot.day_of_week] = {};
+        }
+        const startHour = parseInt(slot.slot_start_time.split(":")[0]);
+        const endHour = parseInt(slot.slot_end_time.split(":")[0]);
+        for (let hour = startHour; hour < endHour; hour++) {
+          const timeSlot = `${hour.toString().padStart(2, "0")}:00`;
+          if (!initialSlotsByDay[slot.day_of_week].includes(timeSlot)) {
+            initialSlotsByDay[slot.day_of_week].push(timeSlot);
+          }
+          // Store active status. Assumes is_active: false means booked.
+          // Defaults to true (active) if slot.is_active is null or undefined.
+          initialSlotStatusByDay[slot.day_of_week][timeSlot] = slot.is_active ?? true;
+        }
+      });
       setSelectedFirstCallSlotsByDay(initialSlotsByDay);
+      setFirstCallSlotActiveStatusByDay(initialSlotStatusByDay);
     }
   }, [firstCallSlots]);
 
@@ -210,19 +237,35 @@ function DeveloperAvailabilityScreen({
           {timeSlotsToDisplay.map((timeSlot) => (
             <TouchableOpacity
               key={timeSlot}
-              style={[
-                styles.timeSlot,
-                currentDaySelectedSlots.includes(timeSlot) && styles.selectedTimeSlot,
-                (isLoading || isSaving) && styles.disabledButton,
-              ]}
+              style={(() => {
+                const slotStyle: ViewStyle[] = [styles.timeSlot];
+                const isSlotBooked = firstCallSlotActiveStatusByDay[selectedDay]?.[timeSlot] === false;
+
+                if (isSlotBooked) {
+                  slotStyle.push({ backgroundColor: 'lightcoral' });
+                } else if (currentDaySelectedSlots.includes(timeSlot)) {
+                  slotStyle.push(styles.selectedTimeSlot);
+                }
+
+                if (isLoading || isSaving) {
+                  slotStyle.push(styles.disabledButton);
+                }
+                return slotStyle;
+              })()}
               onPress={() => !(isLoading || isSaving) && handleTimeSlotPress(timeSlot)}
               disabled={isLoading || isSaving}
             >
               <Text
-                style={[
-                  styles.timeSlotText,
-                  currentDaySelectedSlots.includes(timeSlot) && styles.selectedTimeSlotText,
-                ]}
+                style={(() => {
+                const textStyle: TextStyle[] = [styles.timeSlotText];
+                const isSlotBooked = firstCallSlotActiveStatusByDay[selectedDay]?.[timeSlot] === false;
+
+                // If booked, text style is default. If not booked AND selected, then selected text style.
+                if (!isSlotBooked && currentDaySelectedSlots.includes(timeSlot)) {
+                  textStyle.push(styles.selectedTimeSlotText);
+                }
+                return textStyle;
+              })()}
               >
                 {timeSlot}
               </Text>

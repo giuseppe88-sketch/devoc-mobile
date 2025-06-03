@@ -21,7 +21,7 @@ interface BookingConfirmationData {
 // Define the expected structure of the data returned by supabase.functions.invoke
 interface EdgeFunctionResponse {
   success: boolean;
-  booking?: BookingConfirmationData; // Present on success
+  booking?: BookingConfirmationData[]; // RPC returns an array, even for single row
   error?: string; // Present on failure within the function
 }
 
@@ -59,7 +59,13 @@ const bookFirstCall = async ({
     );
   }
 
-  return responseData.booking;
+  // The RPC function returns an array, even if it's a single booking object
+  if (Array.isArray(responseData.booking) && responseData.booking.length > 0) {
+    return responseData.booking[0];
+  } else {
+    console.error("Booking data not found or not in expected array format:", responseData.booking);
+    throw new Error("Booking confirmation data is missing or invalid.");
+  }
 };
 
 export const useCreateBooking = () => {
@@ -161,19 +167,6 @@ export const useCreateBooking = () => {
                 timeZoneName: "short",
               });
 
-              // Log the date transformation for debugging
-              console.log(
-                "Original booking timestamp:",
-                data.booked_start_time,
-              );
-              console.log("Parsed Date object:", bookingDate);
-              console.log("Formatted date:", formattedDate);
-              console.log("Formatted time:", formattedTime);
-
-              console.log("Client Profile:", clientProfile);
-              console.log("Auth User:", authUser);
-              console.log("Developer Profile:", developerProfile);
-
               const emailPayload = {
                 clientName: clientProfile.full_name || "Valued Client",
                 clientEmail: authUser.email,
@@ -181,9 +174,9 @@ export const useCreateBooking = () => {
                 developerEmail: developerProfile.email,
                 bookingDate: formattedDate,
                 bookingTime: formattedTime,
+                bookingStartTimeISO: data.booked_start_time, // Pass ISO string directly
+                bookingEndTimeISO: data.booked_end_time,     // Pass ISO string directly
               };
-
-              console.log("Email Payload:", emailPayload);
 
               const { error: emailError } = await supabase.functions.invoke(
                 "send-booking-email",

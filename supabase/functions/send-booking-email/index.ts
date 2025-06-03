@@ -16,6 +16,25 @@ interface BookingDetails {
   developerEmail: string;
   bookingDate: string; // e.g., "June 15, 2024"
   bookingTime: string; // e.g., "10:00 AM PST"
+  bookingStartTimeISO?: string; // ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
+  bookingEndTimeISO?: string;   // ISO 8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
+}
+
+// Helper function to format ISO date string for Google Calendar URL (YYYYMMDDTHHmmssZ)
+function formatGoogleCalendarDate(isoDateString?: string): string {
+  if (!isoDateString) return "";
+  try {
+    const date = new Date(isoDateString);
+    // Ensure the date is valid
+    if (isNaN(date.getTime())) {
+        console.warn(`[send-booking-email] Invalid date string for formatting: ${isoDateString}`);
+        return "";
+    }
+    return date.toISOString().replace(/-|:|\.\d{3}/g, "");
+  } catch (e) {
+    console.error(`[send-booking-email] Error formatting date string ${isoDateString}:`, e);
+    return "";
+  }
 }
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
@@ -29,7 +48,6 @@ console.log(
 
 serve(async (req: Request) => {
   console.log("[send-booking-email] Function invoked.");
-  console.log("[send-booking-email] All Deno Env Vars:", Deno.env.toObject()); // Log all environment variables
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -62,10 +80,17 @@ serve(async (req: Request) => {
 
   try {
     const bookingDetails: BookingDetails = (await req.json()) as BookingDetails;
-    console.log(
-      "[send-booking-email] Received booking details for processing:",
-      JSON.stringify(bookingDetails, null, 2),
-    );
+
+    // Format dates for Google Calendar if ISO times are provided
+    const googleCalendarStartTime = formatGoogleCalendarDate(bookingDetails.bookingStartTimeISO);
+    const googleCalendarEndTime = formatGoogleCalendarDate(bookingDetails.bookingEndTimeISO);
+
+    let googleCalendarLink = "";
+    if (googleCalendarStartTime && googleCalendarEndTime && bookingDetails.clientName && bookingDetails.developerName) {
+      const eventText = `First Call: ${bookingDetails.clientName} with ${bookingDetails.developerName}`;
+      const eventDetails = `Booking for a first call session.\nClient: ${bookingDetails.clientName}\nDeveloper: ${bookingDetails.developerName}`;
+      googleCalendarLink = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventText)}&dates=${googleCalendarStartTime}/${googleCalendarEndTime}&details=${encodeURIComponent(eventDetails)}`;
+    }
 
     // Validate payload
     if (
@@ -103,6 +128,7 @@ serve(async (req: Request) => {
           <li><strong>Time:</strong> ${bookingDetails.bookingTime}</li>
           <li><strong>Duration:</strong> Up to 1 hour</li>
         </ul>
+        ${googleCalendarLink ? `<p><a href="${googleCalendarLink}" target="_blank">Add to Google Calendar</a></p>` : ''}
         <p>Thank you for booking with us!</p>
         <p>Best regards,</p>
         <p>The DevConnect Team</p>
@@ -125,6 +151,7 @@ serve(async (req: Request) => {
           <li><strong>Time:</strong> ${bookingDetails.bookingTime}</li>
           <li><strong>Duration:</strong> Up to 1 hour</li>
         </ul>
+        ${googleCalendarLink ? `<p><a href="${googleCalendarLink}" target="_blank">Add to Google Calendar</a></p>` : ''}
         <p>Please prepare for the session.</p>
         <p>Best regards,</p>
         <p>The DevConnect Team</p>
@@ -132,10 +159,6 @@ serve(async (req: Request) => {
     };
 
     // Send both emails
-    console.log(
-      "[send-booking-email] Attempting to send client email to:",
-      emailToClient.to,
-    );
     const { data: clientEmailData, error: clientEmailError } = await resend
       .emails.send(emailToClient);
     if (clientEmailError) {
@@ -159,10 +182,6 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log(
-      "[send-booking-email] Attempting to send developer email to:",
-      emailToDeveloper.to,
-    );
     const { data: developerEmailData, error: developerEmailError } =
       await resend.emails.send(emailToDeveloper);
     if (developerEmailError) {

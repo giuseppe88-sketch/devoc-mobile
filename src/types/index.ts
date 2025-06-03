@@ -39,6 +39,7 @@ export interface Availability {
   availability_type: 'first_call' | 'general_work_block';
   range_start_date?: string | null; // ISO date string, YYYY-MM-DD, for 'general_work_block'
   range_end_date?: string | null;   // ISO date string, YYYY-MM-DD, for 'general_work_block'
+  is_active: boolean; // Indicates if the slot is available (true) or booked (false)
   created_at?: string; // Optional: Timestamp of when the slot was created
   updated_at?: string; // Optional: Timestamp of when the slot was last updated
 }
