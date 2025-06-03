@@ -16,6 +16,7 @@ import AccountScreen from "../screens/account/account-screen"; // Import Account
 
 // Client Screens
 import ClientDashboardScreen from "../screens/client/dashboard-screen";
+import BookingDetailsScreen from '../screens/client/booking-details-screen'; // <-- Import BookingDetailsScreen
 import ClientBrowseScreen from "../screens/client/browse-screen";
 import ClientBookingsScreen from '../screens/client/ClientBookingsScreen';
 import { ClientProfileScreen } from "../screens/client/profile-screen";
@@ -34,6 +35,7 @@ import {
 export type ClientDashboardStackParamList = {
   ClientDashboardHome: undefined;
   ClientBookings: undefined;
+  BookingDetails: { bookingId: string };
 };
 import { colors as themeColors, spacing } from "../theme";
 
@@ -170,6 +172,11 @@ function ClientDashboardStackNavigator() {
         name="ClientBookings" 
         component={ClientBookingsScreen} 
         options={{ title: 'My Bookings', headerShown: true }} // Show header with title for bookings
+      />
+      <ClientDashboardStack.Screen 
+        name="BookingDetails" 
+        component={BookingDetailsScreen} 
+        options={{ title: 'Booking Details', headerShown: true }}
       />
     </ClientDashboardStack.Navigator>
   );

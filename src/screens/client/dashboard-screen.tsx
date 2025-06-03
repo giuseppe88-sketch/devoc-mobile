@@ -173,8 +173,7 @@ function ClientDashboardScreen() {
                 key={booking.id}
                 style={styles.bookingCard}
                 onPress={() => {
-                  // TODO: Navigate to booking details screen if needed
-                  // navigation.navigate('BookingDetail', { bookingId: booking.id });
+                  navigation.navigate('BookingDetails', { bookingId: booking.id });
                 }}
               >
                 <View style={styles.bookingHeader}>
