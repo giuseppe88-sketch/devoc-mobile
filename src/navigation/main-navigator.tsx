@@ -17,7 +17,7 @@ import AccountScreen from "../screens/account/account-screen"; // Import Account
 // Client Screens
 import ClientDashboardScreen from "../screens/client/dashboard-screen";
 import ClientBrowseScreen from "../screens/client/browse-screen";
-// import ClientBookingsScreen from '../screens/client/bookings-screen';
+import ClientBookingsScreen from '../screens/client/ClientBookingsScreen';
 import { ClientProfileScreen } from "../screens/client/profile-screen";
 import EditClientProfileScreen from "../screens/client/edit-profile-screen";
 import { DeveloperDetailScreen } from "../screens/client/developer-detail-screen";
@@ -29,6 +29,12 @@ import {
   BrowseStackParamList, // Import BrowseStackParamList
   AllMainTabsParamList, // Import AllMainTabsParamList
 } from "../types"; // Import shared types
+
+// Define ParamList for the new Client Dashboard Stack
+export type ClientDashboardStackParamList = {
+  ClientDashboardHome: undefined;
+  ClientBookings: undefined;
+};
 import { colors as themeColors, spacing } from "../theme";
 
 // Assuming dark theme for navigation elements
@@ -41,6 +47,7 @@ const ClientProfileStack =
 
 // BrowseStackParamList is now imported from ../types
 const BrowseStack = createNativeStackNavigator<BrowseStackParamList>(); // Create Browse Stack
+const ClientDashboardStack = createNativeStackNavigator<ClientDashboardStackParamList>(); // Create Client Dashboard Stack
 
 // Profile Stack Navigator Component
 function ProfileStackNavigator() {
@@ -135,6 +142,36 @@ function ClientProfileStackNavigator() {
         }}
       />
     </ClientProfileStack.Navigator>
+  );
+}
+
+// Client Dashboard Stack Navigator Component
+function ClientDashboardStackNavigator() {
+  // Use the main 'colors' object which is already defined (themeColors.dark)
+  return (
+    <ClientDashboardStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.card, // Use existing 'colors' object
+        },
+        headerTintColor: colors.text, // Use existing 'colors' object
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerBackTitleVisible: false,
+      }}
+    >
+      <ClientDashboardStack.Screen 
+        name="ClientDashboardHome" 
+        component={ClientDashboardScreen} 
+        options={{ headerShown: false }} // No header for the root dashboard screen in this stack
+      />
+      <ClientDashboardStack.Screen 
+        name="ClientBookings" 
+        component={ClientBookingsScreen} 
+        options={{ title: 'My Bookings', headerShown: true }} // Show header with title for bookings
+      />
+    </ClientDashboardStack.Navigator>
   );
 }
 
@@ -281,7 +318,11 @@ function MainNavigator() {
       ) : (
         // Client Tabs
         <>
-          <Tab.Screen name="Dashboard" component={ClientDashboardScreen} />
+          <Tab.Screen 
+            name="Dashboard" 
+            component={ClientDashboardStackNavigator} 
+            options={{ headerShown: false }} // The stack itself will manage headers for its screens
+          />
           <Tab.Screen
             name="Browse"
             component={BrowseStackNavigator}

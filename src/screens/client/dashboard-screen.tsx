@@ -6,11 +6,14 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useBrowseDevelopers, DeveloperProfile } from '@/hooks/useBrowseDevelopers';
 import { ActivityIndicator } from 'react-native';
 import { colors as themeColors, spacing } from '../../theme';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { ClientDashboardStackParamList } from '../../navigation/main-navigator';
 
 const colors = themeColors.light;
 
-function ClientDashboardScreen({ navigation }: { navigation: any }) {
+function ClientDashboardScreen() {
   const { user } = useAuthStore();
+  const navigation = useNavigation<NavigationProp<ClientDashboardStackParamList, 'ClientDashboardHome'>>();
   const name = user?.user_metadata?.name || 'Client';
 
   const { data: allDevelopers, isLoading: isLoadingDevelopers, error: errorDevelopers } = useBrowseDevelopers();
@@ -45,7 +48,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
         <View style={styles.searchContainer}>
           <TouchableOpacity 
             style={styles.searchBar}
-            onPress={() => navigation.navigate('Browse')}
+            onPress={() => navigation.getParent<any>()?.navigate('Browse')}
           >
             <Ionicons name="search" size={20} color={colors.placeholder} />
             <Text style={styles.searchText}>Search for developers...</Text>
@@ -55,7 +58,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured Developers</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Browse')}>
+            <TouchableOpacity onPress={() => navigation.getParent<any>()?.navigate('Browse')}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -70,7 +73,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
                 <TouchableOpacity
                   key={developer.id}
                   style={styles.developerCard}
-                  onPress={() => navigation.navigate('Browse', { screen: 'DeveloperDetail', params: { developerId: developer.id } })}
+                  onPress={() => navigation.getParent<any>()?.navigate('Browse', { screen: 'DeveloperDetail', params: { developerId: developer.id } })}
                 >
                   <Image
                     source={{ uri: developer.avatar_url || 'https://via.placeholder.com/100' }} // Use avatar_url and provide a fallback
@@ -109,7 +112,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your Bookings</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Bookings')}>
+            <TouchableOpacity onPress={() => navigation.navigate('ClientBookings')}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -146,7 +149,7 @@ function ClientDashboardScreen({ navigation }: { navigation: any }) {
               <Text style={styles.emptyStateText}>No upcoming bookings</Text>
               <TouchableOpacity 
                 style={styles.findDevelopersButton}
-                onPress={() => navigation.navigate('Browse')}
+                onPress={() => navigation.getParent<any>()?.navigate('Browse')}
               >
                 <Text style={styles.findDevelopersText}>Find Developers</Text>
               </TouchableOpacity>
