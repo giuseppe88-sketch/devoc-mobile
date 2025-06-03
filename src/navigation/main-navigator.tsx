@@ -34,8 +34,7 @@ import {
 // Define ParamList for the new Client Dashboard Stack
 export type ClientDashboardStackParamList = {
   ClientDashboardHome: undefined;
-  ClientBookings: undefined;
-  BookingDetails: { bookingId: string };
+  BookingDetails: { bookingId: string }; // BookingDetails remains, ClientBookings moved to a main tab
 };
 import { colors as themeColors, spacing } from "../theme";
 
@@ -168,11 +167,7 @@ function ClientDashboardStackNavigator() {
         component={ClientDashboardScreen} 
         options={{ headerShown: false }} // No header for the root dashboard screen in this stack
       />
-      <ClientDashboardStack.Screen 
-        name="ClientBookings" 
-        component={ClientBookingsScreen} 
-        options={{ title: 'My Bookings', headerShown: true }} // Show header with title for bookings
-      />
+      {/* ClientBookingsScreen is now a main tab, removed from this stack */}
       <ClientDashboardStack.Screen 
         name="BookingDetails" 
         component={BookingDetailsScreen} 
@@ -269,41 +264,36 @@ function MainNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-
-          if (route.name === "Dashboard") {
-            iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "Profile") {
-            iconName = focused ? "person" : "person-outline";
-          } else if (route.name === "Availability") {
-            iconName = focused ? "calendar" : "calendar-outline";
-            // } else if (route.name === 'Bookings') { // Bookings tab is not currently active
-            //   iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === "Browse") {
-            iconName = focused ? "search" : "search-outline";
-          } else if (route.name === "Account") {
-            iconName = focused ? "settings" : "settings-outline";
-          }
-
-          // Restore original size prop
-          return <Ionicons name={iconName as any} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.accent, // Color for active tab icon/label
-        tabBarInactiveTintColor: colors.textSecondary, // Color for inactive tab icon/label
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.text,
         tabBarStyle: {
-          backgroundColor: colors.card, // Tab bar background color
-          borderTopColor: colors.border, // Optional: Tab bar border color
-          paddingBottom: spacing.xs, // Add some padding at the bottom
-          height: 60, // Adjust height if needed
-          marginBottom: 10,
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
         },
         headerStyle: {
-          backgroundColor: colors.card, // Header background color
+          backgroundColor: colors.card,
         },
-        headerTintColor: colors.text, // Header text/icon color
+        headerTintColor: colors.text,
         headerTitleStyle: {
           fontWeight: "bold",
+        },
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = "alert-circle-outline"; // Default icon
+
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Browse') {
+            iconName = focused ? 'search' : 'search-outline';
+          } else if (route.name === 'ClientBookingsTab') {
+            iconName = focused ? 'list' : 'list-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline';
+          } else if (route.name === 'Account') { // For Developer
+            iconName = focused ? 'settings' : 'settings-outline';
+          } else if (route.name === 'Availability') { // For Developer
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
@@ -325,21 +315,37 @@ function MainNavigator() {
       ) : (
         // Client Tabs
         <>
-          <Tab.Screen 
-            name="Dashboard" 
-            component={ClientDashboardStackNavigator} 
-            options={{ headerShown: false }} // The stack itself will manage headers for its screens
+          <Tab.Screen
+            name="Dashboard" // Key in AllMainTabsParamList
+            component={ClientDashboardStackNavigator} // Use the StackNavigator
+            options={{
+              tabBarLabel: "Home",
+              headerShown: false, // Stack navigator handles its own headers
+            }}
           />
           <Tab.Screen
-            name="Browse"
+            name="ClientBookingsTab" // Key in AllMainTabsParamList
+            component={ClientBookingsScreen}
+            options={{
+              tabBarLabel: "My Bookings",
+              headerShown: false, 
+            }}
+          />
+          <Tab.Screen
+            name="Browse" // Key in AllMainTabsParamList
             component={BrowseStackNavigator}
-            options={{ headerShown: false }} // Hide Tab Navigator header, Stack header will show
+            options={{
+              tabBarLabel: "Browse",
+              headerShown: false, // Stack navigator handles its own headers
+            }}
           />
-          {/* <Tab.Screen name="Bookings" component={ClientBookingsScreen} /> */}
           <Tab.Screen
-            name="Profile"
+            name="Profile" // Key in AllMainTabsParamList
             component={ClientProfileStackNavigator}
-            options={{ headerShown: false }}
+            options={{
+              tabBarLabel: "Profile",
+              headerShown: false, // Stack navigator handles its own headers
+            }}
           />
         </>
       )}

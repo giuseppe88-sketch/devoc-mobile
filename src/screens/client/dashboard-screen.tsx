@@ -15,16 +15,13 @@ import { useFetchClientBookings, type Booking } from '@/hooks/useFetchClientBook
 import { ActivityIndicator } from "react-native";
 import { colors as themeColors, spacing } from "../../theme";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { ClientDashboardStackParamList } from "../../navigation/main-navigator";
+import { AllMainTabsParamList } from "../../types"; // Corrected import for AllMainTabsParamList
 
 const colors = themeColors.light;
 
 function ClientDashboardScreen() {
   const { user } = useAuthStore();
-  const navigation =
-    useNavigation<
-      NavigationProp<ClientDashboardStackParamList, "ClientDashboardHome">
-    >();
+  const navigation = useNavigation<NavigationProp<AllMainTabsParamList>>();
   const name = user?.user_metadata?.name || "Client";
 
   const {
@@ -157,7 +154,7 @@ function ClientDashboardScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Your Bookings</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate("ClientBookings")}
+              onPress={() => navigation.navigate("ClientBookingsTab")}
             >
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
@@ -173,7 +170,7 @@ function ClientDashboardScreen() {
                 key={booking.id}
                 style={styles.bookingCard}
                 onPress={() => {
-                  navigation.navigate('BookingDetails', { bookingId: booking.id });
+                  navigation.navigate('Dashboard', { screen: 'BookingDetails', params: { bookingId: booking.id } });
                 }}
               >
                 <View style={styles.bookingHeader}>

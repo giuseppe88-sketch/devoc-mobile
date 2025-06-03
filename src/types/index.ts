@@ -1,5 +1,6 @@
 import { Database } from './supabase';
 import { NavigatorScreenParams } from '@react-navigation/native';
+import type { ClientDashboardStackParamList } from '../navigation/main-navigator';
 
 export interface User {
   id: string;
@@ -131,17 +132,17 @@ export type DeveloperMainTabParamList = {
 
 // Navigation param list for the main Tab navigator when user is a Client
 export type ClientMainTabParamList = {
-  Dashboard: undefined;
-  Browse: NavigatorScreenParams<BrowseStackParamList>; 
+  Dashboard: NavigatorScreenParams<ClientDashboardStackParamList>; // This will point to ClientDashboardStackNavigator
+  Browse: NavigatorScreenParams<BrowseStackParamList>;
+  ClientBookingsTab: undefined; // New dedicated tab for all client bookings
   Profile: NavigatorScreenParams<ClientProfileStackParamList>;
-  // Bookings: undefined; // If ClientBookingsScreen is added to tabs
 };
 
 // Combined ParamList for the main Tab navigator, encompassing all possible tabs
 // This allows a single Tab.Navigator to be typed correctly, even if screens are conditional.
 export type AllMainTabsParamList = {
   // Common screens or screens that might change target based on role
-  Dashboard: undefined;
+  Dashboard: NavigatorScreenParams<ClientDashboardStackParamList> | undefined; // Client dashboard is a stack, Developer dashboard is undefined
   Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
   Account: undefined; // Universal Account/Settings Tab
 
@@ -150,7 +151,8 @@ export type AllMainTabsParamList = {
   
   // Client-specific screens (optional if not present for developers)
   Browse?: NavigatorScreenParams<BrowseStackParamList>;
+  ClientBookingsTab?: undefined; // New client-specific bookings tab
   
   // Common optional screens
-  // Bookings?: undefined; // Example if bookings were shared or role-specific optional
+  // Bookings?: undefined;
 };

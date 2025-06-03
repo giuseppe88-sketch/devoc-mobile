@@ -4,15 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFetchClientBookings, Booking } from '@/hooks/useFetchClientBookings';
 import { colors as themeColors, spacing } from '@/theme'; 
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { AllMainTabsParamList } from '@/types';
 
 // Assuming dark theme for this screen, adjust if needed
-const localColors = themeColors.dark;
+const localColors = themeColors.light;
 
 const ClientBookingsScreen = () => {
   const { data: bookings = [], isLoading, error } = useFetchClientBookings();
+  const navigation = useNavigation<NavigationProp<AllMainTabsParamList>>();
 
   const renderBookingItem = ({ item }: { item: Booking }) => (
-    <View style={styles.bookingCard}>
+    <TouchableOpacity onPress={() => navigation.navigate('Dashboard', { screen: 'BookingDetails', params: { bookingId: item.id } })}>
+      <View style={styles.bookingCard}>
       <View style={styles.cardHeader}>
         {item.developer_profile?.user?.avatar_url ? (
           <Image source={{ uri: item.developer_profile.user.avatar_url }} style={styles.avatar} />
@@ -39,6 +43,7 @@ const ClientBookingsScreen = () => {
         <Text style={styles.statusText}>{item.status}</Text>
       </View>
     </View>
+    </TouchableOpacity>
   );
 
   if (isLoading) {
