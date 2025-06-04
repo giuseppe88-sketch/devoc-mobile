@@ -1,21 +1,24 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 // import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Not used yet
 import { Ionicons } from '@expo/vector-icons';
 import { colors as themeColors, spacing } from '../../theme';
 import { ClientDashboardStackParamList } from '../../navigation/main-navigator';
 import { useFetchBookingDetails, Booking } from '../../hooks/useFetchBookingDetails'; // Import hook and Booking type
+import { useCancelBooking } from '../../hooks/useCancelBooking'; // Import the new hook
 
 const colors = themeColors.light;
 
 type BookingDetailsScreenRouteProp = RouteProp<ClientDashboardStackParamList, 'BookingDetails'>;
 
 const BookingDetailsScreen: React.FC = () => {
+  const navigation = useNavigation(); // For potential navigation
   const route = useRoute<BookingDetailsScreenRouteProp>();
   const { bookingId } = route.params;
 
   const { data: booking, isLoading, isError, error } = useFetchBookingDetails(bookingId);
+  const { mutate: cancelBookingMutate, isPending: isCancelling } = useCancelBooking();
 
   const handleCancelBooking = () => {
     Alert.alert(
@@ -25,7 +28,11 @@ const BookingDetailsScreen: React.FC = () => {
         { text: 'No', style: 'cancel' },
         { 
           text: 'Yes, Cancel', 
-          onPress: () => console.log('Booking cancellation initiated for:', bookingId), 
+          onPress: () => {
+          cancelBookingMutate({ bookingId });
+          // onSuccess in the hook will handle toast and query invalidation.
+          // If navigation is desired after successful API call, handle in useCancelBooking's onSuccess
+        }, 
           style: 'destructive' 
         },
       ]
@@ -84,9 +91,19 @@ const BookingDetailsScreen: React.FC = () => {
           <Text style={[styles.detailValue, styles.bookingIdText]}>{bookingId}</Text>
         </View>
 
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancelBooking}>
-          <Ionicons name="close-circle-outline" size={20} color={colors.card} style={{marginRight: spacing.sm}} />
-          <Text style={styles.cancelButtonText}>Cancel Booking</Text>
+        <TouchableOpacity 
+          style={[styles.cancelButton, isCancelling && styles.cancelButtonDisabled]}
+          onPress={handleCancelBooking}
+          disabled={isCancelling || booking?.status === 'cancelled' || booking?.status === 'completed'} // Also disable if already cancelled/completed
+        >
+          {isCancelling ? (
+            <ActivityIndicator size="small" color={colors.card} style={{marginRight: spacing.sm}} />
+          ) : (
+            <Ionicons name="close-circle-outline" size={20} color={colors.card} style={{marginRight: spacing.sm}} />
+          )}
+          <Text style={styles.cancelButtonText}>
+            {isCancelling ? 'Cancelling...' : booking?.status === 'cancelled' ? 'Booking Cancelled' : booking?.status === 'completed' ? 'Booking Completed' : 'Cancel Booking'}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -188,6 +205,10 @@ const styles = StyleSheet.create({
     color: colors.card, // White text on error background
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  cancelButtonDisabled: {
+    backgroundColor: '#D3D3D3', // Light grey for disabled state
+    opacity: 0.7,
   },
 });
 
