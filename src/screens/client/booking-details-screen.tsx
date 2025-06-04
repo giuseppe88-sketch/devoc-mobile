@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 // import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Not used yet
 import { Ionicons } from '@expo/vector-icons';
 import { colors as themeColors, spacing } from '../../theme';
@@ -21,6 +22,15 @@ const BookingDetailsScreen: React.FC = () => {
   const { mutate: cancelBookingMutate, isPending: isCancelling } = useCancelBooking();
 
   const handleCancelBooking = () => {
+    if (!booking) { // Guard against undefined booking
+      Toast.show({
+        type: 'error',
+        text1: 'Cannot Cancel Booking',
+        text2: 'Booking details are not available.',
+      });
+      return;
+    }
+
     Alert.alert(
       'Cancel Booking',
       'Are you sure you want to cancel this booking?',
@@ -29,7 +39,7 @@ const BookingDetailsScreen: React.FC = () => {
         { 
           text: 'Yes, Cancel', 
           onPress: () => {
-          cancelBookingMutate({ bookingId });
+          cancelBookingMutate({ bookingId, clientId: booking.client_id });
           // onSuccess in the hook will handle toast and query invalidation.
           // If navigation is desired after successful API call, handle in useCancelBooking's onSuccess
         }, 

@@ -5,6 +5,7 @@ import Toast from 'react-native-toast-message';
 
 interface CancelBookingVariables {
   bookingId: string;
+  clientId: string; // Added for targeted query invalidation
 }
 
 interface CancelBookingResponse {
@@ -49,7 +50,7 @@ export const useCancelBooking = () => {
         });
         // Invalidate queries to refetch data
         // Adjust query keys as per your application's structure
-        queryClient.invalidateQueries({ queryKey: ['bookings', 'client'] }); // For client's list of bookings
+        queryClient.invalidateQueries({ queryKey: ['clientBookings', variables.clientId] }); // For client's list of bookings
         queryClient.invalidateQueries({ queryKey: ['bookingDetails', variables.bookingId] }); // For specific booking details
         // Potentially invalidate availability slots if they are displayed and should reflect the change
         // queryClient.invalidateQueries({ queryKey: ['availabilitySlots', relevantDeveloperId] }); 
