@@ -104,6 +104,7 @@ function ProfileStackNavigator() {
 }
 
 function ClientProfileStackNavigator() {
+  const colors = themeColors.light; // Use light theme for this stack's headers
   return (
     <ClientProfileStack.Navigator
       screenOptions={{
@@ -122,14 +123,7 @@ function ClientProfileStackNavigator() {
         name="ClientProfile"
         component={ClientProfileScreen}
         options={{
-          // Replace title text with an icon
-          headerTitle: () => (
-            <Ionicons
-              name="person-circle-outline"
-              size={28}
-              color={colors.text}
-            />
-          ),
+          title: "Profile" // Set header title to 'Profile'
         }}
       />
       <ClientProfileStack.Screen
@@ -148,6 +142,7 @@ function ClientProfileStackNavigator() {
 
 // Client Dashboard Stack Navigator Component
 function ClientDashboardStackNavigator() {
+  const colors = themeColors.light; // Use light theme for this stack's headers
   // Use the main 'colors' object which is already defined (themeColors.dark)
   return (
     <ClientDashboardStack.Navigator
@@ -328,7 +323,13 @@ function MainNavigator() {
             component={ClientBookingsScreen}
             options={{
               tabBarLabel: "My Bookings",
-              headerShown: false, 
+              headerShown: true, 
+              title: "My Bookings",
+              // Styles below match the Tab.Navigator defaults for consistency
+              // The 'colors' variable here correctly refers to themeColors.light from the MainNavigator scope
+              headerStyle: { backgroundColor: colors.card }, 
+              headerTintColor: colors.text,
+              headerTitleStyle: { fontWeight: 'bold' },
             }}
           />
           <Tab.Screen

@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
   listContentContainer: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
+    paddingTop:spacing.md,
     paddingBottom: spacing.lg, 
   },
   bookingCard: {
