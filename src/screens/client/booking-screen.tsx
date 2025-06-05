@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Button, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BrowseStackParamList, Availability } from '@/types'; // Assuming @ is src/
 import { useFetchDeveloperFirstCallAvailability } from '@/hooks/useFetchDeveloperFirstCallAvailability';
@@ -20,15 +20,27 @@ const BookingScreen: React.FC = () => {
   const route = useRoute<BookingScreenRouteProp>();
   const navigation = useNavigation<BookingScreenNavigationProp>();
   const { developerId, developerName } = route.params;
+  console.log('[BookingScreen] Fetching availability for developerId:', developerId); // Log developerId for debugging
 
   const colors = themeColors.light; // Or based on your theme logic
 
   const { mutate: createBooking, isPending: isBookingPending } = useCreateBooking();
 
-  const { availabilitySlots: fetchedSlotsFromHook, isLoading, error } = useFetchDeveloperFirstCallAvailability(developerId);
+  const { availabilitySlots: fetchedSlotsFromHook, isLoading, error, refetch } = useFetchDeveloperFirstCallAvailability(developerId);
   const availabilitySlots = fetchedSlotsFromHook || [];
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (developerId) { // Ensure developerId is available before refetching
+        refetch();
+      }
+      return () => {
+        // Optional: any cleanup if needed when the screen loses focus
+      };
+    }, [developerId, refetch]) // Add developerId and refetch as dependencies
+  );
 
   // Group slots by day of week
   const slotsByDay = useMemo(() => {

@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 interface CancelBookingVariables {
   bookingId: string;
   clientId: string; // Added for targeted query invalidation
+  developerId: string; // To invalidate developer's availability
 }
 
 interface CancelBookingResponse {
@@ -52,8 +53,11 @@ export const useCancelBooking = () => {
         // Adjust query keys as per your application's structure
         queryClient.invalidateQueries({ queryKey: ['clientBookings', variables.clientId] }); // For client's list of bookings
         queryClient.invalidateQueries({ queryKey: ['bookingDetails', variables.bookingId] }); // For specific booking details
-        // Potentially invalidate availability slots if they are displayed and should reflect the change
-        // queryClient.invalidateQueries({ queryKey: ['availabilitySlots', relevantDeveloperId] }); 
+        // Invalidate developer's first call availability to refresh slots
+        if (variables.developerId) {
+          console.log('[useCancelBooking] Invalidating for developerId:', variables.developerId); // Log developerId for debugging
+          queryClient.invalidateQueries({ queryKey: ['developerFirstCallAvailability', variables.developerId] });
+        } 
       } else {
         // Handle cases where the Edge Function returns success: false
         Toast.show({

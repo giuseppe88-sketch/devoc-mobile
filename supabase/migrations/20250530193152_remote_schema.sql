@@ -64,8 +64,8 @@ BEGIN
   WHERE id = p_slot_id;
 
   -- Create the booking
-  INSERT INTO public.bookings (developer_id, client_id, start_time, end_time, status, notes)
-  VALUES (p_developer_id, p_client_id, v_calculated_start_timestamp, v_calculated_end_timestamp, 'confirmed', 'First call booking')
+  INSERT INTO public.bookings (developer_id, client_id, start_time, end_time, status, notes, original_availability_slot_id)
+  VALUES (p_developer_id, p_client_id, v_calculated_start_timestamp, v_calculated_end_timestamp, 'confirmed', 'First call booking', p_slot_id)
   RETURNING id INTO v_new_booking_id;
   
   RETURN QUERY 

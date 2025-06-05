@@ -39,7 +39,7 @@ const BookingDetailsScreen: React.FC = () => {
         { 
           text: 'Yes, Cancel', 
           onPress: () => {
-          cancelBookingMutate({ bookingId, clientId: booking.client_id });
+          cancelBookingMutate({ bookingId, clientId: booking.client_id, developerId: booking.developer_id });
           // onSuccess in the hook will handle toast and query invalidation.
           // If navigation is desired after successful API call, handle in useCancelBooking's onSuccess
         }, 
