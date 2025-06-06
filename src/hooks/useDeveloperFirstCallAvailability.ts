@@ -91,15 +91,16 @@ async function saveFirstCallAvailabilityMutationFn({
       .delete()
       .eq('developer_id', developerId)
       .eq('availability_type', 'first_call')
-      .in('day_of_week', daysToUpdate);
+      .in('day_of_week', daysToUpdate)
+      .eq('is_active', true); // <-- MODIFIED: Only delete active slots
 
     if (deleteError) {
-      // console.error(`[saveFirstCallAvailabilityMutationFn] Error deleting existing availabilities for days ${daysToUpdate.join(', ')}: ${deleteError.message}`); // Commented out to reduce noise
-      throw new Error(`Failed to clear existing availabilities for specified days: ${deleteError.message}`);
+      console.error(`[saveFirstCallAvailabilityMutationFn] Error deleting existing ACTIVE availabilities for days ${daysToUpdate.join(', ')}: ${deleteError.message}`);
+      throw new Error(`Failed to clear existing ACTIVE availabilities for specified days: ${deleteError.message}`);
     }
     // console.log(`[saveFirstCallAvailabilityMutationFn] Successfully deleted existing 'first_call' availabilities for developer ${developerId} on days: ${daysToUpdate.join(', ')}`); // Commented out to reduce noise
   } else {
-    // console.log('[saveFirstCallAvailabilityMutationFn] No specific days found in input slots to delete. This might mean the input `slots` array was empty. No deletion performed based on day_of_week.'); // Commented out to reduce noise
+    console.log('[saveFirstCallAvailabilityMutationFn] No specific days found in input slots to delete. This might mean the input `slots` array was empty. No deletion performed based on day_of_week.'); // Commented out to reduce noise
     // If slots is empty, it means the intention is to clear the specified days.
     // If daysToUpdate is empty because slots was empty, then it implies clearing for the days represented by the empty slots array.
     // The current logic will then proceed to insert nothing, which is correct if the slots for given days are cleared by the user.
@@ -131,7 +132,7 @@ async function saveFirstCallAvailabilityMutationFn({
 
   // 4. Bulk insert the new availability records if any
   if (newAvailabilityRecords.length === 0) {
-    // console.log('[saveFirstCallAvailabilityMutationFn] No valid new time ranges to insert.'); // Commented out to reduce noise
+    console.log('[saveFirstCallAvailabilityMutationFn] No valid new time ranges to insert.'); // Commented out to reduce noise
     return [];
   }
 
@@ -141,7 +142,7 @@ async function saveFirstCallAvailabilityMutationFn({
     .select(); // Select the inserted rows to return them
 
   if (insertError) {
-    // console.error('[saveFirstCallAvailabilityMutationFn] Error inserting new availabilities:', insertError.message); // Commented out to reduce noise
+    console.error('[saveFirstCallAvailabilityMutationFn] Error inserting new availabilities:', insertError.message); // Commented out to reduce noise
     throw new Error(`Failed to insert new availabilities: ${insertError.message}`);
   }
 

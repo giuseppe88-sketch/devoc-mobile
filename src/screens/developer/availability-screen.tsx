@@ -52,12 +52,12 @@ function DeveloperAvailabilityScreen({
     saveAvailability: saveFirstCall,
     developerId: firstCallDeveloperId,
   } = useDeveloperFirstCallAvailability();
-  
+
   // This state holds the selections made by the user in the UI, per day
-  const [selectedFirstCallSlotsByDay, setSelectedFirstCallSlotsByDay] = useState<
-    Record<number, string[]>
-  >({});
-  const [firstCallSlotActiveStatusByDay, setFirstCallSlotActiveStatusByDay] = useState<Record<number, Record<string, boolean>>>({});
+  const [selectedFirstCallSlotsByDay, setSelectedFirstCallSlotsByDay] =
+    useState<Record<number, string[]>>({});
+  const [firstCallSlotActiveStatusByDay, setFirstCallSlotActiveStatusByDay] =
+    useState<Record<number, Record<string, boolean>>>({});
 
   // State for General Work Availability
   const {
@@ -84,58 +84,69 @@ function DeveloperAvailabilityScreen({
   useEffect(() => {
     if (firstCallSlots) {
       const initialSlotsByDay: Record<number, string[]> = {};
+      const activeSlotsForUISelection: Record<number, string[]> = {};
+      const allSlotStatuses: Record<number, Record<string, boolean>> = {};
+
       firstCallSlots.forEach((slot) => {
         if (slot.day_of_week === undefined || slot.day_of_week === null) return;
-        if (!initialSlotsByDay[slot.day_of_week]) {
-          initialSlotsByDay[slot.day_of_week] = [];
+
+        if (!activeSlotsForUISelection[slot.day_of_week]) {
+          activeSlotsForUISelection[slot.day_of_week] = [];
         }
+        if (!allSlotStatuses[slot.day_of_week]) {
+          allSlotStatuses[slot.day_of_week] = {};
+        }
+
         const startHour = parseInt(slot.slot_start_time.split(":")[0]);
         const endHour = parseInt(slot.slot_end_time.split(":")[0]);
+
         for (let hour = startHour; hour < endHour; hour++) {
           const timeSlot = `${hour.toString().padStart(2, "0")}:00`;
-          if (!initialSlotsByDay[slot.day_of_week].includes(timeSlot)) {
-            initialSlotsByDay[slot.day_of_week].push(timeSlot);
+          const isSlotActive = slot.is_active ?? true; // Default to true if null/undefined
+
+          // Populate status for all slots (for rendering red, etc.)
+          allSlotStatuses[slot.day_of_week][timeSlot] = isSlotActive;
+
+          // Populate UI selectable slots ONLY if the slot is actually active
+          if (isSlotActive) {
+            if (
+              !activeSlotsForUISelection[slot.day_of_week].includes(timeSlot)
+            ) {
+              activeSlotsForUISelection[slot.day_of_week].push(timeSlot);
+            }
           }
         }
       });
-      // Only set this if selectedFirstCallSlotsByDay hasn't been touched by user yet,
-      // or merge carefully. For simplicity, this effect primarily loads initial state.
-      // To prevent overwriting user's un-saved changes when firstCallSlots refetches (e.g. after save),
-      // we might need a more sophisticated merge or only set if selectedFirstCallSlotsByDay is empty.
-      // For now, this will re-initialize from DB on every fetch of firstCallSlots.
-            const initialSlotStatusByDay: Record<number, Record<string, boolean>> = {};
-      firstCallSlots.forEach((slot) => {
-        if (slot.day_of_week === undefined || slot.day_of_week === null) return;
-        if (!initialSlotsByDay[slot.day_of_week]) {
-          initialSlotsByDay[slot.day_of_week] = [];
-        }
-        if (!initialSlotStatusByDay[slot.day_of_week]) { // Initialize for status map
-          initialSlotStatusByDay[slot.day_of_week] = {};
-        }
-        const startHour = parseInt(slot.slot_start_time.split(":")[0]);
-        const endHour = parseInt(slot.slot_end_time.split(":")[0]);
-        for (let hour = startHour; hour < endHour; hour++) {
-          const timeSlot = `${hour.toString().padStart(2, "0")}:00`;
-          if (!initialSlotsByDay[slot.day_of_week].includes(timeSlot)) {
-            initialSlotsByDay[slot.day_of_week].push(timeSlot);
-          }
-          // Store active status. Assumes is_active: false means booked.
-          // Defaults to true (active) if slot.is_active is null or undefined.
-          initialSlotStatusByDay[slot.day_of_week][timeSlot] = slot.is_active ?? true;
-        }
-      });
-      setSelectedFirstCallSlotsByDay(initialSlotsByDay);
-      setFirstCallSlotActiveStatusByDay(initialSlotStatusByDay);
+
+      // Sort the UI selected slots for consistency
+      for (const day in activeSlotsForUISelection) {
+        activeSlotsForUISelection[day].sort();
+      }
+
+      setSelectedFirstCallSlotsByDay(activeSlotsForUISelection);
+      setFirstCallSlotActiveStatusByDay(allSlotStatuses);
+      // The comment about re-initializing on every fetch is important.
+      // For a more robust UX that preserves unsaved changes during background refetches,
+      // a more sophisticated merging strategy or only initializing if selectedFirstCallSlotsByDay is empty
+      // would be needed. This current fix addresses the primary bug of booked slots being overridden.
     }
   }, [firstCallSlots]);
 
   const handleTimeSlotPress = (time: string) => {
+    if (firstCallSlotActiveStatusByDay[selectedDay]?.[time] === false) {
+      Toast.show({
+        type: "info",
+        text1: "Slot Booked",
+        text2: "This time slot is already booked and cannot be modified.",
+        visibilityTime: 3000,
+      });
+      return;
+    }
     setSelectedFirstCallSlotsByDay((prevSlotsByDay) => {
       const currentDaySlots = prevSlotsByDay[selectedDay] || [];
-      const newDaySlots =
-        currentDaySlots.includes(time)
-          ? currentDaySlots.filter((t) => t !== time) // Deselect
-          : [...currentDaySlots, time].sort(); // Select and sort
+      const newDaySlots = currentDaySlots.includes(time)
+        ? currentDaySlots.filter((t) => t !== time) // Deselect
+        : [...currentDaySlots, time].sort(); // Select and sort
       return {
         ...prevSlotsByDay,
         [selectedDay]: newDaySlots,
@@ -157,16 +168,29 @@ function DeveloperAvailabilityScreen({
     )
       .map(([dayOfWeekStr, timeStringsForDay]) => {
         const day_of_week = parseInt(dayOfWeekStr, 10);
-        // Ensure timeRanges are sorted for consistent data representation if needed by backend/DB
-        const sortedTimeStrings = [...timeStringsForDay].sort();
+
+        // Defensive filter: Ensure only slots that are not marked as booked are processed for saving.
+        const trulyAvailableTimeStrings = timeStringsForDay.filter(
+          (timeSlot) => {
+            const isActive =
+              firstCallSlotActiveStatusByDay[day_of_week]?.[timeSlot];
+            const shouldInclude = isActive !== false;
+            return shouldInclude;
+          }
+        );
+
+        const sortedTimeStrings = [...trulyAvailableTimeStrings].sort();
         const timeRanges = sortedTimeStrings.map((slot) => ({
           slot_start_time: slot,
           slot_end_time: `${String(
             parseInt(slot.split(":")[0], 10) + 1
           ).padStart(2, "0")}:00`,
         }));
+
         return { day_of_week, timeRanges };
-      });
+      })
+      // Filter out days that have no timeRanges after our defensive filtering
+      .filter((dayParams) => dayParams.timeRanges.length > 0);
 
     try {
       await saveFirstCall(allParams); // saveFirstCall expects an array of params
@@ -189,9 +213,12 @@ function DeveloperAvailabilityScreen({
 
   const renderFirstCallAvailabilityTab = () => {
     const dayButtonConfig = [
-      { label: "Mon", dayValue: 1 }, { label: "Tue", dayValue: 2 },
-      { label: "Wed", dayValue: 3 }, { label: "Thu", dayValue: 4 },
-      { label: "Fri", dayValue: 5 }, { label: "Sat", dayValue: 6 },
+      { label: "Mon", dayValue: 1 },
+      { label: "Tue", dayValue: 2 },
+      { label: "Wed", dayValue: 3 },
+      { label: "Thu", dayValue: 4 },
+      { label: "Fri", dayValue: 5 },
+      { label: "Sat", dayValue: 6 },
       { label: "Sun", dayValue: 0 },
     ];
     const timeSlotsToDisplay = Array.from({ length: 11 }, (_, i) => {
@@ -200,11 +227,20 @@ function DeveloperAvailabilityScreen({
     });
 
     if (isLoadingFirstCall) {
-      return <ActivityIndicator style={styles.loadingIndicator} size="large" color={localColors.primary} />;
+      return (
+        <ActivityIndicator
+          style={styles.loadingIndicator}
+          size="large"
+          color={localColors.primary}
+        />
+      );
     }
 
-    const currentDaySelectedSlots = selectedFirstCallSlotsByDay[selectedDay] || [];
-    const noSlotsSelectedOverall = !Object.values(selectedFirstCallSlotsByDay).some(slots => slots && slots.length > 0);
+    const currentDaySelectedSlots =
+      selectedFirstCallSlotsByDay[selectedDay] || [];
+    const noSlotsSelectedOverall = !Object.values(
+      selectedFirstCallSlotsByDay
+    ).some((slots) => slots && slots.length > 0);
 
     return (
       <ScrollView style={styles.tabContentContainer}>
@@ -232,17 +268,23 @@ function DeveloperAvailabilityScreen({
           ))}
         </View>
 
-        <Text style={styles.subHeader}>Select Time Slots for {dayButtonConfig.find(d=>d.dayValue === selectedDay)?.label || ''}:</Text>
+        <Text style={styles.subHeader}>
+          Select Time Slots for{" "}
+          {dayButtonConfig.find((d) => d.dayValue === selectedDay)?.label || ""}
+          :
+        </Text>
         <View style={styles.timeSlotsContainer}>
           {timeSlotsToDisplay.map((timeSlot) => (
             <TouchableOpacity
               key={timeSlot}
               style={(() => {
                 const slotStyle: ViewStyle[] = [styles.timeSlot];
-                const isSlotBooked = firstCallSlotActiveStatusByDay[selectedDay]?.[timeSlot] === false;
+                const isSlotBooked =
+                  firstCallSlotActiveStatusByDay[selectedDay]?.[timeSlot] ===
+                  false;
 
                 if (isSlotBooked) {
-                  slotStyle.push({ backgroundColor: 'lightcoral' });
+                  slotStyle.push({ backgroundColor: "lightcoral" });
                 } else if (currentDaySelectedSlots.includes(timeSlot)) {
                   slotStyle.push(styles.selectedTimeSlot);
                 }
@@ -252,20 +294,27 @@ function DeveloperAvailabilityScreen({
                 }
                 return slotStyle;
               })()}
-              onPress={() => !(isLoading || isSaving) && handleTimeSlotPress(timeSlot)}
+              onPress={() =>
+                !(isLoading || isSaving) && handleTimeSlotPress(timeSlot)
+              }
               disabled={isLoading || isSaving}
             >
               <Text
                 style={(() => {
-                const textStyle: TextStyle[] = [styles.timeSlotText];
-                const isSlotBooked = firstCallSlotActiveStatusByDay[selectedDay]?.[timeSlot] === false;
+                  const textStyle: TextStyle[] = [styles.timeSlotText];
+                  const isSlotBooked =
+                    firstCallSlotActiveStatusByDay[selectedDay]?.[timeSlot] ===
+                    false;
 
-                // If booked, text style is default. If not booked AND selected, then selected text style.
-                if (!isSlotBooked && currentDaySelectedSlots.includes(timeSlot)) {
-                  textStyle.push(styles.selectedTimeSlotText);
-                }
-                return textStyle;
-              })()}
+                  // If booked, text style is default. If not booked AND selected, then selected text style.
+                  if (
+                    !isSlotBooked &&
+                    currentDaySelectedSlots.includes(timeSlot)
+                  ) {
+                    textStyle.push(styles.selectedTimeSlotText);
+                  }
+                  return textStyle;
+                })()}
               >
                 {timeSlot}
               </Text>
@@ -275,7 +324,11 @@ function DeveloperAvailabilityScreen({
 
         <TouchableOpacity
           onPress={handleSaveFirstCallAvailability}
-          style={[styles.saveButton, (isSavingFirstCall || noSlotsSelectedOverall) && styles.disabledButton]}
+          style={[
+            styles.saveButton,
+            (isSavingFirstCall || noSlotsSelectedOverall) &&
+              styles.disabledButton,
+          ]}
           disabled={isSavingFirstCall || noSlotsSelectedOverall}
         >
           {isSavingFirstCall ? (
@@ -297,8 +350,8 @@ function DeveloperAvailabilityScreen({
     const marked: { [key: string]: any } = {};
     generalWorkSlots.forEach((slot) => {
       if (slot.range_start_date && slot.range_end_date) {
-        let currentDate = new Date(slot.range_start_date + 'T00:00:00'); // Ensure parsing as local date
-        const endDate = new Date(slot.range_end_date + 'T00:00:00');
+        let currentDate = new Date(slot.range_start_date + "T00:00:00"); // Ensure parsing as local date
+        const endDate = new Date(slot.range_end_date + "T00:00:00");
         while (currentDate <= endDate) {
           const dateString = currentDate.toISOString().split("T")[0];
           marked[dateString] = {
@@ -328,13 +381,13 @@ function DeveloperAvailabilityScreen({
         textColor: localColors.background,
       };
       if (rangeStartDate && rangeStartDate !== rangeEndDate) {
-        let fillDate = new Date(rangeStartDate + 'T00:00:00');
-        const finalEndDate = new Date(rangeEndDate + 'T00:00:00');
+        let fillDate = new Date(rangeStartDate + "T00:00:00");
+        const finalEndDate = new Date(rangeEndDate + "T00:00:00");
         while (fillDate < finalEndDate) {
           fillDate.setDate(fillDate.getDate() + 1);
           const dateString = fillDate.toISOString().split("T")[0];
-          if (dateString !== rangeEndDate) { 
-             marked[dateString] = {
+          if (dateString !== rangeEndDate) {
+            marked[dateString] = {
               ...(marked[dateString] || {}),
               color: localColors.primary,
               textColor: localColors.background,
@@ -344,20 +397,26 @@ function DeveloperAvailabilityScreen({
       }
     }
     if (selectedGeneralSlotId) {
-        const selectedSlot = generalWorkSlots.find(s => s.id === selectedGeneralSlotId);
-        if (selectedSlot && selectedSlot.range_start_date && selectedSlot.range_end_date) {
-            let currentDate = new Date(selectedSlot.range_start_date + 'T00:00:00');
-            const endDate = new Date(selectedSlot.range_end_date + 'T00:00:00');
-            while (currentDate <= endDate) {
-                const dateString = currentDate.toISOString().split("T")[0];
-                marked[dateString] = {
-                    ...marked[dateString],
-                    color: localColors.secondary, 
-                    textColor: localColors.text,
-                };
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
+      const selectedSlot = generalWorkSlots.find(
+        (s) => s.id === selectedGeneralSlotId
+      );
+      if (
+        selectedSlot &&
+        selectedSlot.range_start_date &&
+        selectedSlot.range_end_date
+      ) {
+        let currentDate = new Date(selectedSlot.range_start_date + "T00:00:00");
+        const endDate = new Date(selectedSlot.range_end_date + "T00:00:00");
+        while (currentDate <= endDate) {
+          const dateString = currentDate.toISOString().split("T")[0];
+          marked[dateString] = {
+            ...marked[dateString],
+            color: localColors.secondary,
+            textColor: localColors.text,
+          };
+          currentDate.setDate(currentDate.getDate() + 1);
         }
+      }
     }
     return marked;
   };
@@ -384,13 +443,13 @@ function DeveloperAvailabilityScreen({
         setSelectedGeneralSlotId(existingSlot.id);
       }
     } else {
-      setSelectedGeneralSlotId(null); 
+      setSelectedGeneralSlotId(null);
       if (!rangeStartDate || (rangeStartDate && rangeEndDate)) {
         setRangeStartDate(clickedDate);
         setRangeEndDate(null);
       } else if (clickedDate >= rangeStartDate) {
         setRangeEndDate(clickedDate);
-      } else { 
+      } else {
         setRangeStartDate(clickedDate);
         setRangeEndDate(null);
       }
@@ -399,16 +458,29 @@ function DeveloperAvailabilityScreen({
 
   const handleSaveGeneralAvailability = async () => {
     if (!developerId) {
-      Toast.show({ type: "error", text1: "Error", text2: "Developer profile not found." });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Developer profile not found.",
+      });
       return;
     }
     if (!rangeStartDate || !rangeEndDate) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please select a start and end date." });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please select a start and end date.",
+      });
       return;
     }
     if (selectedGeneralSlotId) {
-        Toast.show({ type: "info", text1: "Info", text2: "Editing existing ranges is not directly supported. Delete and recreate if needed." });
-        return;
+      Toast.show({
+        type: "info",
+        text1: "Info",
+        text2:
+          "Editing existing ranges is not directly supported. Delete and recreate if needed.",
+      });
+      return;
     }
 
     const params: SaveGeneralAvailabilityParams = {
@@ -418,45 +490,71 @@ function DeveloperAvailabilityScreen({
 
     try {
       await saveGeneralWork(params);
-      Toast.show({ type: "success", text1: "Success", text2: "General availability saved!" });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "General availability saved!",
+      });
       setRangeStartDate(null);
       setRangeEndDate(null);
       setSelectedGeneralSlotId(null);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
       Toast.show({ type: "error", text1: "Save Failed", text2: errorMessage });
     }
   };
 
   const handleDeleteGeneralAvailability = async () => {
     if (!selectedGeneralSlotId) {
-      Toast.show({ type: "error", text1: "Error", text2: "No range selected to delete." });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No range selected to delete.",
+      });
       return;
     }
 
     const params: DeleteGeneralAvailabilityParams = {
-      availabilityId: selectedGeneralSlotId as string, 
+      availabilityId: selectedGeneralSlotId as string,
     };
 
     try {
       await deleteGeneralWork(params);
-      Toast.show({ type: "success", text1: "Success", text2: "Availability range deleted!" });
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Availability range deleted!",
+      });
       setRangeStartDate(null);
       setRangeEndDate(null);
       setSelectedGeneralSlotId(null);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      Toast.show({ type: "error", text1: "Delete Failed", text2: errorMessage });
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred.";
+      Toast.show({
+        type: "error",
+        text1: "Delete Failed",
+        text2: errorMessage,
+      });
     }
   };
 
   const renderGeneralAvailabilityTab = () => {
     if (isLoadingGeneralWork) {
-      return <ActivityIndicator style={styles.loadingIndicator} size="large" color={localColors.primary} />;
+      return (
+        <ActivityIndicator
+          style={styles.loadingIndicator}
+          size="large"
+          color={localColors.primary}
+        />
+      );
     }
     return (
       <ScrollView style={styles.tabContentContainer}>
-        <Text style={styles.subHeader}>Select Date Range for General Work:</Text>
+        <Text style={styles.subHeader}>
+          Select Date Range for General Work:
+        </Text>
         <Calendar
           style={styles.calendar}
           current={new Date().toISOString().split("T")[0]}
@@ -497,9 +595,18 @@ function DeveloperAvailabilityScreen({
           onPress={handleSaveGeneralAvailability}
           style={[
             styles.saveButton,
-            (isSavingGeneralWork || (!rangeStartDate || !rangeEndDate) || !!selectedGeneralSlotId) && styles.disabledButton,
+            (isSavingGeneralWork ||
+              !rangeStartDate ||
+              !rangeEndDate ||
+              !!selectedGeneralSlotId) &&
+              styles.disabledButton,
           ]}
-          disabled={isSavingGeneralWork || !rangeStartDate || !rangeEndDate || !!selectedGeneralSlotId}
+          disabled={
+            isSavingGeneralWork ||
+            !rangeStartDate ||
+            !rangeEndDate ||
+            !!selectedGeneralSlotId
+          }
         >
           {isSavingGeneralWork ? (
             <ActivityIndicator color={localColors.background} />
@@ -623,7 +730,7 @@ const styles = StyleSheet.create({
     borderColor: localColors.border,
     borderRadius: spacing.sm,
     alignItems: "center",
-    minWidth: 45, 
+    minWidth: 45,
   },
   selectedDayButton: {
     backgroundColor: localColors.primary,
@@ -640,7 +747,7 @@ const styles = StyleSheet.create({
   timeSlotsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "flex-start", 
+    justifyContent: "flex-start",
     marginBottom: spacing.lg,
   },
   timeSlot: {
@@ -650,7 +757,7 @@ const styles = StyleSheet.create({
     borderColor: localColors.border,
     borderRadius: spacing.sm,
     margin: spacing.xsmall,
-    minWidth: "28%", 
+    minWidth: "28%",
     alignItems: "center",
   },
   selectedTimeSlot: {
@@ -671,7 +778,7 @@ const styles = StyleSheet.create({
     borderRadius: spacing.sm,
     alignItems: "center",
     marginTop: spacing.md,
-    marginBottom: spacing.lg, 
+    marginBottom: spacing.lg,
   },
   saveButtonText: {
     color: localColors.background,
@@ -684,7 +791,7 @@ const styles = StyleSheet.create({
   },
   loadingIndicator: {
     marginTop: spacing.lg,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   calendar: {
     marginBottom: spacing.md,
@@ -697,12 +804,12 @@ const styles = StyleSheet.create({
     backgroundColor: localColors.card,
     borderRadius: spacing.sm,
     marginBottom: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   selectedRangeText: {
     color: localColors.text,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   deleteButton: {
     backgroundColor: localColors.error,
