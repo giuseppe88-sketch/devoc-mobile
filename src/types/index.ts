@@ -122,6 +122,12 @@ export type BrowseStackParamList = {
   BookingScreen: { developerId: string; developerName?: string }; // Screen for booking a first call
 };
 
+// Navigation param list for the Developer Bookings stack
+export type DeveloperBookingsStackParamList = {
+  DeveloperBookingsList: undefined; // List of developer's bookings
+  DeveloperBookingDetails: { bookingId: string }; // Details of a specific booking
+};
+
 // Navigation param list for the main Tab navigator when user is a Developer
 export type DeveloperMainTabParamList = {
   Dashboard: undefined;
@@ -141,13 +147,16 @@ export type ClientMainTabParamList = {
 // Combined ParamList for the main Tab navigator, encompassing all possible tabs
 // This allows a single Tab.Navigator to be typed correctly, even if screens are conditional.
 export type AllMainTabsParamList = {
+  // Developer Bookings Tab (Stack)
+  DeveloperBookingsTab?: NavigatorScreenParams<DeveloperBookingsStackParamList>;
   // Common screens or screens that might change target based on role
   Dashboard: NavigatorScreenParams<ClientDashboardStackParamList> | undefined; // Client dashboard is a stack, Developer dashboard is undefined
   Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
   Account: undefined; // Universal Account/Settings Tab
 
   // Developer-specific screens (optional if not present for clients)
-  Availability?: undefined; 
+  Availability?: undefined;
+  // DeveloperBookingsTab is now defined above with other optional params
   
   // Client-specific screens (optional if not present for developers)
   Browse?: NavigatorScreenParams<BrowseStackParamList>;

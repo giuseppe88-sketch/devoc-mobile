@@ -12,13 +12,14 @@ import DeveloperProfileScreen from "../screens/developer/profile-screen";
 import EditDeveloperProfileScreen from "../screens/developer/edit-profile-screen";
 import DeveloperAvailabilityScreen from "../screens/developer/availability-screen";
 import AccountScreen from "../screens/account/account-screen"; // Import AccountScreen
-// import DeveloperBookingsScreen from '../screens/developer/bookings-screen';
+import DeveloperBookingsScreen from '../screens/developer/developer-bookings-screen';
+import DeveloperBookingDetailsScreen from '../screens/developer/developer-booking-details-screen';
 
 // Client Screens
 import ClientDashboardScreen from "../screens/client/dashboard-screen";
 import BookingDetailsScreen from '../screens/client/booking-details-screen'; // <-- Import BookingDetailsScreen
 import ClientBrowseScreen from "../screens/client/browse-screen";
-import ClientBookingsScreen from '../screens/client/ClientBookingsScreen';
+import ClientBookingsScreen from '../screens/client/client-bookings-screen';
 import { ClientProfileScreen } from "../screens/client/profile-screen";
 import EditClientProfileScreen from "../screens/client/edit-profile-screen";
 import { DeveloperDetailScreen } from "../screens/client/developer-detail-screen";
@@ -29,6 +30,7 @@ import {
   ClientProfileStackParamList,
   BrowseStackParamList, // Import BrowseStackParamList
   AllMainTabsParamList, // Import AllMainTabsParamList
+  DeveloperBookingsStackParamList, // Import Developer Bookings Stack Param List
 } from "../types"; // Import shared types
 
 // Define ParamList for the new Client Dashboard Stack
@@ -48,6 +50,7 @@ const ClientProfileStack =
 
 // BrowseStackParamList is now imported from ../types
 const BrowseStack = createNativeStackNavigator<BrowseStackParamList>(); // Create Browse Stack
+const DeveloperBookingsStack = createNativeStackNavigator<DeveloperBookingsStackParamList>(); // Create Developer Bookings Stack
 const ClientDashboardStack = createNativeStackNavigator<ClientDashboardStackParamList>(); // Create Client Dashboard Stack
 
 // Profile Stack Navigator Component
@@ -137,6 +140,37 @@ function ClientProfileStackNavigator() {
         }}
       />
     </ClientProfileStack.Navigator>
+  );
+}
+
+// Client Dashboard Stack Navigator Component
+// Developer Bookings Stack Navigator Component
+function DeveloperBookingsStackNavigator() {
+  // Use the main 'colors' object which is already defined (themeColors.dark for developer section)
+  return (
+    <DeveloperBookingsStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.card, // Use existing 'colors' object (dark theme)
+        },
+        headerTintColor: colors.text, // Use existing 'colors' object
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+        headerBackTitleVisible: false,
+      }}
+    >
+      <DeveloperBookingsStack.Screen 
+        name="DeveloperBookingsList" 
+        component={DeveloperBookingsScreen} 
+        options={{ title: 'My Bookings' }} 
+      />
+      <DeveloperBookingsStack.Screen 
+        name="DeveloperBookingDetails" 
+        component={DeveloperBookingDetailsScreen} 
+        options={{ title: 'Booking Details' }}
+      />
+    </DeveloperBookingsStack.Navigator>
   );
 }
 
@@ -287,6 +321,8 @@ function MainNavigator() {
             iconName = focused ? 'settings' : 'settings-outline';
           } else if (route.name === 'Availability') { // For Developer
             iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'DeveloperBookingsTab') { // For Developer Bookings
+            iconName = focused ? 'list-circle' : 'list-circle-outline'; // Example icon, choose as needed
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -299,6 +335,14 @@ function MainNavigator() {
           <Tab.Screen
             name="Availability"
             component={DeveloperAvailabilityScreen}
+          />
+          <Tab.Screen 
+            name="DeveloperBookingsTab" 
+            component={DeveloperBookingsStackNavigator} 
+            options={{
+              tabBarLabel: 'My Bookings',
+              headerShown: false, // Stack navigator handles its own headers
+            }}
           />
           {/* <Tab.Screen name="Bookings" component={DeveloperBookingsScreen} /> */}
           <Tab.Screen
