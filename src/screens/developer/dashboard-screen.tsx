@@ -46,6 +46,13 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
     .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
     .slice(0, 3); // Show upcoming/pending, sorted, limit to 5 for dashboard
 
+  const bookingsTotal = bookings.filter(
+    (b) => b.status === "confirmed" || b.status === "pending" || b.status === "cancelled"
+  ).length;
+    
+ 
+
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -56,11 +63,11 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>5</Text>
+            <Text style={styles.statNumber}>{bookingsTotal}</Text>
             <Text style={styles.statLabel}>Total Bookings</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>2</Text>
+            <Text style={styles.statNumber}>{upcomingBookings.length}</Text>
             <Text style={styles.statLabel}>Upcoming</Text>
           </View>
           <View style={styles.statCard}>
@@ -72,7 +79,7 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Bookings")}>
+            <TouchableOpacity onPress={() => navigation.navigate('DeveloperBookingsTab', { screen: 'DeveloperBookingsList' })}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
