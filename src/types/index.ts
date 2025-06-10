@@ -19,6 +19,7 @@ export interface FetchedDeveloperProfile extends DeveloperProfile {
   avatar_url?: string | null; // From users.avatar_url
   bio?: string | null;        // From users.bio
   user_id: string;          // Explicitly added in the hook
+  email?: string | null;      // From users.email
 }
 
 export type UserDeveloperProfile = DeveloperProfile & User;

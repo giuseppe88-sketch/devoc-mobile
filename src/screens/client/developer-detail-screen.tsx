@@ -225,8 +225,11 @@ export function DeveloperDetailScreen() {
             </View>
           )}
           <Text style={styles.nameText}>{developer.name || "N/A"}</Text>
-          {/* Email is not directly in DeveloperProfile, typically from auth.users. Omit for now. */}
-          {/* developer.email && <Text style={styles.emailText}>{developer.email}</Text> */}
+          {developer.email && (
+            <View style={styles.iconDetailItem}>
+              <Text style={styles.emailText}>{developer.email}</Text>
+            </View>
+          )}
           <View style={styles.iconDetailRow}>
             {developer.rating !== null && developer.rating !== undefined && (
               <View style={styles.iconDetailItem}>
@@ -249,10 +252,10 @@ export function DeveloperDetailScreen() {
             {(developer.focus_areas?.length ?? 0) > 0 && (
               <View style={styles.skillsFocusColumn}>
                 <Text style={styles.sectionTitleSmall}>Focus Areas</Text>
-                <View style={styles.badgeContainer}>
+                <View style={styles.chipsContainer}>
                   {developer.focus_areas?.map((area, index) => (
-                    <View key={`focus-${index}`} style={styles.badge}>
-                      <Text style={styles.badgeText}>{area}</Text>
+                    <View key={`focus-${index}`} style={styles.chip}>
+                      <Text style={styles.chipText}>{area}</Text>
                     </View>
                   ))}
                 </View>
@@ -261,10 +264,10 @@ export function DeveloperDetailScreen() {
             {(developer.skills?.length ?? 0) > 0 && (
               <View style={styles.skillsFocusColumn}>
                 <Text style={styles.sectionTitleSmall}>Skills</Text>
-                <View style={styles.badgeContainer}>
+                <View style={styles.chipsContainer}>
                   {developer.skills?.map((skill, index) => (
-                    <View key={`skill-${index}`} style={styles.badge}>
-                      <Text style={styles.badgeText}>{skill}</Text>
+                    <View key={`skill-${index}`} style={styles.chip}>
+                      <Text style={styles.chipText}>{skill}</Text>
                     </View>
                   ))}
                 </View>
@@ -338,24 +341,28 @@ export function DeveloperDetailScreen() {
               )}
 
               {!errorFirstCall && firstCallSlots && firstCallSlots.length > 0 && (
-                <View style={styles.availabilitySubSection}>
-                  <Text style={styles.subSectionTitle}>First Call Slots (Weekly)</Text>
-                  {firstCallSlots.map((slot, index) => (
-                    <Text key={`first-call-${slot.id || index}`} style={styles.availabilityText}>
-                      {getDayOfWeekName(slot.day_of_week)}: {formatTime(slot.slot_start_time)} - {formatTime(slot.slot_end_time)}
-                    </Text>
-                  ))}
+                <View style={styles.availabilityCard}>
+                  <View style={styles.availabilitySubSection}>
+                    <Text style={styles.subSectionTitle}>Discovery Call Slots (Weekly)</Text>
+                    {firstCallSlots.map((slot, index) => (
+                      <Text key={`first-call-${slot.id || index}`} style={styles.availabilityText}>
+                        {getDayOfWeekName(slot.day_of_week)}: {formatTime(slot.slot_start_time)} - {formatTime(slot.slot_end_time)}
+                      </Text>
+                    ))}
+                  </View>
                 </View>
               )}
               
               {!errorGeneral && generalWorkSlots && generalWorkSlots.length > 0 && (
-                <View style={styles.availabilitySubSection}>
-                  <Text style={styles.subSectionTitle}>General Work Blocks</Text>
-                  {generalWorkSlots.map((slot, index) => (
-                    <Text key={`general-${slot.id || index}`} style={styles.availabilityText}>
-                      {formatDateRange(slot.range_start_date, slot.range_end_date)}
-                    </Text>
-                  ))}
+                <View style={styles.availabilityCard}>
+                  <View style={styles.availabilitySubSection}>
+                    <Text style={styles.subSectionTitle}>Project Availability</Text>
+                    {generalWorkSlots.map((slot, index) => (
+                      <Text key={`general-${slot.id || index}`} style={styles.availabilityText}>
+                        {formatDateRange(slot.range_start_date, slot.range_end_date)}
+                      </Text>
+                    ))}
+                  </View>
                 </View>
               )}
 
@@ -489,29 +496,59 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
-  badgeContainer: {
+  chipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center', // Center badges if they wrap
     alignItems: 'center',
   },
-  badge: {
-    backgroundColor: colors.primary,
+  chip: {
+    backgroundColor: colors.subtle, // Using light theme colors
+    borderRadius: 14,
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.sm,
-    borderRadius: 15,
-    margin: spacing.xs,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  badgeText: {
-    color: colors.subtle, 
-    fontSize: 13,
-    fontWeight: '500',
+  chipText: {
+    color: colors.text, // Using light theme colors
+    fontSize: 12,
   },
   sectionContainer: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     // borderBottomWidth: 1,
     // borderBottomColor: colors.border,
+  },
+  availabilityCard: {
+    backgroundColor: colors.card,
+    borderRadius: spacing.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  availabilitySubSection: {
+    // Removed marginBottom as it's now on the card
+  },
+  subSectionTitle: {
+    fontSize: 18, // Increased font size
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.sm, // Added margin below title
+  },
+  availabilityText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs, // Added margin for list items
+    lineHeight: 20, // Improved line height for readability
+  },
+  errorTextSmall: {
+    color: colors.error,
+    fontSize: 13,
+    marginBottom: spacing.sm,
   },
   bioText: {
     fontSize: 15,
@@ -564,27 +601,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.md,
   },
-  availabilitySubSection: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-    paddingLeft: spacing.sm, // Indent subsections slightly
-  },
-  subSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  availabilityText: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
-  errorTextSmall: { // For availability errors
-    color: colors.error,
-    fontSize: 14,
-    marginTop: spacing.xs,
-  },
+
 });
 
 export default DeveloperDetailScreen;

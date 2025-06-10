@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   Platform,
   Image, // Added for displaying portfolio image
+  TouchableOpacity, // Added for selectable items
 } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
@@ -33,6 +34,14 @@ import type { ActionState } from "../../actions/profile-actions";
 import type { DeveloperProfile } from "../../types";
 import type { ProfileStackParamList } from "../../types";
 import * as ImagePicker from "expo-image-picker"; // Added for image picking
+
+const FOCUS_AREA_OPTIONS = [
+  "E-commerce",
+  "Business Website",
+  "Mobile App",
+  "Landing Page",
+  "Portfolio Website",
+];
 
 // Define the type for the form data passed to the action
 type ProfileFormData = Partial<Omit<DeveloperProfile, "user_id">>;
@@ -63,7 +72,7 @@ function EditDeveloperProfileScreen() {
     avatarUrl: string | null;
     bio: string;
     skills: string;
-    focusAreas: string;
+    focusAreas: string[];
     portfolioUrl: string;
     portfolioImageUrl: string | null; // Added for portfolio image
     githubUrl: string;
@@ -79,7 +88,7 @@ function EditDeveloperProfileScreen() {
     avatarUrl: null,
     bio: "",
     skills: "",
-    focusAreas: "",
+    focusAreas: [],
     portfolioUrl: "",
     portfolioImageUrl: null, // Added for portfolio image
     githubUrl: "",
@@ -100,6 +109,17 @@ function EditDeveloperProfileScreen() {
       ...prevState,
       [field]: value,
     }));
+  };
+
+  const handleFocusAreaToggle = (area: string) => {
+    setFormState((prevState) => {
+      const currentFocusAreas = prevState.focusAreas || [];
+      const newFocusAreas =
+        currentFocusAreas.includes(area)
+          ? currentFocusAreas.filter((item) => item !== area)
+          : [...currentFocusAreas, area];
+      return { ...prevState, focusAreas: newFocusAreas };
+    });
   };
 
   // useActionState hook manages the submission process
@@ -124,7 +144,7 @@ function EditDeveloperProfileScreen() {
         avatarUrl: profileData.avatar_url || null,
         bio: profileData.bio || "",
         skills: profileData.skills?.join(", ") || "",
-        focusAreas: profileData.focus_areas?.join(", ") || "",
+        focusAreas: profileData.focus_areas || [],
         portfolioUrl: profileData.portfolio_url || "",
         portfolioImageUrl: profileData.portfolio_image_url || null, // Added for portfolio image
         githubUrl: profileData.github_url || "",
@@ -168,10 +188,7 @@ function EditDeveloperProfileScreen() {
         .split(",")
         .map((s) => s.trim())
         .filter((s) => s),
-      focus_areas: formState.focusAreas
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s),
+      focus_areas: formState.focusAreas.length > 0 ? formState.focusAreas : undefined,
       portfolio_url: formState.portfolioUrl.trim() || undefined,
       portfolio_image_url: formState.portfolioImageUrl || undefined, // Added for portfolio image
       github_url: formState.githubUrl.trim() || undefined,
@@ -487,14 +504,29 @@ function EditDeveloperProfileScreen() {
         placeholderTextColor={colors.light.placeholder}
       />
 
-      <Text style={styles.label}>Focus Areas (comma-separated)</Text>
-      <TextInput
-        style={styles.input}
-        value={formState.focusAreas}
-        onChangeText={(text) => handleInputChange("focusAreas", text)}
-        placeholder="e.g., Mobile Development, UI/UX Design"
-        placeholderTextColor={colors.light.placeholder}
-      />
+      <Text style={styles.label}>Focus Areas</Text>
+      <View style={styles.focusAreasContainer}>
+        {FOCUS_AREA_OPTIONS.map((area) => (
+          <TouchableOpacity
+            key={area}
+            style={[
+              styles.focusAreaChip,
+              formState.focusAreas?.includes(area) && styles.focusAreaChipSelected,
+            ]}
+            onPress={() => handleFocusAreaToggle(area)}
+          >
+            <Text
+              style={[
+                styles.focusAreaChipText,
+                formState.focusAreas?.includes(area) &&
+                  styles.focusAreaChipTextSelected,
+              ]}
+            >
+              {area}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <Text style={styles.label}>Portfolio URL</Text>
       <TextInput
@@ -578,6 +610,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.light.background,
+  },
+  focusAreasContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: spacing.md,
+  },
+  focusAreaChip: {
+    backgroundColor: colors.light.subtle,
+    borderRadius: 14, // Slightly smaller border radius
+    paddingVertical: spacing.xs, // Reduced padding
+    paddingHorizontal: spacing.sm, // Reduced padding
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.light.border,
+  },
+  focusAreaChipSelected: {
+    backgroundColor: colors.light.primary,
+    borderColor: colors.light.primary,
+  },
+  focusAreaChipText: {
+    color: colors.light.text,
+    fontSize: 12, // Reduced font size
+  },
+  focusAreaChipTextSelected: {
+    color: colors.light.card, // Assuming card is a light color for selected text on primary background
+    fontWeight: 'bold',
   },
   contentContainer: {
     padding: spacing.md, // Use theme spacing

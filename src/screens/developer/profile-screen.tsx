@@ -145,10 +145,10 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                 {(profileData.focus_areas?.length ?? 0) > 0 && (
                   <View style={styles.skillsFocusColumn}>
                     <Text style={styles.sectionTitleSmall}>Focus Areas</Text>
-                    <View style={styles.badgeContainer}>
+                    <View style={styles.focusAreasContainer}>
                       {profileData.focus_areas?.map((area, index) => (
-                        <View key={index} style={styles.badge}>
-                          <Text style={styles.badgeText}>{area}</Text>
+                        <View key={index} style={styles.focusAreaChip}>
+                          <Text style={styles.focusAreaChipText}>{area}</Text>
                         </View>
                       ))}
                     </View>
@@ -159,7 +159,7 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                 {(profileData.skills?.length ?? 0) > 0 && (
                   <View style={styles.skillsFocusColumn}>
                     <Text style={styles.sectionTitleSmall}>Skills</Text>
-                    <View style={styles.badgeContainer}>
+                    <View style={styles.skillsBadgeContainer}>
                       {profileData.skills?.map((skill, index) => (
                         <View key={index} style={styles.badge}>
                           <Text style={styles.badgeText}>{skill}</Text>
@@ -217,6 +217,25 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: colors.background 
+  },
+  focusAreasContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    // Removed marginBottom: spacing.md as it's handled by skillsFocusColumn
+  },
+  focusAreaChip: {
+    backgroundColor: colors.subtle, // Using dark theme colors here
+    borderRadius: 14,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border, // Using dark theme colors here
+  },
+  focusAreaChipText: {
+    color: colors.text, // Using dark theme colors here
+    fontSize: 12,
   },
   scrollContentContainer: {
     paddingBottom: spacing.xl, // Corrected: Ensure space at the bottom
@@ -310,7 +329,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: spacing.md,
   },
-  badgeContainer: {
+  skillsBadgeContainer: { // Renamed to avoid conflict if 'badgeContainer' is used elsewhere for skills
     flexDirection: 'row',
     flexWrap: 'wrap',
   },

@@ -32,7 +32,7 @@ async function fetchDeveloperProfile(
     const { data: userData, error: userError, status: userStatus } =
       await supabase
         .from("users") // Assuming public.users table
-        .select("full_name, avatar_url, bio") // Adjust fields as needed
+        .select("full_name, avatar_url, bio, email") // Adjust fields as needed
         .eq("id", userId)
         .single();
 
@@ -47,6 +47,7 @@ async function fetchDeveloperProfile(
       name: userData?.full_name, // Map full_name to name
       avatar_url: userData?.avatar_url,
       bio: userData?.bio,
+      email: userData?.email,
       ...(devData || {}), // Spread developer-specific data, potentially overwriting if name conflicts
     };
 
