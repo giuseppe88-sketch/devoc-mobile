@@ -81,6 +81,34 @@ serve(async (req: Request) => {
   try {
     const bookingDetails: BookingDetails = (await req.json()) as BookingDetails;
 
+    // Format the date and time to be unambiguous (UTC)
+    let displayDateTime = `
+      <li><strong>Date:</strong> ${bookingDetails.bookingDate}</li>
+      <li><strong>Time:</strong> ${bookingDetails.bookingTime}</li>
+    `;
+
+    if (bookingDetails.bookingStartTimeISO) {
+      try {
+        const date = new Date(bookingDetails.bookingStartTimeISO);
+        const options: Intl.DateTimeFormatOptions = {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Europe/Rome',
+          timeZoneName: 'short',
+          hour12: true,
+        };
+        const formattedDateTime = new Intl.DateTimeFormat('en-US', options).format(date);
+        displayDateTime = `<li><strong>Time:</strong> ${formattedDateTime}</li>`;
+      } catch (e) {
+        console.error(`[send-booking-email] Error formatting ISO date: ${e}`);
+        // Fallback to original strings if formatting fails
+      }
+    }
+
     // Format dates for Google Calendar if ISO times are provided
     const googleCalendarStartTime = formatGoogleCalendarDate(bookingDetails.bookingStartTimeISO);
     const googleCalendarEndTime = formatGoogleCalendarDate(bookingDetails.bookingEndTimeISO);
@@ -124,8 +152,7 @@ serve(async (req: Request) => {
         <p>Your booking for a First Call session is confirmed:</p>
         <ul>
           <li><strong>Developer:</strong> ${bookingDetails.developerName}</li>
-          <li><strong>Date:</strong> ${bookingDetails.bookingDate}</li>
-          <li><strong>Time:</strong> ${bookingDetails.bookingTime}</li>
+          ${displayDateTime}
           <li><strong>Duration:</strong> Up to 1 hour</li>
         </ul>
         ${googleCalendarLink ? `<p><a href="${googleCalendarLink}" target="_blank">Add to Google Calendar</a></p>` : ''}
@@ -147,8 +174,7 @@ serve(async (req: Request) => {
         <ul>
           <li><strong>Client:</strong> ${bookingDetails.clientName}</li>
           <li><strong>Client Email:</strong> ${bookingDetails.clientEmail}</li>
-          <li><strong>Date:</strong> ${bookingDetails.bookingDate}</li>
-          <li><strong>Time:</strong> ${bookingDetails.bookingTime}</li>
+          ${displayDateTime}
           <li><strong>Duration:</strong> Up to 1 hour</li>
         </ul>
         ${googleCalendarLink ? `<p><a href="${googleCalendarLink}" target="_blank">Add to Google Calendar</a></p>` : ''}
