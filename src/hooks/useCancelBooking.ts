@@ -57,6 +57,7 @@ export const useCancelBooking = () => {
         if (variables.developerId) {
           console.log('[useCancelBooking] Invalidating for developerId:', variables.developerId); // Log developerId for debugging
           queryClient.invalidateQueries({ queryKey: ['developerFirstCallAvailability', variables.developerId] });
+          queryClient.invalidateQueries({ queryKey: ['developerBookings', variables.developerId] }); // <-- ADDED THIS LINE
         } 
       } else {
         // Handle cases where the Edge Function returns success: false

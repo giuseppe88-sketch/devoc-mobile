@@ -29,7 +29,7 @@ serve(async (req: Request) => {
         status: 401,
       });
     }
-    const requestingClientId = user.id;
+    const requestingUserId = user.id; // Renamed for clarity, this is the ID of the authenticated user
 
     const { bookingId }: CancelBookingRequest = await req.json();
 
@@ -43,7 +43,7 @@ serve(async (req: Request) => {
     // Call the RPC function to cancel the booking and reactivate the slot
     const { data: rpcResponse, error: rpcError } = await supabaseClient.rpc('cancel_booking_and_reactivate_slot', {
       p_booking_id: bookingId,
-      p_requesting_client_id: requestingClientId,
+      p_requesting_user_id: requestingUserId, // Updated parameter name to match new SQL function
     });
 
     if (rpcError) {
