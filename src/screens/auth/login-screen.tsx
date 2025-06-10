@@ -53,7 +53,7 @@ function LoginScreen({ navigation }: { navigation: any }) {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor={colors.subtle}
+              placeholderTextColor={colors.placeholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -64,7 +64,7 @@ function LoginScreen({ navigation }: { navigation: any }) {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              placeholderTextColor={colors.subtle}
+              placeholderTextColor={colors.placeholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry

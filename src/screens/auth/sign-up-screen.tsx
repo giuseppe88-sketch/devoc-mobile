@@ -57,7 +57,7 @@ const SignUpScreen = () => {
             <TextInput
               style={styles.input}
               placeholder="Email"
-              placeholderTextColor={colors.subtle}
+              placeholderTextColor={colors.placeholder}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -68,7 +68,7 @@ const SignUpScreen = () => {
             <TextInput
               style={styles.input}
               placeholder="Password (min. 6 characters)"
-              placeholderTextColor={colors.subtle}
+              placeholderTextColor={colors.placeholder}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -78,7 +78,7 @@ const SignUpScreen = () => {
             <TextInput
               style={styles.input}
               placeholder="Confirm Password"
-              placeholderTextColor={colors.subtle}
+              placeholderTextColor={colors.placeholder}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry

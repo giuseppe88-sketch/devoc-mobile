@@ -219,7 +219,6 @@ function DeveloperAvailabilityScreen({
       { label: "Thu", dayValue: 4 },
       { label: "Fri", dayValue: 5 },
       { label: "Sat", dayValue: 6 },
-      { label: "Sun", dayValue: 0 },
     ];
     const timeSlotsToDisplay = Array.from({ length: 11 }, (_, i) => {
       const hour = i + 9; // 9 AM to 7 PM (19:00)
@@ -735,14 +734,16 @@ const styles = StyleSheet.create({
   selectedDayButton: {
     backgroundColor: localColors.primary,
     borderColor: localColors.primary,
+    color: localColors.text,
   },
   dayButtonText: {
     color: localColors.text,
     fontSize: 14,
   },
   selectedDayButtonText: {
-    color: localColors.background,
     fontWeight: "bold",
+    color: localColors.text,
+
   },
   timeSlotsContainer: {
     flexDirection: "row",
@@ -769,8 +770,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   selectedTimeSlotText: {
-    color: localColors.background,
+    color: localColors.text,
     fontWeight: "bold",
+
   },
   saveButton: {
     backgroundColor: localColors.primary,
@@ -781,7 +783,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   saveButtonText: {
-    color: localColors.background,
+    color: localColors.text,
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -820,7 +822,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   deleteButtonText: {
-    color: localColors.background,
+    color: localColors.text,
     fontSize: 16,
     fontWeight: "bold",
   },
