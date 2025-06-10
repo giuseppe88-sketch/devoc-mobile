@@ -40,8 +40,8 @@ export type ClientDashboardStackParamList = {
 };
 import { colors as themeColors, spacing } from "../theme";
 
-// Assuming dark theme for navigation elements
-const colors = themeColors.dark;
+// Use light theme for navigation elements
+const colors = themeColors.light;
 
 const Tab = createBottomTabNavigator<AllMainTabsParamList>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParamList>(); // Create Profile Stack
@@ -59,7 +59,7 @@ function ProfileStackNavigator() {
     <ProfileStack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.card, // Change to card background color
+          backgroundColor: colors.background,
         },
         headerTintColor: colors.text, // Set header text/icon color
         headerTitleStyle: {
@@ -73,14 +73,7 @@ function ProfileStackNavigator() {
         name="DeveloperProfile"
         component={DeveloperProfileScreen}
         options={{
-          // Replace title text with an icon
-          headerTitle: () => (
-            <Ionicons
-              name="person-circle-outline"
-              size={28}
-              color={colors.text}
-            />
-          ),
+          title: "Profile",
         }}
       />
       <ProfileStack.Screen
@@ -146,12 +139,11 @@ function ClientProfileStackNavigator() {
 // Client Dashboard Stack Navigator Component
 // Developer Bookings Stack Navigator Component
 function DeveloperBookingsStackNavigator() {
-  // Use the main 'colors' object which is already defined (themeColors.dark for developer section)
   return (
     <DeveloperBookingsStack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.card, // Use existing 'colors' object (dark theme)
+          backgroundColor: colors.background,
         },
         headerTintColor: colors.text, // Use existing 'colors' object
         headerTitleStyle: {
