@@ -116,17 +116,17 @@ function ClientDashboardScreen() {
                     style={styles.developerImage}
                   />
                   <Text style={styles.developerName}>{developer.name}</Text>
-                  {developer.skills && developer.skills.length > 0 && (
+                  {developer.focus_areas && developer.focus_areas.length > 0 && (
                     <View style={styles.skillsContainer}>
-                      {developer.skills.slice(0, 2).map((skill, index) => (
+                      {developer.focus_areas.slice(0, 2).map((area, index) => (
                         <View key={index} style={styles.skillBadge}>
-                          <Text style={styles.skillText}>{skill}</Text>
+                          <Text style={styles.skillText}>{area}</Text>
                         </View>
                       ))}
-                      {developer.skills.length > 2 && (
+                      {developer.focus_areas.length > 2 && (
                         <View style={styles.skillBadge}>
                           <Text style={styles.skillText}>
-                            +{developer.skills.length - 2}
+                            +{developer.focus_areas.length - 2}
                           </Text>
                         </View>
                       )}

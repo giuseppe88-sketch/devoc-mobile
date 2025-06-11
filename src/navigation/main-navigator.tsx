@@ -12,14 +12,14 @@ import DeveloperProfileScreen from "../screens/developer/profile-screen";
 import EditDeveloperProfileScreen from "../screens/developer/edit-profile-screen";
 import DeveloperAvailabilityScreen from "../screens/developer/availability-screen";
 import AccountScreen from "../screens/account/account-screen"; // Import AccountScreen
-import DeveloperBookingsScreen from '../screens/developer/developer-bookings-screen';
-import DeveloperBookingDetailsScreen from '../screens/developer/developer-booking-details-screen';
+import DeveloperBookingsScreen from "../screens/developer/developer-bookings-screen";
+import DeveloperBookingDetailsScreen from "../screens/developer/developer-booking-details-screen";
 
 // Client Screens
 import ClientDashboardScreen from "../screens/client/dashboard-screen";
-import BookingDetailsScreen from '../screens/client/booking-details-screen'; // <-- Import BookingDetailsScreen
+import BookingDetailsScreen from "../screens/client/booking-details-screen"; // <-- Import BookingDetailsScreen
 import ClientBrowseScreen from "../screens/client/browse-screen";
-import ClientBookingsScreen from '../screens/client/client-bookings-screen';
+import ClientBookingsScreen from "../screens/client/client-bookings-screen";
 import { ClientProfileScreen } from "../screens/client/profile-screen";
 import EditClientProfileScreen from "../screens/client/edit-profile-screen";
 import { DeveloperDetailScreen } from "../screens/client/developer-detail-screen";
@@ -50,8 +50,10 @@ const ClientProfileStack =
 
 // BrowseStackParamList is now imported from ../types
 const BrowseStack = createNativeStackNavigator<BrowseStackParamList>(); // Create Browse Stack
-const DeveloperBookingsStack = createNativeStackNavigator<DeveloperBookingsStackParamList>(); // Create Developer Bookings Stack
-const ClientDashboardStack = createNativeStackNavigator<ClientDashboardStackParamList>(); // Create Client Dashboard Stack
+const DeveloperBookingsStack =
+  createNativeStackNavigator<DeveloperBookingsStackParamList>(); // Create Developer Bookings Stack
+const ClientDashboardStack =
+  createNativeStackNavigator<ClientDashboardStackParamList>(); // Create Client Dashboard Stack
 
 // Profile Stack Navigator Component
 function ProfileStackNavigator() {
@@ -119,7 +121,7 @@ function ClientProfileStackNavigator() {
         name="ClientProfile"
         component={ClientProfileScreen}
         options={{
-          title: "Profile" // Set header title to 'Profile'
+          title: "Profile", // Set header title to 'Profile'
         }}
       />
       <ClientProfileStack.Screen
@@ -147,20 +149,20 @@ function DeveloperBookingsStackNavigator() {
         },
         headerTintColor: colors.text, // Use existing 'colors' object
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: "bold",
         },
         headerBackTitleVisible: false,
       }}
     >
-      <DeveloperBookingsStack.Screen 
-        name="DeveloperBookingsList" 
-        component={DeveloperBookingsScreen} 
-        options={{ title: 'My Bookings' }} 
+      <DeveloperBookingsStack.Screen
+        name="DeveloperBookingsList"
+        component={DeveloperBookingsScreen}
+        options={{ title: "My Bookings" }}
       />
-      <DeveloperBookingsStack.Screen 
-        name="DeveloperBookingDetails" 
-        component={DeveloperBookingDetailsScreen} 
-        options={{ title: 'Booking Details' }}
+      <DeveloperBookingsStack.Screen
+        name="DeveloperBookingDetails"
+        component={DeveloperBookingDetailsScreen}
+        options={{ title: "Booking Details" }}
       />
     </DeveloperBookingsStack.Navigator>
   );
@@ -178,21 +180,21 @@ function ClientDashboardStackNavigator() {
         },
         headerTintColor: colors.text, // Use existing 'colors' object
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: "bold",
         },
         headerBackTitleVisible: false,
       }}
     >
-      <ClientDashboardStack.Screen 
-        name="ClientDashboardHome" 
-        component={ClientDashboardScreen} 
+      <ClientDashboardStack.Screen
+        name="ClientDashboardHome"
+        component={ClientDashboardScreen}
         options={{ headerShown: false }} // No header for the root dashboard screen in this stack
       />
       {/* ClientBookingsScreen is now a main tab, removed from this stack */}
-      <ClientDashboardStack.Screen 
-        name="BookingDetails" 
-        component={BookingDetailsScreen} 
-        options={{ title: 'Booking Details', headerShown: true }}
+      <ClientDashboardStack.Screen
+        name="BookingDetails"
+        component={BookingDetailsScreen}
+        options={{ title: "Booking Details", headerShown: true }}
       />
     </ClientDashboardStack.Navigator>
   );
@@ -301,20 +303,23 @@ function MainNavigator() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = "alert-circle-outline"; // Default icon
 
-          if (route.name === 'Dashboard') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Browse') {
-            iconName = focused ? 'search' : 'search-outline';
-          } else if (route.name === 'ClientBookingsTab') {
-            iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person-circle' : 'person-circle-outline';
-          } else if (route.name === 'Account') { // For Developer
-            iconName = focused ? 'settings' : 'settings-outline';
-          } else if (route.name === 'Availability') { // For Developer
-            iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'DeveloperBookingsTab') { // For Developer Bookings
-            iconName = focused ? 'list-circle' : 'list-circle-outline'; // Example icon, choose as needed
+          if (route.name === "Dashboard") {
+            iconName = focused ? "home" : "home-outline";
+          } else if (route.name === "Browse") {
+            iconName = focused ? "search" : "search-outline";
+          } else if (route.name === "ClientBookingsTab") {
+            iconName = focused ? "list" : "list-outline";
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person-circle" : "person-circle-outline";
+          } else if (route.name === "Account") {
+            // For Developer
+            iconName = focused ? "settings" : "settings-outline";
+          } else if (route.name === "Availability") {
+            // For Developer
+            iconName = focused ? "calendar" : "calendar-outline";
+          } else if (route.name === "DeveloperBookingsTab") {
+            // For Developer Bookings
+            iconName = focused ? "list-circle" : "list-circle-outline"; // Example icon, choose as needed
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -328,11 +333,11 @@ function MainNavigator() {
             name="Availability"
             component={DeveloperAvailabilityScreen}
           />
-          <Tab.Screen 
-            name="DeveloperBookingsTab" 
-            component={DeveloperBookingsStackNavigator} 
+          <Tab.Screen
+            name="DeveloperBookingsTab"
+            component={DeveloperBookingsStackNavigator}
             options={{
-              tabBarLabel: 'My Bookings',
+              tabBarLabel: "My Bookings",
               headerShown: false, // Stack navigator handles its own headers
             }}
           />
@@ -359,13 +364,13 @@ function MainNavigator() {
             component={ClientBookingsScreen}
             options={{
               tabBarLabel: "My Bookings",
-              headerShown: true, 
+              headerShown: true,
               title: "My Bookings",
               // Styles below match the Tab.Navigator defaults for consistency
               // The 'colors' variable here correctly refers to themeColors.light from the MainNavigator scope
-              headerStyle: { backgroundColor: colors.card }, 
+              headerStyle: { backgroundColor: colors.card },
               headerTintColor: colors.text,
-              headerTitleStyle: { fontWeight: 'bold' },
+              headerTitleStyle: { fontWeight: "bold" },
             }}
           />
           <Tab.Screen
