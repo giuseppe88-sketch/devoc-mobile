@@ -17,9 +17,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Added for navigation prop type
 
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
+import { useClientProfile } from "@/hooks/useClientProfile";
+import { useAuthStore } from "@/stores/auth-store";
 import { useDeveloperFirstCallAvailability } from "@/hooks/useDeveloperFirstCallAvailability";
 import { useDeveloperGeneralAvailability } from "@/hooks/useDeveloperGeneralAvailability";
-import { DeveloperProfile, BrowseStackParamList } from "@/types"; // Added BrowseStackParamList
+import { DeveloperProfile, BrowseStackParamList, Availability } from "@/types"; // Added BrowseStackParamList and Availability
 import { colors as themeColors, spacing } from "@/theme";
 
 const colors = themeColors.light; // Use light theme
@@ -53,6 +55,9 @@ export function DeveloperDetailScreen() {
     isLoading: isLoadingProfile,
     error: errorProfile,
   } = useDeveloperProfile(developerId);
+
+  const currentClientId = useAuthStore((state) => state.user?.id);
+  const { data: clientProfile } = useClientProfile(currentClientId);
 
   useLayoutEffect(() => {
     // Ensure developer data is available before setting options that depend on it
@@ -99,6 +104,41 @@ export function DeveloperDetailScreen() {
   } = useDeveloperGeneralAvailability({ targetDeveloperId: developerId });
   
   const generalWorkSlots = generalWorkSlotsFromHook || [];
+
+    const handleBookPress = () => {
+    if (!developer || !clientProfile) {
+      Alert.alert("Profile Not Loaded", "Profile data could not be verified. Please try again in a moment.");
+      return;
+    }
+
+    const isProfileComplete = clientProfile.email && (clientProfile.client_name || clientProfile.company_name);
+
+    if (!isProfileComplete) {
+      Alert.alert(
+        "Complete Your Profile",
+        "Please add your name/company and email to your profile before booking a developer.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Complete Profile",
+            onPress: () => {
+              const profileForNavigation = {
+                ...clientProfile,
+                email: clientProfile.email ?? undefined,
+              };
+              // @ts-ignore - Navigation prop type mismatch is complex to solve here but navigation will work
+              navigation.navigate('Profile', {
+                screen: 'EditClientProfile',
+                params: { profileData: profileForNavigation },
+              });
+            },
+          },
+        ]
+      );
+    } else {
+      navigation.navigate('BookingScreen', { developerId: developer.id, developerName: developer.name ?? undefined });
+    }
+  };
 
   const handleLinkPress = async (url: string | undefined | null) => {
     if (!url) return;
@@ -314,14 +354,7 @@ export function DeveloperDetailScreen() {
         {/* Booking Button */}
         <TouchableOpacity 
           style={styles.bookButton}
-          onPress={() => {
-            if (developer) {
-              navigation.navigate('BookingScreen', { 
-                developerId: developer.id, 
-                developerName: developer.name || undefined 
-              });
-            }
-          }}
+          onPress={handleBookPress}
         >
           <Text style={styles.bookButtonText}>Book First Call</Text>
         </TouchableOpacity>
@@ -344,7 +377,7 @@ export function DeveloperDetailScreen() {
                 <View style={styles.availabilityCard}>
                   <View style={styles.availabilitySubSection}>
                     <Text style={styles.subSectionTitle}>Discovery Call Slots (Weekly)</Text>
-                    {firstCallSlots.map((slot, index) => (
+                    {firstCallSlots.map((slot: Availability, index: number) => (
                       <Text key={`first-call-${slot.id || index}`} style={styles.availabilityText}>
                         {getDayOfWeekName(slot.day_of_week)}: {formatTime(slot.slot_start_time)} - {formatTime(slot.slot_end_time)}
                       </Text>
@@ -357,7 +390,7 @@ export function DeveloperDetailScreen() {
                 <View style={styles.availabilityCard}>
                   <View style={styles.availabilitySubSection}>
                     <Text style={styles.subSectionTitle}>Project Availability</Text>
-                    {generalWorkSlots.map((slot, index) => (
+                    {generalWorkSlots.map((slot: Availability, index: number) => (
                       <Text key={`general-${slot.id || index}`} style={styles.availabilityText}>
                         {formatDateRange(slot.range_start_date, slot.range_end_date)}
                       </Text>
