@@ -16,13 +16,24 @@ import { ActivityIndicator } from "react-native";
 import { colors as themeColors, spacing } from "../../theme";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { AllMainTabsParamList } from "../../types"; // Corrected import for AllMainTabsParamList
+import { useClientProfile } from '@/hooks/useClientProfile';
 
 const colors = themeColors.light;
 
 function ClientDashboardScreen() {
-  const { user } = useAuthStore();
+  const { user, full_name: authFullName } = useAuthStore();
   const navigation = useNavigation<NavigationProp<AllMainTabsParamList>>();
-  const name = user?.user_metadata?.name || "Client";
+  
+  const { data: clientProfile, isLoading: isLoadingClientProfile } = useClientProfile(user?.id);
+
+  const getDisplayName = () => {
+    if (authFullName) return authFullName;
+    if (clientProfile?.client_name) return clientProfile.client_name;
+    if (clientProfile?.company_name) return clientProfile.company_name;
+    return "Client";
+  };
+
+  const name = getDisplayName();
 
   const {
     data: allDevelopers,
@@ -82,7 +93,7 @@ function ClientDashboardScreen() {
             </TouchableOpacity>
           </View>
 
-          {isLoadingDevelopers ? (
+          {isLoadingDevelopers || isLoadingClientProfile ? (
             <ActivityIndicator
               size="large"
               color={colors.primary}

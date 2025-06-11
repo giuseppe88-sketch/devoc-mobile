@@ -21,8 +21,8 @@ const colors = themeColors.dark;
 function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
   const { data: bookings = [], isLoading, error } = useFetchDeveloperBookings();
 
-  const { user } = useAuthStore();
-  const name = user?.user_metadata?.name || "Developer";
+  const { full_name } = useAuthStore();
+  const name = full_name || "Developer";
 
   if (isLoading) {
     return (

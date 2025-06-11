@@ -13,6 +13,7 @@ interface AuthState {
   session: Session | null;
   user: User | null;
   userRole: 'developer' | 'client' | null; // <-- Add role state
+  full_name: string | null; // <-- Add full_name state
   loading: boolean; // Loading for auth actions
   loadingProfile: boolean; // Loading specifically for profile fetching
   signIn: (
@@ -33,36 +34,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   userRole: null, // <-- Initialize role
+  full_name: null, // <-- Initialize full_name
   loading: true,
   loadingProfile: false, // <-- Initialize profile loading state
 
   fetchUserProfile: async (userId) => {
     if (!userId) {
-      set({ userRole: null, loadingProfile: false });
+      set({ userRole: null, full_name: null, loadingProfile: false });
       return;
     }
     set({ loadingProfile: true });
     try {
       const { data, error, status } = await supabase
         .from('users') // Query the 'public.users' table
-        .select('role') // Select only the role
+        .select('role, full_name') // Select role and full_name
         .eq('id', userId)
         .single(); // Expect one row or null
 
       if (error && status !== 406) { // 406 means no rows found, which is handled below
         console.error('Error fetching user profile:', error.message);
-        set({ userRole: null, loadingProfile: false });
+        set({ userRole: null, full_name: null, loadingProfile: false });
       } else if (data) {
-        set({ userRole: data.role as 'developer' | 'client', loadingProfile: false });
+        set({ userRole: data.role as 'developer' | 'client', full_name: data.full_name || null, loadingProfile: false });
       } else {
          // Handle case where user exists in auth but not in public.users
-         console.warn(`No profile found in public.users for user ID: ${userId}. Defaulting role.`);
+         console.warn(`No profile found in public.users for user ID: ${userId}. Defaulting role and name.`);
          // Decide on default behavior: null or 'client'? Let's use null for clarity.
-         set({ userRole: null, loadingProfile: false });
+         set({ userRole: null, full_name: null, loadingProfile: false });
       }
     } catch (error) {
       console.error('Unexpected error fetching profile:', error);
-      set({ userRole: null, loadingProfile: false });
+      set({ userRole: null, full_name: null, loadingProfile: false });
     }
   },
 
@@ -79,9 +81,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
        // Ensure newUserId is not undefined before calling
        get().fetchUserProfile(newUserId);
     } else if (!newUserId && currentUserId) {
-       console.log(`User logged out (${currentUserId}), clearing role.`);
-       set({ userRole: null, loadingProfile: false });
-    } else if (newUserId && newUserId === currentUserId && get().userRole === null && !get().loadingProfile) {
+       console.log(`User logged out (${currentUserId}), clearing role and name.`);
+       set({ userRole: null, full_name: null, loadingProfile: false });
+    } else if (newUserId && newUserId === currentUserId && (get().userRole === null || get().full_name === null) && !get().loadingProfile) {
         // User ID is the same, but role wasn't loaded (e.g., initial load), try fetching
         // Ensure newUserId is not undefined before calling
         console.log(`User ID ${newUserId} same, but role missing, fetching profile...`);
