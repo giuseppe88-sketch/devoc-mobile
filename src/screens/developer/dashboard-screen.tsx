@@ -5,7 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator // Ensured import
+  ActivityIndicator, // Ensured import
+  ImageBackground // Added ImageBackground
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -54,8 +55,12 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
 
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
+    <ImageBackground 
+      source={require('../../../assets/brick-wall-texture.jpg')} 
+      style={styles.backgroundImage}
+    >
+      <SafeAreaView style={styles.container}>
+        <ScrollView>
         <View style={styles.header}>
           <Text style={styles.greeting}>Hello, {name}!</Text>
           <Text style={styles.subGreeting}>Your developer dashboard</Text>
@@ -145,12 +150,17 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
             <Text style={styles.actionButtonText}>Edit Profile</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover', // or 'stretch'
+  },
   centeredContainer: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -162,7 +172,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent', // Changed from colors.background
   },
   header: {
     paddingHorizontal: spacing.lg,

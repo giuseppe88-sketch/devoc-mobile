@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ImageBackground, // Added ImageBackground
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -66,7 +67,11 @@ function ClientDashboardScreen() {
   }, [allBookings, errorBookings]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ImageBackground 
+      source={require('../../../assets/white-bricks-wall-texture.jpg')} 
+      style={styles.backgroundImage}
+    >
+      <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
           <Text style={styles.greeting}>Hello, {name}!</Text>
@@ -226,14 +231,19 @@ function ClientDashboardScreen() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent', // Changed to transparent
   },
   header: {
     paddingHorizontal: spacing.lg,
