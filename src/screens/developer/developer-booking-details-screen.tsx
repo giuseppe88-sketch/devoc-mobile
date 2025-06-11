@@ -72,7 +72,7 @@ const DeveloperBookingDetailsScreen: React.FC = () => {
   }
 
   const clientName = booking.client_profile?.client_name || "N/A";
-  const clientAvatar = booking.client_profile?.user?.avatar_url;
+  const clientAvatar = booking.client_profile?.logo_url;
   const bookingDate = new Date(booking.start_time).toLocaleDateString();
   const bookingStartTime = new Date(booking.start_time).toLocaleTimeString([], {
     hour: "2-digit",

@@ -40,7 +40,8 @@ export interface DeveloperBookingDetails {
   updated_at?: string | null;
   client_profile?: {
     client_name?: string;
-    id: string;
+    id: string; // client_profiles.id
+    logo_url?: string | null; // The client's uploaded avatar/logo
     user?: {
       full_name?: string;
       avatar_url?: string | null;
@@ -65,7 +66,8 @@ const fetchDeveloperBookingDetails = async (bookingId: string, developerId: stri
         avatar_url,
         client_profile_data:client_profiles!id(
           id,
-          client_name
+          client_name,
+          logo_url
         )
       )
     `)
@@ -115,6 +117,7 @@ export const useFetchDeveloperBookingDetails = (bookingId: string | undefined) =
         client_profile: userData ? {
           id: profileData?.id || '', // client_profiles.id
           client_name: profileData?.client_name, // client_profiles.client_name
+          logo_url: profileData?.logo_url, // client_profiles.logo_url
           user: {
             full_name: userData.full_name,
             avatar_url: userData.avatar_url,

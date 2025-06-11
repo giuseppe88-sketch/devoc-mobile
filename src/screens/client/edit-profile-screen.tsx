@@ -19,6 +19,10 @@ import { useAuthStore } from '../../stores/auth-store';
 import { useClientProfile } from '../../hooks/useClientProfile';
 import { colors as themeColors, spacing } from '../../theme'; // Import theme colors and spacing
 import { ClientProfileStackParamList, ClientProfile } from '../../types';
+import { Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '../../lib/supabase'; // Assuming supabase client is here
+import { decode } from 'base64-arraybuffer';
 // Import the action and its related types
 import {
   saveClientProfileAction,
@@ -66,6 +70,7 @@ function EditClientProfileScreen() {
     websiteUrl: '',
   };
   const [formState, setFormState] = useState<EditClientFormState>(initialFormState);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   // useActionState hook to manage the submission
   const [state, submitAction, isPending] = useActionState<ActionState | null, {
@@ -107,6 +112,76 @@ function EditClientProfileScreen() {
       ...prevState,
       [field]: value,
     }));
+  };
+
+  const uploadAvatar = async (base64Data: string, fileType: string) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated.');
+      return;
+    }
+    setIsUploadingAvatar(true);
+    try {
+      const arrayBuffer = decode(base64Data);
+      const fileExtension = fileType.split('/')[1] || 'jpg'; // e.g., 'jpeg' from 'image/jpeg'
+      const fileName = `${user.id}-avatar-${Date.now()}.${fileExtension}`;
+      const filePath = `public/${fileName}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('client-avatars')
+        .upload(filePath, arrayBuffer, {
+          contentType: fileType || 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('client-avatars')
+        .getPublicUrl(filePath);
+
+      if (publicUrlData?.publicUrl) {
+        handleInputChange('logoUrl', publicUrlData.publicUrl);
+        Alert.alert('Success', 'Avatar updated successfully!');
+      } else {
+        Alert.alert('Error', 'Could not get public URL for the avatar.');
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      const message = error instanceof Error ? error.message : 'An unknown error occurred during upload.';
+      Alert.alert('Upload Error', `Failed to upload avatar: ${message}`);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7, // Compress image slightly
+      base64: true, // Request base64 data
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedAsset = result.assets[0];
+      if (selectedAsset.base64 && selectedAsset.mimeType) {
+        uploadAvatar(selectedAsset.base64, selectedAsset.mimeType);
+      } else if (selectedAsset.base64) {
+        // Fallback if mimeType is somehow not available, default to jpeg
+        uploadAvatar(selectedAsset.base64, 'image/jpeg'); 
+      } else {
+        Alert.alert('Error', 'Could not get image data to upload.');
+      }
+    }
   };
 
   // Handle Save Button Press using startTransition and the action
@@ -184,16 +259,18 @@ function EditClientProfileScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Logo URL</Text>
-          <TextInput
-            style={styles.input}
-            value={formState.logoUrl}
-            onChangeText={(text) => handleInputChange('logoUrl', text)}
-            placeholder="Optional: URL to your logo (e.g., https://...)"
-            placeholderTextColor={colors.placeholder}
-            keyboardType="url"
-            autoCapitalize="none"
-          />
+          <Text style={styles.label}>Avatar / Logo</Text>
+          {formState.logoUrl ? (
+            <Image source={{ uri: formState.logoUrl }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarPlaceholderText}>No Avatar</Text>
+            </View>
+          )}
+          <TouchableOpacity style={styles.changeAvatarButton} onPress={() => handlePickAvatar()} disabled={isUploadingAvatar}>
+            <Text style={styles.changeAvatarButtonText}>Change Avatar</Text>
+          </TouchableOpacity>
+          {isUploadingAvatar && <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.sm }} />}
         </View>
 
         <View style={styles.formGroup}>
@@ -257,6 +334,39 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: spacing.sm,
     color: colors.text,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: spacing.md,
+    alignSelf: 'center',
+    backgroundColor: colors.subtle,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.subtle,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: spacing.md,
+  },
+  avatarPlaceholderText: {
+    color: colors.textSecondary,
+  },
+  changeAvatarButton: {
+    backgroundColor: colors.secondary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: spacing.xs,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
+  },
+  changeAvatarButtonText: {
+    color: themeColors.dark.text, // Assuming secondary button text is light
+    fontWeight: 'bold',
   },
   input: {
     fontSize: 16,
