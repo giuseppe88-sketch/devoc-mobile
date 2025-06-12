@@ -82,7 +82,6 @@ function ProfileStackNavigator() {
         name="EditDeveloperProfile"
         component={EditDeveloperProfileScreen}
         options={{
-          // Replace title text with an icon
           headerTitle: () => (
             <Ionicons name="create-outline" size={26} color={colors.text} />
           ),
@@ -238,8 +237,7 @@ function MainNavigator() {
   const { user, signOut, userRole, loadingProfile } = useAuthStore();
   const isDeveloper = userRole === "developer";
 
-  console.log("Role from store:", userRole, "Is Developer:", isDeveloper);
-  console.log("Developer", isDeveloper);
+ 
   useEffect(() => {
     const validateSession = async () => {
       console.log("MainNavigator mounted, validating session...");
@@ -257,7 +255,7 @@ function MainNavigator() {
         await signOut();
         // No need to explicitly navigate, App.tsx will react to session becoming null
       } else {
-        console.log("Session validated successfully in MainNavigator.");
+        console.log("Session validated successfully in MainNavigator.Account");
       }
     };
 

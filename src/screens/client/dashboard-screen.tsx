@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
-  ImageBackground, // Added ImageBackground
+  Image as RNImage, // Renaming to avoid conflict if Image is used elsewhere
 } from "react-native";
+import { Image } from 'expo-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
@@ -20,6 +20,10 @@ import { AllMainTabsParamList } from "../../types"; // Corrected import for AllM
 import { useClientProfile } from '@/hooks/useClientProfile';
 
 const colors = themeColors.light;
+
+const backgroundImageSource = require('../../../assets/white-bricks-wall-texture-min.jpg');
+const blurhash =
+  '|LFgSn_300WB%MM{ofM{?wWB~qWB%MofM{of00WBofof%MofofM{'; // Example blurhash, generate a real one for your image
 
 function ClientDashboardScreen() {
   const { user, full_name: authFullName } = useAuthStore();
@@ -67,10 +71,14 @@ function ClientDashboardScreen() {
   }, [allBookings, errorBookings]);
 
   return (
-    <ImageBackground 
-      source={require('../../../assets/white-bricks-wall-texture.jpg')} 
-      style={styles.backgroundImage}
-    >
+    <View style={{ flex: 1 }}>
+      <Image
+        style={styles.backgroundImage}
+        source={backgroundImageSource}
+        placeholder={{ blurhash }}
+        contentFit="cover"
+        transition={300}
+      />
       <SafeAreaView style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
@@ -123,12 +131,12 @@ function ClientDashboardScreen() {
                       })
                   }
                 >
-                  <Image
+                  <RNImage
                     source={{
                       uri:
                         developer.avatar_url ||
                         "https://via.placeholder.com/100",
-                    }} // Use avatar_url and provide a fallback
+                    }} 
                     style={styles.developerImage}
                   />
                   <Text style={styles.developerName}>{developer.name}</Text>
@@ -191,7 +199,7 @@ function ClientDashboardScreen() {
               >
                 <View style={styles.bookingHeader}>
                   {booking.developer_profile?.user?.avatar_url ? (
-                    <Image source={{ uri: booking.developer_profile.user.avatar_url }} style={styles.avatar} />
+                    <RNImage source={{ uri: booking.developer_profile.user.avatar_url }} style={styles.avatar} />
                   ) : (
                     <View style={[styles.avatar, styles.avatarPlaceholder]}>
                       <Ionicons name="person-circle-outline" size={32} color={colors.textSecondary} />
@@ -232,14 +240,13 @@ function ClientDashboardScreen() {
         </View>
       </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   backgroundImage: {
-    flex: 1,
-    resizeMode: 'cover',
+    ...StyleSheet.absoluteFillObject,
   },
   container: {
     flex: 1,

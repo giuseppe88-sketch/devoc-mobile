@@ -6,8 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator, // Ensured import
-  ImageBackground // Added ImageBackground
 } from "react-native";
+import { Image } from 'expo-image';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
@@ -18,6 +18,10 @@ import {
 } from "@/hooks/useFetchDeveloperBookings"; // Updated import
 
 const colors = themeColors.dark;
+
+const backgroundImage = require('../../../assets/brick-wall-texture.jpg');
+const blurhash =
+  '|rF?hV%2_N_3t7M{V?xu?uM|RjRj?wRjofof~qofM{of%Mofof?w';
 
 function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
   const { data: bookings = [], isLoading, error } = useFetchDeveloperBookings();
@@ -55,10 +59,14 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
 
 
   return (
-    <ImageBackground 
-      source={require('../../../assets/brick-wall-texture.jpg')} 
-      style={styles.backgroundImage}
-    >
+    <View style={styles.container}>
+      <Image
+        style={styles.backgroundImage}
+        source={backgroundImage}
+        placeholder={{ blurhash }}
+        contentFit="cover"
+        transition={300}
+      />
       <SafeAreaView style={styles.container}>
         <ScrollView>
         <View style={styles.header}>
@@ -152,14 +160,13 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
         </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   backgroundImage: {
-    flex: 1,
-    resizeMode: 'cover', // or 'stretch'
+    ...StyleSheet.absoluteFillObject,
   },
   centeredContainer: {
     justifyContent: 'center',
