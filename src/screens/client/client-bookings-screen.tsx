@@ -237,31 +237,34 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   controlsContainer: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: localColors.border,
   },
   filterRow: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: 'center',
   },
   filterButton: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     marginHorizontal: spacing.xs,
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: localColors.primary,
+    borderColor: localColors.border,
+    backgroundColor: 'transparent',
   },
   activeFilter: {
     backgroundColor: localColors.primary,
+    borderColor: localColors.primary,
   },
   activeFilterText: {
     color: '#FFFFFF',
+    fontWeight: '700',
   },
   filterText: {
-    color: localColors.text,
+    color: localColors.textSecondary,
     fontWeight: "600",
   },
   listContentContainer: {
