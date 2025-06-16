@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -8,13 +8,13 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../stores/auth-store';
-import { useClientProfile } from '../../hooks/useClientProfile';
-import { useDeveloperProfile } from '../../hooks/useDeveloperProfile';
-import { colors as themeColors, spacing } from '../../theme';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../stores/auth-store";
+import { useClientProfile } from "../../hooks/useClientProfile";
+import { useDeveloperProfile } from "../../hooks/useDeveloperProfile";
+import { colors as themeColors, spacing } from "../../theme";
 
 const colors = themeColors.light;
 
@@ -26,11 +26,27 @@ interface MenuItemProps {
   isDestructive?: boolean;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ icon, text, onPress, isDestructive = false }) => (
+const MenuItem: React.FC<MenuItemProps> = ({
+  icon,
+  text,
+  onPress,
+  isDestructive = false,
+}) => (
   <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-    <Ionicons name={icon} size={24} color={isDestructive ? colors.error : colors.primary} style={styles.menuIcon} />
-    <Text style={[styles.menuText, isDestructive && { color: colors.error }]}>{text}</Text>
-    <Ionicons name="chevron-forward-outline" size={22} color={colors.textSecondary} />
+    <Ionicons
+      name={icon}
+      size={24}
+      color={isDestructive ? colors.error : colors.primary}
+      style={styles.menuIcon}
+    />
+    <Text style={[styles.menuText, isDestructive && { color: colors.error }]}>
+      {text}
+    </Text>
+    <Ionicons
+      name="chevron-forward-outline"
+      size={22}
+      color={colors.textSecondary}
+    />
   </TouchableOpacity>
 );
 
@@ -40,33 +56,41 @@ const AccountScreen = () => {
   const userId = user?.id;
 
   // Correctly call hooks with one argument
-  const { data: clientProfile, isLoading: isLoadingClient } = useClientProfile(userId);
-  const { data: developerProfile, isLoading: isLoadingDeveloper } = useDeveloperProfile(userId);
+  const { data: clientProfile, isLoading: isLoadingClient } =
+    useClientProfile(userId);
+  const { data: developerProfile, isLoading: isLoadingDeveloper } =
+    useDeveloperProfile(userId);
 
   const isLoading = isLoadingClient || isLoadingDeveloper;
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: () => signOut() },
+    Alert.alert("Logout", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Logout", style: "destructive", onPress: () => signOut() },
     ]);
   };
 
   const handleNavigateToProfile = () => {
-    if (userRole === 'developer') {
-      navigation.navigate('Profile', { screen: 'DeveloperProfile' });
-    } else if (userRole === 'client') {
-      navigation.navigate('Profile', { screen: 'ClientProfile' });
+    if (userRole === "developer") {
+      navigation.navigate("Profile", { screen: "DeveloperProfile" });
+    } else if (userRole === "client") {
+      navigation.navigate("Profile", { screen: "ClientProfile" });
     }
   };
-  
+
   const handleTerms = () => {
-    Alert.alert('Terms & Conditions', 'This feature is coming soon!');
+    navigation.navigate("Account", { screen: "Terms" });
   };
 
-  const profileName = userRole === 'developer' ? developerProfile?.name : clientProfile?.client_name;
+  const profileName =
+    userRole === "developer"
+      ? developerProfile?.name
+      : clientProfile?.client_name;
   const profileEmail = user?.email;
-  const avatarUrl = userRole === 'developer' ? developerProfile?.avatar_url : clientProfile?.logo_url;
+  const avatarUrl =
+    userRole === "developer"
+      ? developerProfile?.avatar_url
+      : clientProfile?.logo_url;
 
   if (isLoading) {
     return (
@@ -83,11 +107,15 @@ const AccountScreen = () => {
           <Image source={{ uri: avatarUrl }} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <Ionicons name="person-circle-outline" size={60} color={colors.textSecondary} />
+            <Ionicons
+              name="person-circle-outline"
+              size={60}
+              color={colors.textSecondary}
+            />
           </View>
         )}
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>{profileName || 'User'}</Text>
+          <Text style={styles.userName}>{profileName || "User"}</Text>
           <Text style={styles.userEmail}>{profileEmail}</Text>
         </View>
       </View>
@@ -121,13 +149,13 @@ const styles = StyleSheet.create({
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.background,
   },
   profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: spacing.lg, // Use correct theme key
     backgroundColor: colors.card,
     borderBottomWidth: 1,
@@ -141,15 +169,15 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: {
     backgroundColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   userInfo: {
     flex: 1,
   },
   userName: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   userEmail: {
@@ -160,8 +188,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg, // Use correct theme key
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.card,
     paddingVertical: spacing.md, // Use correct theme key
     paddingHorizontal: spacing.lg, // Use correct theme key

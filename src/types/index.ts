@@ -1,25 +1,26 @@
-import { Database } from './supabase';
-import { NavigatorScreenParams } from '@react-navigation/native';
-import type { ClientDashboardStackParamList } from '../navigation/main-navigator';
+import { Database } from "./supabase";
+import { NavigatorScreenParams } from "@react-navigation/native";
+import type { ClientDashboardStackParamList } from "../navigation/main-navigator";
 
 export interface User {
   id: string;
   email: string;
   user_metadata: {
     name: string;
-    role: 'developer' | 'client';
+    role: "developer" | "client";
   };
 }
 
-export type DeveloperProfile = Database['public']['Tables']['developer_profiles']['Row'];
+export type DeveloperProfile =
+  Database["public"]["Tables"]["developer_profiles"]["Row"];
 
 // Represents the combined profile data fetched by the useDeveloperProfile hook
 export interface FetchedDeveloperProfile extends DeveloperProfile {
-  name?: string | null;       // Mapped from users.full_name
+  name?: string | null; // Mapped from users.full_name
   avatar_url?: string | null; // From users.avatar_url
-  bio?: string | null;        // From users.bio
-  user_id: string;          // Explicitly added in the hook
-  email?: string | null;      // From users.email
+  bio?: string | null; // From users.bio
+  user_id: string; // Explicitly added in the hook
+  email?: string | null; // From users.email
 }
 
 export type UserDeveloperProfile = DeveloperProfile & User;
@@ -38,9 +39,9 @@ export interface Availability {
   day_of_week: number; // 0 = Sunday, 1 = Monday, etc.
   slot_start_time: string; // Format: "HH:MM" in 24-hour format
   slot_end_time: string; // Format: "HH:MM" in 24-hour format
-  availability_type: 'first_call' | 'general_work_block';
+  availability_type: "first_call" | "general_work_block";
   range_start_date?: string | null; // ISO date string, YYYY-MM-DD, for 'general_work_block'
-  range_end_date?: string | null;   // ISO date string, YYYY-MM-DD, for 'general_work_block'
+  range_end_date?: string | null; // ISO date string, YYYY-MM-DD, for 'general_work_block'
   is_active: boolean; // Indicates if the slot is available (true) or booked (false)
   created_at?: string; // Optional: Timestamp of when the slot was created
   updated_at?: string; // Optional: Timestamp of when the slot was last updated
@@ -62,7 +63,7 @@ export interface Booking {
   startTime: string; // Format: "HH:MM" in 24-hour format
   endTime: string; // Format: "HH:MM" in 24-hour format
   notes?: string;
-  status: 'pending' | 'confirmed' | 'rejected' | 'completed' | 'cancelled';
+  status: "pending" | "confirmed" | "rejected" | "completed" | "cancelled";
   calendarEventId?: string; // Google Calendar event ID
 }
 
@@ -71,7 +72,11 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: 'booking_request' | 'booking_confirmation' | 'booking_reminder' | 'booking_cancelled';
+  type:
+    | "booking_request"
+    | "booking_confirmation"
+    | "booking_reminder"
+    | "booking_cancelled";
   read: boolean;
   createdAt: string; // ISO date string
   relatedBookingId?: string;
@@ -80,7 +85,7 @@ export interface Notification {
 export type EditDeveloperProfileRouteParams = {
   // Using Partial<DeveloperProfile> makes it more aligned with the actual profile
   // Add email separately if it's not part of the DB profile table
-  profileData?: Partial<DeveloperProfile> & { email?: string }; 
+  profileData?: Partial<DeveloperProfile> & { email?: string };
 };
 
 // Define the parameters for each screen in the Profile stack
@@ -91,7 +96,8 @@ export type ProfileStackParamList = {
 };
 
 // --- Add Client Profile Types ---
-export type ClientProfile = Database['public']['Tables']['client_profiles']['Row'];
+export type ClientProfile =
+  Database["public"]["Tables"]["client_profiles"]["Row"];
 
 // Parameters for the Edit Client Profile screen
 export type EditClientProfileRouteParams = {
@@ -152,17 +158,24 @@ export type AllMainTabsParamList = {
   DeveloperBookingsTab?: NavigatorScreenParams<DeveloperBookingsStackParamList>;
   // Common screens or screens that might change target based on role
   Dashboard: NavigatorScreenParams<ClientDashboardStackParamList> | undefined; // Client dashboard is a stack, Developer dashboard is undefined
-  Profile: NavigatorScreenParams<ProfileStackParamList> | NavigatorScreenParams<ClientProfileStackParamList>;
+  Profile:
+    | NavigatorScreenParams<ProfileStackParamList>
+    | NavigatorScreenParams<ClientProfileStackParamList>;
   Account: undefined; // Universal Account/Settings Tab
 
   // Developer-specific screens (optional if not present for clients)
   Availability?: undefined;
   // DeveloperBookingsTab is now defined above with other optional params
-  
+
   // Client-specific screens (optional if not present for developers)
   Browse?: NavigatorScreenParams<BrowseStackParamList>;
   ClientBookingsTab?: undefined; // New client-specific bookings tab
-  
   // Common optional screens
   // Bookings?: undefined;
+};
+
+// Add this new type for the Account Stack
+export type AccountStackParamList = {
+  AccountRoot: undefined;
+  Terms: undefined;
 };

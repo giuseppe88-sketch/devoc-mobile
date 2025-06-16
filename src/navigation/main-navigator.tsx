@@ -12,6 +12,7 @@ import DeveloperProfileScreen from "../screens/developer/profile-screen";
 import EditDeveloperProfileScreen from "../screens/developer/edit-profile-screen";
 import DeveloperAvailabilityScreen from "../screens/developer/availability-screen";
 import AccountScreen from "../screens/account/account-screen"; // Import AccountScreen
+import TermsScreen from "../screens/account/terms-screen"; // Import TermsScreen
 import DeveloperBookingsScreen from "../screens/developer/developer-bookings-screen";
 import DeveloperBookingDetailsScreen from "../screens/developer/developer-booking-details-screen";
 
@@ -31,6 +32,7 @@ import {
   BrowseStackParamList, // Import BrowseStackParamList
   AllMainTabsParamList, // Import AllMainTabsParamList
   DeveloperBookingsStackParamList, // Import Developer Bookings Stack Param List
+  AccountStackParamList, // Import the new AccountStackParamList
 } from "../types"; // Import shared types
 
 // Define ParamList for the new Client Dashboard Stack
@@ -54,6 +56,7 @@ const DeveloperBookingsStack =
   createNativeStackNavigator<DeveloperBookingsStackParamList>(); // Create Developer Bookings Stack
 const ClientDashboardStack =
   createNativeStackNavigator<ClientDashboardStackParamList>(); // Create Client Dashboard Stack
+const AccountStack = createNativeStackNavigator<AccountStackParamList>(); // Create Account Stack
 
 // Profile Stack Navigator Component
 function ProfileStackNavigator() {
@@ -233,11 +236,39 @@ function BrowseStackNavigator() {
   );
 }
 
+// New Account Stack Navigator
+function AccountStackNavigator() {
+  return (
+    <AccountStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.card,
+        },
+        headerTintColor: colors.text,
+        headerTitleStyle: {
+          fontWeight: "bold",
+        },
+        headerBackTitleVisible: false,
+      }}
+    >
+      <AccountStack.Screen
+        name="AccountRoot"
+        component={AccountScreen}
+        options={{ title: "Account Settings" }}
+      />
+      <AccountStack.Screen
+        name="Terms"
+        component={TermsScreen}
+        options={{ title: "Terms & Conditions" }}
+      />
+    </AccountStack.Navigator>
+  );
+}
+
 function MainNavigator() {
   const { user, signOut, userRole, loadingProfile } = useAuthStore();
   const isDeveloper = userRole === "developer";
 
- 
   useEffect(() => {
     const validateSession = async () => {
       console.log("MainNavigator mounted, validating session...");
@@ -392,13 +423,10 @@ function MainNavigator() {
       {/* Universal Account Tab */}
       <Tab.Screen
         name="Account"
-        component={AccountScreen}
-        options={
-          {
-            // If AccountScreen has its own header, you might want to hide the Tab Navigator's header for this screen
-            // headerShown: false,
-          }
-        }
+        component={AccountStackNavigator} // Use the new stack navigator
+        options={{
+          headerShown: false, // Stack navigator handles its own header
+        }}
       />
     </Tab.Navigator>
   );
