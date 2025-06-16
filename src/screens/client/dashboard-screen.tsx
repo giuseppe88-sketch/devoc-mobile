@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md, // Reduced from spacing.xl to spacing.md
     paddingBottom: spacing.lg,
     flexDirection: "row",
     justifyContent: "space-between",
