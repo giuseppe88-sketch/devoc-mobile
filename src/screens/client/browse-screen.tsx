@@ -129,7 +129,7 @@ export function ClientBrowseScreen() {
             <View style={styles.nameRatingContainer}>
               <Text style={styles.developerName}>{item.name}</Text>
               <View style={styles.ratingContainer}>
-                <Ionicons name="star" size={14} color={colors.primary} />
+                <Ionicons name="star" size={14} color="#FFD700" />
                 <Text style={styles.ratingText}>{4}</Text>
               </View>
             </View>
@@ -142,6 +142,36 @@ export function ClientBrowseScreen() {
                 {item.years_of_experience === 1 ? "year" : "years"} experience
               </Text>
             )}
+
+            {/* Hourly Rate and Email Section */}
+            <View style={styles.contactInfoContainer}>
+              {item.hourly_rate && (
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name="cash-outline"
+                    size={16}
+                    color="#2E8B57"
+                    style={styles.icon}
+                  />
+                  <Text style={[styles.developerDetailText, { marginTop: 0 }]}>
+                    ${item.hourly_rate}/hr
+                  </Text>
+                </View>
+              )}
+              {item.email && (
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name="mail-outline"
+                    size={16}
+                    color="#4682B4"
+                    style={styles.icon}
+                  />
+                  <Text style={[styles.developerDetailText, { marginTop: 0 }]}>
+                    {item.email}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
 
@@ -321,6 +351,7 @@ const styles = StyleSheet.create({
   },
   developerInfo: {
     flex: 1,
+    justifyContent: "center",
   },
   nameRatingContainer: {
     flexDirection: "row",
@@ -329,36 +360,39 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   developerName: {
-    fontSize: 17,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "bold",
     color: colors.text,
-    flexShrink: 1,
-    marginRight: spacing.sm,
   },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.subtle,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: 6,
+    marginTop: spacing.xs,
   },
   ratingText: {
     marginLeft: spacing.xs,
-    fontSize: 13,
-    fontWeight: "bold",
-    color: colors.primary,
+    fontSize: 14,
+    color: colors.text,
   },
   developerDetailText: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
+  contactInfoContainer: {
+    marginTop: spacing.sm, // Add some space above the contact info
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.xs,
+  },
+  icon: {
+    marginRight: spacing.sm, // Space between icon and text
+  },
   skillsContainer: {
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
   focusAreasTitle: {
     fontSize: 13,

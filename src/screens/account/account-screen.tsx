@@ -54,9 +54,9 @@ const AccountScreen = () => {
 
   const handleNavigateToProfile = () => {
     if (userRole === 'developer') {
-      navigation.navigate('Profile', { screen: 'EditDeveloperProfile' });
+      navigation.navigate('Profile', { screen: 'DeveloperProfile' });
     } else if (userRole === 'client') {
-      navigation.navigate('Profile', { screen: 'EditClientProfile' });
+      navigation.navigate('Profile', { screen: 'ClientProfile' });
     }
   };
   
