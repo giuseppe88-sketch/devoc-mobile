@@ -1,3 +1,5 @@
+DROP FUNCTION IF EXISTS public.create_booking_and_update_slot(uuid, uuid, uuid);
+
 CREATE OR REPLACE FUNCTION public.create_booking_and_update_slot(p_client_id uuid, p_developer_id uuid, p_slot_id uuid)
  RETURNS TABLE(booking_id uuid, booked_start_time timestamp with time zone, booked_end_time timestamp with time zone, booking_status text)
  LANGUAGE plpgsql

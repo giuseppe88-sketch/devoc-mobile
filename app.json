@@ -45,8 +45,8 @@
     },
     "newArchEnabled": true,
     "extra": {
-      "EXPO_PUBLIC_SUPABASE_URL": "http://192.168.0.10:54321",
-      "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0",
+      "EXPO_PUBLIC_SUPABASE_URL": "https://cumfyuysagnsyigohtqb.supabase.co",
+      "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1bWZ5dXlzYWduc3lpZ29odHFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MzExMTgsImV4cCI6MjA2MDIwNzExOH0.73TgbXbfBWpfyzWfRyUfrnbEhGyHwL5iEL259lv94qg",
       "eas": {
         "projectId": "d3cfae8d-fc5f-401a-ab44-b4cbad6c30bf"
       }
