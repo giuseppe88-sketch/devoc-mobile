@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -8,28 +8,25 @@ import {
   Image,
   ActivityIndicator,
   Linking,
-  Alert
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../stores/auth-store';
-import { DeveloperProfile } from '../../types';
-import { colors as themeColors, spacing } from '../../theme';
-import { useDeveloperProfile } from '../../hooks/useDeveloperProfile';
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../stores/auth-store";
+import { DeveloperProfile } from "../../types";
+import { colors as themeColors, spacing } from "../../theme";
+import { useDeveloperProfile } from "../../hooks/useDeveloperProfile";
 
 const colors = themeColors.dark;
 
 function DeveloperProfileScreen({ navigation }: { navigation: any }) {
   const { user } = useAuthStore();
 
-  const { 
-    data: profileData, 
-    isLoading, 
-    error 
-  } = useDeveloperProfile(user?.id);
+  const { data: profileData, isLoading, error } = useDeveloperProfile(user?.id);
 
   const handleEditPress = () => {
-    navigation.navigate('EditDeveloperProfile', { profileData: profileData ?? null });
+    navigation.navigate("EditDeveloperProfile", {
+      profileData: profileData ?? null,
+    });
   };
 
   const handleLinkPress = async (url: string | undefined | null) => {
@@ -50,32 +47,43 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
 
   if (isLoading) {
     return (
-        <SafeAreaView style={styles.container}>
-          <ActivityIndicator size={50} color={colors.primary} style={styles.centered} />
-        </SafeAreaView>
+      <View style={styles.container}>
+        <ActivityIndicator
+          size={50}
+          color={colors.primary}
+          style={styles.centered}
+        />
+      </View>
     );
   }
 
   if (error) {
-    const errorMessage = error instanceof Error 
-      ? error.message 
-      : 'An unknown error occurred';
+    const errorMessage =
+      error instanceof Error ? error.message : "An unknown error occurred";
 
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.centered}>
-          <Text style={styles.errorText}>Error loading profile: {errorMessage}</Text>
+          <Text style={styles.errorText}>
+            Error loading profile: {errorMessage}
+          </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  const renderDetailItem = (label: string, value: string | number | null | undefined, iconName?: keyof typeof Ionicons.glyphMap) => {
+  const renderDetailItem = (
+    label: string,
+    value: string | number | null | undefined,
+    iconName?: keyof typeof Ionicons.glyphMap
+  ) => {
     if (value === null || value === undefined || value === "") {
       return (
         <View style={styles.detailRow}>
           <View style={styles.detailLeftContainer}>
-            {iconName && <Ionicons name={iconName} size={20} style={styles.detailIcon} />}
+            {iconName && (
+              <Ionicons name={iconName} size={20} style={styles.detailIcon} />
+            )}
             <Text style={styles.detailLabel}>{label}</Text>
           </View>
           <Text style={[styles.detailValue, styles.notSetText]}>Not set</Text>
@@ -85,7 +93,9 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
     return (
       <View style={styles.detailRow}>
         <View style={styles.detailLeftContainer}>
-          {iconName && <Ionicons name={iconName} size={20} style={styles.detailIcon} />}
+          {iconName && (
+            <Ionicons name={iconName} size={20} style={styles.detailIcon} />
+          )}
           <Text style={styles.detailLabel}>{label}</Text>
         </View>
         <Text style={styles.detailValue}>{value}</Text>
@@ -94,17 +104,31 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContentContainer}>
         {/* Header (Title + Edit Button) */}
         <View style={styles.header}>
           <Text style={styles.title}>Your Profile</Text>
           <View style={styles.headerIconsContainer}>
-            <TouchableOpacity onPress={handleEditPress} style={styles.headerButton}>
-              <Ionicons name="create-outline" size={28} color={colors.secondary} />
+            <TouchableOpacity
+              onPress={handleEditPress}
+              style={styles.headerButton}
+            >
+              <Ionicons
+                name="create-outline"
+                size={28}
+                color={colors.secondary}
+              />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('AccountScreen')} style={styles.headerButton}>
-              <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
+            <TouchableOpacity
+              onPress={() => navigation.navigate("AccountScreen")}
+              style={styles.headerButton}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={24}
+                color={colors.textSecondary}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -114,24 +138,43 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
             {/* Identity Block */}
             <View style={styles.identitySection}>
               {profileData.avatar_url ? (
-                <Image source={{ uri: profileData.avatar_url }} style={styles.avatar} />
+                <Image
+                  source={{ uri: profileData.avatar_url }}
+                  style={styles.avatar}
+                />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Ionicons name="person-circle-outline" size={100} color={colors.textSecondary} />
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={100}
+                    color={colors.textSecondary}
+                  />
                 </View>
               )}
               <Text style={styles.nameText}>{profileData.name || "N/A"}</Text>
-              {user?.email && <Text style={styles.emailText}>{user.email}</Text>}
+              {user?.email && (
+                <Text style={styles.emailText}>{user.email}</Text>
+              )}
               <View style={styles.iconDetailRow}>
-                {profileData.rating !== null && profileData.rating !== undefined && (
-                  <View style={styles.iconDetailItem}>
-                    <Ionicons name="star" size={18} color={colors.star} />
-                    <Text style={styles.iconDetailText}>{profileData.rating.toFixed(1)}</Text>
-                  </View>
-                )}
+                {profileData.rating !== null &&
+                  profileData.rating !== undefined && (
+                    <View style={styles.iconDetailItem}>
+                      <Ionicons name="star" size={18} color={colors.star} />
+                      <Text style={styles.iconDetailText}>
+                        {profileData.rating.toFixed(1)}
+                      </Text>
+                    </View>
+                  )}
                 {profileData.github_url && (
-                  <TouchableOpacity onPress={() => handleLinkPress(profileData.github_url)} style={styles.iconDetailItem}>
-                    <Ionicons name="logo-github" size={18} color={colors.textSecondary} />
+                  <TouchableOpacity
+                    onPress={() => handleLinkPress(profileData.github_url)}
+                    style={styles.iconDetailItem}
+                  >
+                    <Ionicons
+                      name="logo-github"
+                      size={18}
+                      color={colors.textSecondary}
+                    />
                     <Text style={styles.iconDetailText}>GitHub</Text>
                   </TouchableOpacity>
                 )}
@@ -139,7 +182,8 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
             </View>
 
             {/* Combined Focus Areas and Skills Section */}
-            {((profileData.focus_areas?.length ?? 0) > 0 || (profileData.skills?.length ?? 0) > 0) && (
+            {((profileData.focus_areas?.length ?? 0) > 0 ||
+              (profileData.skills?.length ?? 0) > 0) && (
               <View style={styles.skillsFocusRowContainer}>
                 {/* Focus Areas Column */}
                 {(profileData.focus_areas?.length ?? 0) > 0 && (
@@ -181,46 +225,73 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
 
             {/* Portfolio */}
             {(profileData.portfolio_image_url || profileData.portfolio_url) && (
-                <View style={styles.sectionContainer}>
-                    {/* <Text style={styles.sectionTitle}>Portfolio</Text> */}
-                    {profileData.portfolio_image_url ? (
-                    <TouchableOpacity onPress={() => handleLinkPress(profileData.portfolio_url)}>
-                        <Image
-                        source={{ uri: profileData.portfolio_image_url }}
-                        style={styles.portfolioImage}
-                        />
-                    </TouchableOpacity>
-                    ) : profileData.portfolio_url ? (
-                    <TouchableOpacity onPress={() => handleLinkPress(profileData.portfolio_url)}>
-                        <Text style={styles.linkText}>{profileData.portfolio_url}</Text>
-                    </TouchableOpacity>
-                    ) : null}
-                </View>
+              <View style={styles.sectionContainer}>
+                {/* <Text style={styles.sectionTitle}>Portfolio</Text> */}
+                {profileData.portfolio_image_url ? (
+                  <TouchableOpacity
+                    onPress={() => handleLinkPress(profileData.portfolio_url)}
+                  >
+                    <Image
+                      source={{ uri: profileData.portfolio_image_url }}
+                      style={styles.portfolioImage}
+                    />
+                  </TouchableOpacity>
+                ) : profileData.portfolio_url ? (
+                  <TouchableOpacity
+                    onPress={() => handleLinkPress(profileData.portfolio_url)}
+                  >
+                    <Text style={styles.linkText}>
+                      {profileData.portfolio_url}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             )}
 
             {/* More Details Section */}
             <View style={styles.sectionContainer}>
               {/* <Text style={styles.sectionTitle}>More Details</Text> */}
-              {renderDetailItem("Hourly Rate", profileData.hourly_rate !== null && profileData.hourly_rate !== undefined ? `$${profileData.hourly_rate}/hr` : null, "cash-outline")}
-              {renderDetailItem("Phone", profileData.phone_number, "call-outline")}
-              {renderDetailItem("Location", profileData.location, "location-outline")}
-              {renderDetailItem("Years of Experience", profileData.years_of_experience ? `${profileData.years_of_experience} years` : null, "time-outline")}
+              {renderDetailItem(
+                "Hourly Rate",
+                profileData.hourly_rate !== null &&
+                  profileData.hourly_rate !== undefined
+                  ? `$${profileData.hourly_rate}/hr`
+                  : null,
+                "cash-outline"
+              )}
+              {renderDetailItem(
+                "Phone",
+                profileData.phone_number,
+                "call-outline"
+              )}
+              {renderDetailItem(
+                "Location",
+                profileData.location,
+                "location-outline"
+              )}
+              {renderDetailItem(
+                "Years of Experience",
+                profileData.years_of_experience
+                  ? `${profileData.years_of_experience} years`
+                  : null,
+                "time-outline"
+              )}
             </View>
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: colors.background 
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
   focusAreasContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     // Removed marginBottom: spacing.md as it's handled by skillsFocusColumn
   },
   focusAreaChip: {
@@ -240,31 +311,31 @@ const styles = StyleSheet.create({
   scrollContentContainer: {
     paddingBottom: spacing.xl, // Corrected: Ensure space at the bottom
   },
-  centered: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md, // Adjusted padding
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   title: {
     fontSize: 26, // Slightly smaller title
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   headerIconsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   headerButton: {
     marginLeft: spacing.md, // Add some space between icons
   },
   identitySection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.xl,
     marginHorizontal: spacing.lg,
     borderBottomWidth: 1,
@@ -282,13 +353,13 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     backgroundColor: colors.card, // Corrected: A subtle background for placeholder
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   nameText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.xs,
   },
@@ -298,15 +369,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md, // Increased margin
   },
   iconDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: spacing.sm,
-    flexWrap: 'wrap', // Allow wrapping if content is too wide
+    flexWrap: "wrap", // Allow wrapping if content is too wide
   },
   iconDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: spacing.sm, // Adjusted for potentially more items
     marginBottom: spacing.xs, // For wrapping
   },
@@ -325,13 +396,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.md,
   },
-  skillsBadgeContainer: { // Renamed to avoid conflict if 'badgeContainer' is used elsewhere for skills
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  skillsBadgeContainer: {
+    // Renamed to avoid conflict if 'badgeContainer' is used elsewhere for skills
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   badge: {
     backgroundColor: colors.primary,
@@ -344,11 +416,11 @@ const styles = StyleSheet.create({
   badgeText: {
     color: themeColors.dark.text, // Ensure contrast, assuming primary is light
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   skillsFocusRowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
   },
@@ -358,7 +430,7 @@ const styles = StyleSheet.create({
   },
   sectionTitleSmall: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.sm,
   },
@@ -368,7 +440,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   portfolioImage: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
     borderRadius: spacing.md,
     marginBottom: spacing.sm,
@@ -377,19 +449,19 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 16,
     color: colors.accent,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    alignItems: 'center', // Corrected: Removed extra margin/border
+    alignItems: "center", // Corrected: Removed extra margin/border
   },
   detailLeftContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   detailIcon: {
     marginRight: spacing.sm,
@@ -398,23 +470,23 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 16,
     color: colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   detailValue: {
     fontSize: 16,
     color: colors.text,
-    textAlign: 'right',
-    flexShrink: 1, 
+    textAlign: "right",
+    flexShrink: 1,
   },
   notSetText: {
-    fontStyle: 'italic',
-    color: colors.textSecondary, 
+    fontStyle: "italic",
+    color: colors.textSecondary,
   },
-  errorText: { 
-    color: colors.error, 
-    textAlign: 'center', 
-    margin: spacing.md, 
-    fontSize: 16 
+  errorText: {
+    color: colors.error,
+    textAlign: "center",
+    margin: spacing.md,
+    fontSize: 16,
   },
 });
 

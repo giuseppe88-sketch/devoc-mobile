@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { Calendar, DateData } from "react-native-calendars";
 import { useAuthStore } from "../../stores/auth-store";
@@ -632,7 +631,7 @@ function DeveloperAvailabilityScreen({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scrollViewContainer}>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Manage Your Availability</Text>
@@ -663,7 +662,7 @@ function DeveloperAvailabilityScreen({
           ? renderFirstCallAvailabilityTab()
           : renderGeneralAvailabilityTab()}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -743,7 +742,6 @@ const styles = StyleSheet.create({
   selectedDayButtonText: {
     fontWeight: "bold",
     color: localColors.text,
-
   },
   timeSlotsContainer: {
     flexDirection: "row",
@@ -772,7 +770,6 @@ const styles = StyleSheet.create({
   selectedTimeSlotText: {
     color: localColors.text,
     fontWeight: "bold",
-
   },
   saveButton: {
     backgroundColor: localColors.primary,

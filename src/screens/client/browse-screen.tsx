@@ -9,13 +9,15 @@ import {
   ActivityIndicator,
   TouchableOpacity, // Import TouchableOpacity
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors as themeColors, spacing } from "@/theme";
-import { useBrowseDevelopers, DeveloperProfile } from "@/hooks/useBrowseDevelopers";
-import { useNavigation } from '@react-navigation/native'; // Import useNavigation
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Import stack navigation type
-import { BrowseStackParamList } from '@/types'; // Import param list type
+import {
+  useBrowseDevelopers,
+  DeveloperProfile,
+} from "@/hooks/useBrowseDevelopers";
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"; // Import stack navigation type
+import { BrowseStackParamList } from "@/types"; // Import param list type
 
 type Developer = DeveloperProfile;
 const colors = themeColors.light; // Revert back to light theme for client screen
@@ -23,10 +25,11 @@ const colors = themeColors.light; // Revert back to light theme for client scree
 // Define the type for the navigation prop within this screen's context
 type BrowseScreenNavigationProp = NativeStackNavigationProp<
   BrowseStackParamList, // Use the correct stack param list
-  'ClientBrowse' // The name of this screen in the stack
+  "ClientBrowse" // The name of this screen in the stack
 >;
 
-export function ClientBrowseScreen() { // Removed { navigation } prop
+export function ClientBrowseScreen() {
+  // Removed { navigation } prop
   const { data: developers, isLoading, error } = useBrowseDevelopers();
   const navigation = useNavigation<BrowseScreenNavigationProp>(); // Get navigation object
 
@@ -47,31 +50,33 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
   // Filter developers based on search query and selected focus areas
   const filteredDevelopers = useMemo(() => {
     // Use default empty array to prevent iterator error on undefined
-    return (developers ?? []).filter((developer) => {
-      const nameMatch = developer.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const skillsMatch = developer.skills?.some((skill) =>
-        skill.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      const focusAreasMatch = developer.focus_areas?.some((area) =>
-        area.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      if (searchQuery) {
-        return nameMatch || skillsMatch || focusAreasMatch;
-      }
-
-      return true;
-    }).filter((developer) => {
-      if (selectedFocusAreas.length > 0) {
-        return selectedFocusAreas.some((area) =>
-          developer.focus_areas?.includes(area)
+    return (developers ?? [])
+      .filter((developer) => {
+        const nameMatch = developer.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        const skillsMatch = developer.skills?.some((skill) =>
+          skill.toLowerCase().includes(searchQuery.toLowerCase())
         );
-      }
+        const focusAreasMatch = developer.focus_areas?.some((area) =>
+          area.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
-      return true;
-    });
+        if (searchQuery) {
+          return nameMatch || skillsMatch || focusAreasMatch;
+        }
+
+        return true;
+      })
+      .filter((developer) => {
+        if (selectedFocusAreas.length > 0) {
+          return selectedFocusAreas.some((area) =>
+            developer.focus_areas?.includes(area)
+          );
+        }
+
+        return true;
+      });
   }, [developers, searchQuery, selectedFocusAreas]);
 
   const allFocusAreas = useMemo(() => {
@@ -86,8 +91,8 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
   const allSkills = useMemo(() => {
     const skills = new Set<string>();
     // Use default empty array
-    (developers ?? []).forEach(dev => {
-      dev.skills?.forEach(skill => skills.add(skill));
+    (developers ?? []).forEach((dev) => {
+      dev.skills?.forEach((skill) => skills.add(skill));
     });
     return Array.from(skills).sort();
   }, [developers]);
@@ -105,7 +110,7 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
 
     // Function to handle navigation
     const handlePress = () => {
-      navigation.navigate('DeveloperDetail', { developerId: item.id });
+      navigation.navigate("DeveloperDetail", { developerId: item.id });
     };
 
     return (
@@ -145,11 +150,13 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
           <View style={styles.skillsContainer}>
             <View style={styles.badgesContainer}>
               {/* Add explicit type for area */}
-              {item.focus_areas.slice(0, 3).map((area: string, index: number) => (
-                <View key={index} style={styles.skillBadge}>
-                  <Text style={styles.skillText}>{area}</Text>
-                </View>
-              ))}
+              {item.focus_areas
+                .slice(0, 3)
+                .map((area: string, index: number) => (
+                  <View key={index} style={styles.skillBadge}>
+                    <Text style={styles.skillText}>{area}</Text>
+                  </View>
+                ))}
               {item.focus_areas.length > 3 && (
                 <View style={styles.skillBadgeMore}>
                   <Text style={styles.skillTextMore}>
@@ -166,16 +173,16 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, styles.loadingContainer]}>
+      <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size={50} color={colors.primary} />
         <Text style={styles.loadingText}>Loading Developers...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Ionicons
             name="alert-circle-outline"
@@ -184,12 +191,12 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
           />
           <Text style={styles.errorText}>Could not load developers.</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <View style={styles.safeArea}>
       <View style={styles.header}>
         <Text style={styles.title}>Find Developers</Text>
         <Text style={styles.subtitle}>
@@ -259,7 +266,7 @@ export function ClientBrowseScreen() { // Removed { navigation } prop
           contentContainerStyle={styles.listContentContainer}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

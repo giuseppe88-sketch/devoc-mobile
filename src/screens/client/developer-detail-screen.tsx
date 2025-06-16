@@ -11,10 +11,9 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native"; // Added useNavigation
 import { Ionicons } from "@expo/vector-icons";
-import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Added for navigation prop type
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"; // Added for navigation prop type
 
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
 import { useClientProfile } from "@/hooks/useClientProfile";
@@ -42,7 +41,7 @@ type DeveloperDetailScreenRouteProp = RouteProp<
 // Define the type for the navigation prop for this screen
 type DeveloperDetailScreenNavigationProp = NativeStackNavigationProp<
   BrowseStackParamList,
-  'DeveloperDetail'
+  "DeveloperDetail"
 >;
 
 export function DeveloperDetailScreen() {
@@ -64,7 +63,7 @@ export function DeveloperDetailScreen() {
     if (developer) {
       navigation.setOptions({
         headerShown: true, // Ensure the header is visible
-        headerTitle: developer.name || 'Developer Details', // Use developer.name
+        headerTitle: developer.name || "Developer Details", // Use developer.name
         headerLeft: () => (
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -79,7 +78,7 @@ export function DeveloperDetailScreen() {
       // Fallback for when developer data is not yet loaded
       navigation.setOptions({
         headerShown: true,
-        headerTitle: 'Loading Details...',
+        headerTitle: "Loading Details...",
         headerLeft: () => (
           <TouchableOpacity
             onPress={() => navigation.goBack()}
@@ -102,16 +101,21 @@ export function DeveloperDetailScreen() {
     isLoading: isLoadingGeneral,
     error: errorGeneral,
   } = useDeveloperGeneralAvailability({ targetDeveloperId: developerId });
-  
+
   const generalWorkSlots = generalWorkSlotsFromHook || [];
 
-    const handleBookPress = () => {
+  const handleBookPress = () => {
     if (!developer || !clientProfile) {
-      Alert.alert("Profile Not Loaded", "Profile data could not be verified. Please try again in a moment.");
+      Alert.alert(
+        "Profile Not Loaded",
+        "Profile data could not be verified. Please try again in a moment."
+      );
       return;
     }
 
-    const isProfileComplete = clientProfile.email && (clientProfile.client_name || clientProfile.company_name);
+    const isProfileComplete =
+      clientProfile.email &&
+      (clientProfile.client_name || clientProfile.company_name);
 
     if (!isProfileComplete) {
       Alert.alert(
@@ -127,8 +131,8 @@ export function DeveloperDetailScreen() {
                 email: clientProfile.email ?? undefined,
               };
               // @ts-ignore - Navigation prop type mismatch is complex to solve here but navigation will work
-              navigation.navigate('Profile', {
-                screen: 'EditClientProfile',
+              navigation.navigate("Profile", {
+                screen: "EditClientProfile",
                 params: { profileData: profileForNavigation },
               });
             },
@@ -136,7 +140,10 @@ export function DeveloperDetailScreen() {
         ]
       );
     } else {
-      navigation.navigate('BookingScreen', { developerId: developer.id, developerName: developer.name ?? undefined });
+      navigation.navigate("BookingScreen", {
+        developerId: developer.id,
+        developerName: developer.name ?? undefined,
+      });
     }
   };
 
@@ -163,7 +170,14 @@ export function DeveloperDetailScreen() {
       return (
         <View style={styles.detailRow}>
           <View style={styles.detailLeftContainer}>
-            {iconName && <Ionicons name={iconName} size={20} color={colors.textSecondary} style={styles.detailIcon} />}
+            {iconName && (
+              <Ionicons
+                name={iconName}
+                size={20}
+                color={colors.textSecondary}
+                style={styles.detailIcon}
+              />
+            )}
             <Text style={styles.detailLabel}>{label}</Text>
           </View>
           <Text style={[styles.detailValue, styles.notSetText]}>Not set</Text>
@@ -173,7 +187,14 @@ export function DeveloperDetailScreen() {
     return (
       <View style={styles.detailRow}>
         <View style={styles.detailLeftContainer}>
-          {iconName && <Ionicons name={iconName} size={20} color={colors.textSecondary} style={styles.detailIcon} />}
+          {iconName && (
+            <Ionicons
+              name={iconName}
+              size={20}
+              color={colors.textSecondary}
+              style={styles.detailIcon}
+            />
+          )}
           <Text style={styles.detailLabel}>{label}</Text>
         </View>
         <Text style={styles.detailValue}>{value}</Text>
@@ -183,72 +204,90 @@ export function DeveloperDetailScreen() {
 
   // Helper Functions for formatting availability data (retained from original)
   const getDayOfWeekName = (dayIndex: number | null | undefined): string => {
-    if (dayIndex === null || dayIndex === undefined) return 'N/A';
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayIndex] || 'Invalid Day';
+    if (dayIndex === null || dayIndex === undefined) return "N/A";
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    return days[dayIndex] || "Invalid Day";
   };
 
   const formatTime = (timeString: string | null | undefined): string => {
-    if (!timeString) return 'N/A';
+    if (!timeString) return "N/A";
     return timeString.substring(0, 5);
   };
 
   const formatDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     try {
-      const date = new Date(dateString + 'T00:00:00'); // Ensure local time parsing
+      const date = new Date(dateString + "T00:00:00"); // Ensure local time parsing
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     } catch (e) {
       return dateString;
     }
   };
 
-  const formatDateRange = (startDate: string | null | undefined, endDate: string | null | undefined): string => {
-    const formattedStartDate = startDate ? formatDate(startDate) : 'N/A';
-    const formattedEndDate = endDate ? formatDate(endDate) : 'N/A';
+  const formatDateRange = (
+    startDate: string | null | undefined,
+    endDate: string | null | undefined
+  ): string => {
+    const formattedStartDate = startDate ? formatDate(startDate) : "N/A";
+    const formattedEndDate = endDate ? formatDate(endDate) : "N/A";
     if (startDate && endDate) {
       if (startDate === endDate) return formattedStartDate;
       return `${formattedStartDate} to ${formattedEndDate}`;
     }
     if (startDate) return `From ${formattedStartDate}`;
     if (endDate) return `Until ${formattedEndDate}`;
-    return 'Date range not specified';
+    return "Date range not specified";
   };
-
 
   if (isLoadingProfile) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size={50} color={colors.primary} style={styles.centered} />
-      </SafeAreaView>
+      <View style={styles.container}>
+        <ActivityIndicator
+          size={50}
+          color={colors.primary}
+          style={styles.centered}
+        />
+      </View>
     );
   }
 
   if (errorProfile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.centered}>
           <Text style={styles.errorText}>
             Error loading profile: {errorProfile.message}
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!developer) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.centered}>
           <Text style={styles.errorText}>Developer not found.</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContentContainer}>
         {/* Header */}
         <View style={styles.header}>
@@ -258,10 +297,17 @@ export function DeveloperDetailScreen() {
         {/* Identity Block */}
         <View style={styles.identitySection}>
           {developer.avatar_url ? (
-            <Image source={{ uri: developer.avatar_url }} style={styles.avatar} />
+            <Image
+              source={{ uri: developer.avatar_url }}
+              style={styles.avatar}
+            />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person-circle-outline" size={100} color={colors.textSecondary} />
+              <Ionicons
+                name="person-circle-outline"
+                size={100}
+                color={colors.textSecondary}
+              />
             </View>
           )}
           <Text style={styles.nameText}>{developer.name || "N/A"}</Text>
@@ -274,12 +320,21 @@ export function DeveloperDetailScreen() {
             {developer.rating !== null && developer.rating !== undefined && (
               <View style={styles.iconDetailItem}>
                 <Ionicons name="star" size={18} color={colors.star} />
-                <Text style={styles.iconDetailText}>{developer.rating.toFixed(1)}</Text>
+                <Text style={styles.iconDetailText}>
+                  {developer.rating.toFixed(1)}
+                </Text>
               </View>
             )}
             {developer.github_url && (
-              <TouchableOpacity onPress={() => handleLinkPress(developer.github_url)} style={styles.iconDetailItem}>
-                <Ionicons name="logo-github" size={18} color={colors.textSecondary} />
+              <TouchableOpacity
+                onPress={() => handleLinkPress(developer.github_url)}
+                style={styles.iconDetailItem}
+              >
+                <Ionicons
+                  name="logo-github"
+                  size={18}
+                  color={colors.textSecondary}
+                />
                 <Text style={styles.iconDetailText}>GitHub</Text>
               </TouchableOpacity>
             )}
@@ -287,7 +342,8 @@ export function DeveloperDetailScreen() {
         </View>
 
         {/* Combined Focus Areas and Skills Section */}
-        {((developer.focus_areas?.length ?? 0) > 0 || (developer.skills?.length ?? 0) > 0) && (
+        {((developer.focus_areas?.length ?? 0) > 0 ||
+          (developer.skills?.length ?? 0) > 0) && (
           <View style={styles.skillsFocusRowContainer}>
             {(developer.focus_areas?.length ?? 0) > 0 && (
               <View style={styles.skillsFocusColumn}>
@@ -325,25 +381,36 @@ export function DeveloperDetailScreen() {
 
         {/* Portfolio */}
         {(developer.portfolio_image_url || developer.portfolio_url) && (
-            <View style={styles.sectionContainer}>
-                {developer.portfolio_image_url ? (
-                <TouchableOpacity onPress={() => handleLinkPress(developer.portfolio_url)}>
-                    <Image
-                    source={{ uri: developer.portfolio_image_url }}
-                    style={styles.portfolioImage}
-                    />
-                </TouchableOpacity>
-                ) : developer.portfolio_url ? (
-                <TouchableOpacity onPress={() => handleLinkPress(developer.portfolio_url)}>
-                    <Text style={styles.linkText}>{developer.portfolio_url}</Text>
-                </TouchableOpacity>
-                ) : null}
-            </View>
+          <View style={styles.sectionContainer}>
+            {developer.portfolio_image_url ? (
+              <TouchableOpacity
+                onPress={() => handleLinkPress(developer.portfolio_url)}
+              >
+                <Image
+                  source={{ uri: developer.portfolio_image_url }}
+                  style={styles.portfolioImage}
+                />
+              </TouchableOpacity>
+            ) : developer.portfolio_url ? (
+              <TouchableOpacity
+                onPress={() => handleLinkPress(developer.portfolio_url)}
+              >
+                <Text style={styles.linkText}>{developer.portfolio_url}</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
         )}
 
         {/* More Details Section */}
         <View style={styles.sectionContainer}>
-          {renderDetailItem("Hourly Rate", developer.hourly_rate !== null && developer.hourly_rate !== undefined ? `$${developer.hourly_rate}/hr` : null, "cash-outline")}
+          {renderDetailItem(
+            "Hourly Rate",
+            developer.hourly_rate !== null &&
+              developer.hourly_rate !== undefined
+              ? `$${developer.hourly_rate}/hr`
+              : null,
+            "cash-outline"
+          )}
           {renderDetailItem("Phone", developer.phone_number, "call-outline")}
           {renderDetailItem("Location", developer.location, "location-outline")}
           {/* {renderDetailItem("Company", developer.company, "business-outline")}
@@ -352,10 +419,7 @@ export function DeveloperDetailScreen() {
         </View>
 
         {/* Booking Button */}
-        <TouchableOpacity 
-          style={styles.bookButton}
-          onPress={handleBookPress}
-        >
+        <TouchableOpacity style={styles.bookButton} onPress={handleBookPress}>
           <Text style={styles.bookButtonText}>Book First Call</Text>
         </TouchableOpacity>
 
@@ -363,52 +427,87 @@ export function DeveloperDetailScreen() {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitleBig}>Availability</Text>
           {isLoadingFirstCall || isLoadingGeneral ? (
-            <ActivityIndicator size="small" color={colors.primary} style={{marginTop: spacing.md}}/>
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              style={{ marginTop: spacing.md }}
+            />
           ) : (
             <>
               {errorFirstCall && (
-                <Text style={styles.errorTextSmall}>Error loading first call availability: {errorFirstCall.message}</Text>
+                <Text style={styles.errorTextSmall}>
+                  Error loading first call availability:{" "}
+                  {errorFirstCall.message}
+                </Text>
               )}
               {errorGeneral && (
-                <Text style={styles.errorTextSmall}>Error loading general availability: {errorGeneral.message}</Text>
+                <Text style={styles.errorTextSmall}>
+                  Error loading general availability: {errorGeneral.message}
+                </Text>
               )}
 
-              {!errorFirstCall && firstCallSlots && firstCallSlots.length > 0 && (
-                <View style={styles.availabilityCard}>
-                  <View style={styles.availabilitySubSection}>
-                    <Text style={styles.subSectionTitle}>Discovery Call Slots (Weekly)</Text>
-                    {firstCallSlots.map((slot: Availability, index: number) => (
-                      <Text key={`first-call-${slot.id || index}`} style={styles.availabilityText}>
-                        {getDayOfWeekName(slot.day_of_week)}: {formatTime(slot.slot_start_time)} - {formatTime(slot.slot_end_time)}
+              {!errorFirstCall &&
+                firstCallSlots &&
+                firstCallSlots.length > 0 && (
+                  <View style={styles.availabilityCard}>
+                    <View style={styles.availabilitySubSection}>
+                      <Text style={styles.subSectionTitle}>
+                        Discovery Call Slots (Weekly)
                       </Text>
-                    ))}
+                      {firstCallSlots.map(
+                        (slot: Availability, index: number) => (
+                          <Text
+                            key={`first-call-${slot.id || index}`}
+                            style={styles.availabilityText}
+                          >
+                            {getDayOfWeekName(slot.day_of_week)}:{" "}
+                            {formatTime(slot.slot_start_time)} -{" "}
+                            {formatTime(slot.slot_end_time)}
+                          </Text>
+                        )
+                      )}
+                    </View>
                   </View>
-                </View>
-              )}
-              
-              {!errorGeneral && generalWorkSlots && generalWorkSlots.length > 0 && (
-                <View style={styles.availabilityCard}>
-                  <View style={styles.availabilitySubSection}>
-                    <Text style={styles.subSectionTitle}>Project Availability</Text>
-                    {generalWorkSlots.map((slot: Availability, index: number) => (
-                      <Text key={`general-${slot.id || index}`} style={styles.availabilityText}>
-                        {formatDateRange(slot.range_start_date, slot.range_end_date)}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-              )}
+                )}
 
-              {(!firstCallSlots || firstCallSlots.length === 0) && 
-               (!generalWorkSlots || generalWorkSlots.length === 0) && 
-               !errorFirstCall && !errorGeneral && (
-                <Text style={styles.availabilityText}>No availability information provided.</Text>
-              )}
+              {!errorGeneral &&
+                generalWorkSlots &&
+                generalWorkSlots.length > 0 && (
+                  <View style={styles.availabilityCard}>
+                    <View style={styles.availabilitySubSection}>
+                      <Text style={styles.subSectionTitle}>
+                        Project Availability
+                      </Text>
+                      {generalWorkSlots.map(
+                        (slot: Availability, index: number) => (
+                          <Text
+                            key={`general-${slot.id || index}`}
+                            style={styles.availabilityText}
+                          >
+                            {formatDateRange(
+                              slot.range_start_date,
+                              slot.range_end_date
+                            )}
+                          </Text>
+                        )
+                      )}
+                    </View>
+                  </View>
+                )}
+
+              {(!firstCallSlots || firstCallSlots.length === 0) &&
+                (!generalWorkSlots || generalWorkSlots.length === 0) &&
+                !errorFirstCall &&
+                !errorGeneral && (
+                  <Text style={styles.availabilityText}>
+                    No availability information provided.
+                  </Text>
+                )}
             </>
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -424,31 +523,31 @@ const styles = StyleSheet.create({
     borderRadius: spacing.sm,
     marginHorizontal: spacing.md,
     marginBottom: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
   },
   bookButtonText: {
     color: themeColors.dark.text, // Assuming primary button text is light on dark bg
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   scrollContentContainer: {
     paddingBottom: spacing.lg,
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: spacing.md,
   },
   errorText: {
     color: colors.error,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     // borderBottomWidth: 1,
@@ -456,11 +555,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   identitySection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -478,30 +577,31 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     backgroundColor: colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   nameText: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.xs,
   },
-  emailText: { // Kept for potential future use, though email not directly on DeveloperProfile
+  emailText: {
+    // Kept for potential future use, though email not directly on DeveloperProfile
     fontSize: 16,
     color: colors.textSecondary,
     marginBottom: spacing.md,
   },
   iconDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: spacing.sm,
   },
   iconDetailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: spacing.md,
   },
   iconDetailText: {
@@ -510,8 +610,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   skillsFocusRowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: spacing.md,
     marginHorizontal: spacing.md,
     // borderBottomWidth: 1,
@@ -519,21 +619,21 @@ const styles = StyleSheet.create({
   },
   skillsFocusColumn: {
     flex: 1,
-    alignItems: 'center', // Center items within the column
+    alignItems: "center", // Center items within the column
     paddingHorizontal: spacing.sm, // Add some padding if columns are too close
   },
   sectionTitleSmall: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center', // Center badges if they wrap
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center", // Center badges if they wrap
+    alignItems: "center",
   },
   chip: {
     backgroundColor: colors.subtle, // Using light theme colors
@@ -568,7 +668,7 @@ const styles = StyleSheet.create({
   },
   subSectionTitle: {
     fontSize: 18, // Increased font size
-    fontWeight: '600',
+    fontWeight: "600",
     color: colors.text,
     marginBottom: spacing.sm, // Added margin below title
   },
@@ -589,26 +689,26 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   portfolioImage: {
-    width: '100%',
+    width: "100%",
     height: 200, // Adjust as needed
     borderRadius: spacing.sm,
     marginBottom: spacing.sm,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   linkText: {
     fontSize: 16,
     color: colors.primary,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.sm,
   },
   detailLeftContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   detailIcon: {
     marginRight: spacing.md,
@@ -622,21 +722,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     flexShrink: 1, // Allow text to wrap or shrink if too long
-    textAlign: 'right',
+    textAlign: "right",
   },
   notSetText: {
-    fontStyle: 'italic',
+    fontStyle: "italic",
     color: colors.text,
   },
-  sectionTitleBig: { // For "Availability" title
+  sectionTitleBig: {
+    // For "Availability" title
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
     marginBottom: spacing.md,
   },
-
 });
 
 export default DeveloperDetailScreen;
-  
-

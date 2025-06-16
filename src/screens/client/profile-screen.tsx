@@ -8,15 +8,14 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
 import { useClientProfile } from "../../hooks/useClientProfile";
 import { ClientProfileStackParamList } from "../../types";
 import { colors as themeColors, spacing } from "../../theme";
-import { Linking, Alert } from 'react-native';
+import { Linking, Alert } from "react-native";
 
 // --- Theme Colors ---
 const colors = themeColors.light; // Use light theme colors
@@ -24,7 +23,7 @@ const colors = themeColors.light; // Use light theme colors
 // Define navigation prop type for type safety
 type ClientProfileScreenNavigationProp = NativeStackNavigationProp<
   ClientProfileStackParamList,
-  'ClientProfile'
+  "ClientProfile"
 >;
 
 export function ClientProfileScreen() {
@@ -46,7 +45,10 @@ export function ClientProfileScreen() {
     if (!url) return;
 
     // Prepend https:// if scheme is missing
-    const formattedUrl = url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
+    const formattedUrl =
+      url.startsWith("http://") || url.startsWith("https://")
+        ? url
+        : `https://${url}`;
 
     const supported = await Linking.canOpenURL(formattedUrl);
 
@@ -63,31 +65,43 @@ export function ClientProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size={50} color={colors.primary} style={styles.centered} />
-      </SafeAreaView>
+      <View style={styles.container}>
+        <ActivityIndicator
+          size={50}
+          color={colors.primary}
+          style={styles.centered}
+        />
+      </View>
     );
   }
 
   if (isError) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.centered}>
           <Text style={styles.errorText}>
-            Error loading profile: {error instanceof Error ? error.message : 'Unknown error'}
+            Error loading profile:{" "}
+            {error instanceof Error ? error.message : "Unknown error"}
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView>
         <View style={styles.header}>
           <Text style={styles.title}>Your Profile</Text>
-          <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
-            <Ionicons name="create-outline" size={24} color={colors.secondary} />
+          <TouchableOpacity
+            onPress={handleEditProfile}
+            style={styles.editButton}
+          >
+            <Ionicons
+              name="create-outline"
+              size={24}
+              color={colors.secondary}
+            />
           </TouchableOpacity>
         </View>
 
@@ -95,10 +109,17 @@ export function ClientProfileScreen() {
           <>
             <View style={styles.avatarContainer}>
               {profile.logo_url ? (
-                <Image source={{ uri: profile.logo_url }} style={styles.avatar} />
+                <Image
+                  source={{ uri: profile.logo_url }}
+                  style={styles.avatar}
+                />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Ionicons name="person" size={50} color={colors.textSecondary} />
+                  <Ionicons
+                    name="person"
+                    size={50}
+                    color={colors.textSecondary}
+                  />
                 </View>
               )}
             </View>
@@ -106,21 +127,35 @@ export function ClientProfileScreen() {
             <View style={styles.detailsCard}>
               <View style={styles.detailItem}>
                 <Text style={styles.label}>Name</Text>
-                <Text style={styles.value}>{profile.client_name || <Text style={styles.notSetText}>N/A</Text>}</Text>
+                <Text style={styles.value}>
+                  {profile.client_name || (
+                    <Text style={styles.notSetText}>N/A</Text>
+                  )}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.label}>Email</Text>
-                <Text style={styles.value}>{profile.email || <Text style={styles.notSetText}>N/A</Text>}</Text>
+                <Text style={styles.value}>
+                  {profile.email || <Text style={styles.notSetText}>N/A</Text>}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.label}>Company Name</Text>
-                <Text style={styles.value}>{profile.company_name || <Text style={styles.notSetText}>Not set</Text>}</Text>
+                <Text style={styles.value}>
+                  {profile.company_name || (
+                    <Text style={styles.notSetText}>Not set</Text>
+                  )}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.label}>Company Website</Text>
                 {profile.website_url ? (
-                  <TouchableOpacity onPress={() => handleLinkPress(profile.website_url)}>
-                    <Text style={[styles.value, styles.linkText]}>{profile.website_url}</Text>
+                  <TouchableOpacity
+                    onPress={() => handleLinkPress(profile.website_url)}
+                  >
+                    <Text style={[styles.value, styles.linkText]}>
+                      {profile.website_url}
+                    </Text>
                   </TouchableOpacity>
                 ) : (
                   <Text style={styles.notSetText}>Not set</Text>
@@ -130,33 +165,33 @@ export function ClientProfileScreen() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  title: { fontSize: 28, fontWeight: 'bold', color: colors.text },
+  title: { fontSize: 28, fontWeight: "bold", color: colors.text },
   editButton: { padding: spacing.sm },
-  avatarContainer: { 
-    alignItems: 'center', 
-    marginVertical: spacing.lg 
-  }, 
+  avatarContainer: {
+    alignItems: "center",
+    marginVertical: spacing.lg,
+  },
   avatar: {
-    width: 120, 
+    width: 120,
     height: 120,
-    borderRadius: 60, 
+    borderRadius: 60,
     backgroundColor: colors.subtle,
     marginBottom: spacing.md,
   },
@@ -165,8 +200,8 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     backgroundColor: colors.subtle,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: spacing.md,
   },
   detailsCard: {
@@ -191,24 +226,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   value: {
     fontSize: 16,
     color: colors.text,
   },
   linkText: {
-    color: colors.primary, 
-    textDecorationLine: 'underline',
+    color: colors.primary,
+    textDecorationLine: "underline",
   },
   notSetText: {
-    fontStyle: 'italic',
+    fontStyle: "italic",
     color: colors.textSecondary,
     fontSize: 16,
   },
   errorText: {
     color: colors.error,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

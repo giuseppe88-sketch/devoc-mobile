@@ -8,7 +8,6 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useFetchDeveloperBookings,
   BookingWithClient,
@@ -138,19 +137,19 @@ const DeveloperBookingsScreen = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.centeredContainer}>
+      <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color={localColors.primary} />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={styles.centeredContainer}>
+      <View style={styles.centeredContainer}>
         <Text style={styles.errorText}>
           Error fetching your bookings: {error.message}
         </Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -160,19 +159,19 @@ const DeveloperBookingsScreen = () => {
     (!bookings || (Array.isArray(bookings) && bookings.length === 0))
   ) {
     return (
-      <SafeAreaView style={styles.centeredContainer}>
+      <View style={styles.centeredContainer}>
         <Ionicons
           name="calendar-outline"
           size={64}
           color={localColors.textSecondary}
         />
         <Text style={styles.emptyText}>You have no bookings yet.</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.controlsContainer}>
         <View style={[styles.filterRow, { marginBottom: spacing.sm }]}>
           <TouchableOpacity
@@ -182,7 +181,14 @@ const DeveloperBookingsScreen = () => {
             ]}
             onPress={() => setSortOrder("most-recent")}
           >
-            <Text style={[styles.filterText, sortOrder === 'most-recent' && styles.activeFilterText]}>Most Recent</Text>
+            <Text
+              style={[
+                styles.filterText,
+                sortOrder === "most-recent" && styles.activeFilterText,
+              ]}
+            >
+              Most Recent
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -191,7 +197,14 @@ const DeveloperBookingsScreen = () => {
             ]}
             onPress={() => setSortOrder("less-recent")}
           >
-            <Text style={[styles.filterText, sortOrder === 'less-recent' && styles.activeFilterText]}>Less Recent</Text>
+            <Text
+              style={[
+                styles.filterText,
+                sortOrder === "less-recent" && styles.activeFilterText,
+              ]}
+            >
+              Less Recent
+            </Text>
           </TouchableOpacity>
         </View>
         <View style={styles.filterRow}>
@@ -202,7 +215,14 @@ const DeveloperBookingsScreen = () => {
             ]}
             onPress={() => setStatusFilter("all")}
           >
-            <Text style={[styles.filterText, statusFilter === 'all' && styles.activeFilterText]}>All</Text>
+            <Text
+              style={[
+                styles.filterText,
+                statusFilter === "all" && styles.activeFilterText,
+              ]}
+            >
+              All
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -211,7 +231,14 @@ const DeveloperBookingsScreen = () => {
             ]}
             onPress={() => setStatusFilter("confirmed")}
           >
-            <Text style={[styles.filterText, statusFilter === 'confirmed' && styles.activeFilterText]}>Confirmed</Text>
+            <Text
+              style={[
+                styles.filterText,
+                statusFilter === "confirmed" && styles.activeFilterText,
+              ]}
+            >
+              Confirmed
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -220,7 +247,14 @@ const DeveloperBookingsScreen = () => {
             ]}
             onPress={() => setStatusFilter("cancelled")}
           >
-            <Text style={[styles.filterText, statusFilter === 'cancelled' && styles.activeFilterText]}>Canceled</Text>
+            <Text
+              style={[
+                styles.filterText,
+                statusFilter === "cancelled" && styles.activeFilterText,
+              ]}
+            >
+              Canceled
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -231,7 +265,7 @@ const DeveloperBookingsScreen = () => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContentContainer}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -255,7 +289,7 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: 'center',
+    alignItems: "center",
   },
   filterButton: {
     paddingHorizontal: spacing.md,
@@ -264,15 +298,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: localColors.border,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   activeFilter: {
     backgroundColor: localColors.primary,
     borderColor: localColors.primary,
   },
   activeFilterText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
   filterText: {
     color: localColors.textSecondary,
