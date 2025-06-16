@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator, // Ensured import
 } from "react-native";
-import { Image } from 'expo-image';
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../stores/auth-store";
@@ -19,9 +19,9 @@ import {
 
 const colors = themeColors.dark;
 
-const backgroundImage = require('../../../assets/brick-wall-texture.jpg');
-const blurhash =
-  '|rF?hV%2_N_3t7M{V?xu?uM|RjRj?wRjofof~qofM{of%Mofof?w';
+const backgroundImage = require("../../../assets/brick-wall-texture.jpg");
+const logoWhiteSource = require("../../../assets/logo-devoc_white.png"); // Add white logo import
+const blurhash = "|rF?hV%2_N_3t7M{V?xu?uM|RjRj?wRjofof~qofM{of%Mofof?w";
 
 function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
   const { data: bookings = [], isLoading, error } = useFetchDeveloperBookings();
@@ -40,23 +40,27 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
   if (error) {
     return (
       <SafeAreaView style={[styles.container, styles.centeredContainer]}>
-        <Text style={styles.errorText}>Error loading bookings: {error.message}</Text>
+        <Text style={styles.errorText}>
+          Error loading bookings: {error.message}
+        </Text>
       </SafeAreaView>
     );
   }
 
-  const upcomingBookings = bookings.filter(
-    (b) => b.status === "confirmed" || b.status === "pending"
-  )
-    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+  const upcomingBookings = bookings
+    .filter((b) => b.status === "confirmed" || b.status === "pending")
+    .sort(
+      (a, b) =>
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    )
     .slice(0, 3); // Show upcoming/pending, sorted, limit to 5 for dashboard
 
   const bookingsTotal = bookings.filter(
-    (b) => b.status === "confirmed" || b.status === "pending" || b.status === "cancelled"
+    (b) =>
+      b.status === "confirmed" ||
+      b.status === "pending" ||
+      b.status === "cancelled"
   ).length;
-    
- 
-
 
   return (
     <View style={styles.container}>
@@ -69,95 +73,132 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
       />
       <SafeAreaView style={styles.container}>
         <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Hello, {name}!</Text>
-          <Text style={styles.subGreeting}>Your developer dashboard</Text>
-        </View>
+          <View style={styles.header}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Hello, {name}!</Text>
+              <Text style={styles.subGreeting}>Your developer dashboard</Text>
+            </View>
+            <Image
+              source={logoWhiteSource}
+              style={styles.logo}
+              contentFit="contain"
+            />
+          </View>
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{bookingsTotal}</Text>
-            <Text style={styles.statLabel}>Total Bookings</Text>
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{bookingsTotal}</Text>
+              <Text style={styles.statLabel}>Total Bookings</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{upcomingBookings.length}</Text>
+              <Text style={styles.statLabel}>Upcoming</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>8</Text>
+              <Text style={styles.statLabel}>Profile Views</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{upcomingBookings.length}</Text>
-            <Text style={styles.statLabel}>Upcoming</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>8</Text>
-            <Text style={styles.statLabel}>Profile Views</Text>
-          </View>
-        </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('DeveloperBookingsTab', { screen: 'DeveloperBookingsList' })}>
-              <Text style={styles.seeAll}>See All</Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("DeveloperBookingsTab", {
+                    screen: "DeveloperBookingsList",
+                  })
+                }
+              >
+                <Text style={styles.seeAll}>See All</Text>
+              </TouchableOpacity>
+            </View>
+
+            {upcomingBookings.length > 0 ? (
+              upcomingBookings.map((booking) => (
+                <TouchableOpacity
+                  key={booking.id}
+                  style={styles.bookingCard}
+                  onPress={() =>
+                    navigation.navigate("DeveloperBookingsTab", {
+                      screen: "DeveloperBookingDetails",
+                      params: { bookingId: booking.id },
+                    })
+                  }
+                >
+                  <View style={styles.bookingHeader}>
+                    <Text style={styles.clientName}>
+                      {booking.client_profile?.client_name ||
+                        booking.client_profile?.user?.full_name ||
+                        "Client N/A"}
+                    </Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        booking.status === "confirmed" && styles.confirmedBadge,
+                        booking.status === "pending" && styles.pendingBadge,
+                        booking.status === "cancelled" && styles.cancelledBadge, // Added style usage
+                      ]}
+                    >
+                      <Text style={styles.statusText}>
+                        {booking.status.charAt(0).toUpperCase() +
+                          booking.status.slice(1)}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.bookingInfo}>
+                    <View style={styles.bookingDetail}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={16}
+                        color={colors.textSecondary}
+                      />
+                      <Text style={styles.bookingDetailText}>
+                        {new Date(booking.start_time).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <View style={styles.bookingDetail}>
+                      <Ionicons
+                        name="time-outline"
+                        size={16}
+                        color={colors.textSecondary}
+                      />
+                      <Text style={styles.bookingDetailText}>
+                        {`${new Date(booking.start_time).toLocaleTimeString(
+                          [],
+                          { hour: "2-digit", minute: "2-digit", hour12: false }
+                        )} - ${new Date(booking.end_time).toLocaleTimeString(
+                          [],
+                          { hour: "2-digit", minute: "2-digit", hour12: false }
+                        )}`}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>No upcoming bookings</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.actionSection}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate("Availability")}
+            >
+              <Ionicons name="calendar" size={24} color={colors.text} />
+              <Text style={styles.actionButtonText}>Set Availability</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => navigation.navigate("Profile")}
+            >
+              <Ionicons name="person" size={24} color={colors.text} />
+              <Text style={styles.actionButtonText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
-
-          {upcomingBookings.length > 0 ? (
-            upcomingBookings.map((booking) => (
-              <TouchableOpacity
-                key={booking.id}
-                style={styles.bookingCard}
-                onPress={() => navigation.navigate('DeveloperBookingsTab', { screen: 'DeveloperBookingDetails', params: { bookingId: booking.id } })}
-              >
-                <View style={styles.bookingHeader}>
-                  <Text style={styles.clientName}>
-                    {booking.client_profile?.client_name || booking.client_profile?.user?.full_name || 'Client N/A'}
-                  </Text>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      booking.status === 'confirmed' && styles.confirmedBadge,
-                      booking.status === 'pending' && styles.pendingBadge,
-                      booking.status === 'cancelled' && styles.cancelledBadge, // Added style usage
-                    ]}
-                  >
-                    <Text style={styles.statusText}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.bookingInfo}> {/* Added style usage */}
-                  <View style={styles.bookingDetail}>
-                    <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
-                    <Text style={styles.bookingDetailText}>{new Date(booking.start_time).toLocaleDateString()}</Text>
-                  </View>
-                  <View style={styles.bookingDetail}>
-                    <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-                    <Text style={styles.bookingDetailText}>
-                      {`${new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })} - ${new Date(booking.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}`}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No upcoming bookings</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.actionSection}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate("Availability")}
-          >
-            <Ionicons name="calendar" size={24} color={colors.text} />
-            <Text style={styles.actionButtonText}>Set Availability</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate("Profile")}
-          >
-            <Ionicons name="person" size={24} color={colors.text} />
-            <Text style={styles.actionButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
-        </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -169,22 +210,28 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   centeredContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorText: {
     color: colors.error,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   container: {
     flex: 1,
-    backgroundColor: 'transparent', // Changed from colors.background
+    backgroundColor: "transparent",
   },
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  greetingContainer: {
+    flex: 1,
   },
   greeting: {
     fontSize: 24,
@@ -195,6 +242,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginLeft: spacing.md,
   },
   statsContainer: {
     flexDirection: "row",
@@ -277,10 +329,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
   },
   pendingBadge: {
-    backgroundColor: colors.warning, // Assuming warningBackground is not defined, use warning with alpha
+    backgroundColor: colors.warning,
   },
   cancelledBadge: {
-    backgroundColor: colors.error, // Assuming errorBackground is not defined, use error with alpha
+    backgroundColor: colors.error,
   },
   statusText: {
     color: colors.text,
@@ -288,7 +340,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   bookingInfo: {
-    marginTop: spacing.md, // Assuming 'md' for medium spacing
+    marginTop: spacing.md,
   },
   bookingDetails: {
     marginTop: spacing.sm,
@@ -299,7 +351,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   bookingDetailText: {
-    marginLeft: spacing.sm, // Assuming 'sm' for small spacing
+    marginLeft: spacing.sm,
     fontSize: 14,
     color: colors.textSecondary,
   },
