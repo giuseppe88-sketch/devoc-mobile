@@ -162,6 +162,8 @@ const ClientBookingsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Your Bookings</Text>
+
       <View style={styles.controlsContainer}>
         <View style={[styles.filterRow, { marginBottom: spacing.sm }]}>
           <TouchableOpacity
@@ -262,6 +264,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: localColors.background,
+  },
+  title: {
+    fontSize: 26, // Slightly smaller title
+    fontWeight: "bold",
+    color: localColors.text,
+    marginTop: spacing.md,
+    marginLeft: spacing.md,
   },
   centeredContainer: {
     flex: 1,

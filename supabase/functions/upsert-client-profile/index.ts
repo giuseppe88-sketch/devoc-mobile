@@ -17,6 +17,15 @@ interface ProfileData {
 
 console.log('"upsert-client-profile" function initialized');
 
+// Log crucial environment variables for debugging local setup
+console.log(`SUPABASE_URL: ${Deno.env.get("SUPABASE_URL")}`);
+console.log(`SUPABASE_ANON_KEY: ${Deno.env.get("SUPABASE_ANON_KEY")}`);
+console.log(
+  `SUPABASE_SERVICE_ROLE_KEY: ${
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? "Loaded" : "NOT LOADED"
+  }`,
+);
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -33,8 +42,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // --- Get User ID from Auth Header ---
-    const supabaseClient = createClient(
+    // --- Get User ID from Auth Header --- (Client for Auth)
+    const authClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
@@ -44,7 +53,8 @@ Deno.serve(async (req) => {
       },
     );
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const { data: { user }, error: userError } = await authClient.auth
+      .getUser();
 
     if (userError || !user) {
       console.error("User auth error:", userError?.message);
@@ -62,10 +72,13 @@ Deno.serve(async (req) => {
 
     // Basic validation (check if required fields are provided)
     if (!profileData.client_name) { // client_name is required
-      return new Response(JSON.stringify({ error: "Missing required field: client_name" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Missing required field: client_name" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     // --- Prepare Data for Upsert ---
@@ -79,16 +92,26 @@ Deno.serve(async (req) => {
       // created_at is handled by default in DB
     };
 
+    // --- Create a new Supabase client for database operations using SERVICE_ROLE_KEY ---
+    const adminSupabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      // No global auth header here, this client uses the service role
+    );
+
     // --- Upsert Profile Data (Select then Insert/Update) ---
     let data, dbError;
 
     try {
-      console.log(`Attempting to SELECT client profile for user ID: ${user.id}`);
-      const { data: existingProfile, error: selectError } = await supabaseClient
-        .from("client_profiles")
-        .select("id") // Select only the id to check for existence
-        .eq("id", user.id)
-        .maybeSingle(); // Returns null if not found, doesn't throw error
+      console.log(
+        `Attempting to SELECT client profile for user ID: ${user.id}`,
+      );
+      const { data: existingProfile, error: selectError } =
+        await adminSupabaseClient // Use admin client
+          .from("client_profiles")
+          .select("id") // Select only the id to check for existence
+          .eq("id", user.id)
+          .maybeSingle(); // Returns null if not found, doesn't throw error
 
       if (selectError) {
         console.error("Error during SELECT:", selectError);
@@ -101,12 +124,13 @@ Deno.serve(async (req) => {
         console.log(
           `Client profile found for user ID: ${user.id}. Attempting UPDATE.`,
         );
-        const { data: updateData, error: updateError } = await supabaseClient
-          .from("client_profiles")
-          .update(dataToUpsert)
-          .eq("id", user.id)
-          .select()
-          .single();
+        const { data: updateData, error: updateError } =
+          await adminSupabaseClient // Use admin client
+            .from("client_profiles")
+            .update(dataToUpsert)
+            .eq("id", user.id)
+            .select()
+            .single();
         data = updateData;
         dbError = updateError;
         if (updateError) console.error("Error during UPDATE:", updateError);
@@ -115,11 +139,12 @@ Deno.serve(async (req) => {
         console.log(
           `No client profile found for user ID: ${user.id}. Attempting INSERT.`,
         );
-        const { data: insertData, error: insertError } = await supabaseClient
-          .from("client_profiles")
-          .insert(dataToUpsert)
-          .select()
-          .single();
+        const { data: insertData, error: insertError } =
+          await adminSupabaseClient // Use admin client
+            .from("client_profiles")
+            .insert(dataToUpsert)
+            .select()
+            .single();
         data = insertData;
         dbError = insertError;
         if (insertError) console.error("Error during INSERT:", insertError);
@@ -130,7 +155,7 @@ Deno.serve(async (req) => {
       let errorMessage = "Unknown DB operation error";
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (typeof error === 'string') {
+      } else if (typeof error === "string") {
         errorMessage = error;
       }
       if (!dbError) dbError = { message: errorMessage, details: String(error) };
