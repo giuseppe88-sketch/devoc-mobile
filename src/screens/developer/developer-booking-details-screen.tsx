@@ -16,6 +16,7 @@ import { colors as themeColors, spacing } from "../../theme";
 import { DeveloperBookingsStackParamList } from "../../types"; // Import the correct ParamList
 import { useFetchDeveloperBookingDetails } from "../../hooks/useFetchDeveloperBookingDetails";
 import { useCancelBooking } from "../../hooks/useCancelBooking";
+import { useDeleteBooking } from "../../hooks/useDeleteBooking"; // Import the delete hook
 
 const colors = themeColors.dark; // Or themeColors.dark based on developer theme
 
@@ -40,6 +41,8 @@ const DeveloperBookingDetailsScreen: React.FC = () => {
     isPending: isCancelling,
     isSuccess: isCancellationSuccess,
   } = useCancelBooking();
+  const { mutate: deleteBookingMutate, isPending: isDeleting } =
+    useDeleteBooking();
 
   useEffect(() => {
     if (isCancellationSuccess) {
@@ -106,6 +109,33 @@ const DeveloperBookingDetailsScreen: React.FC = () => {
               bookingId: booking.id,
               clientId: booking.client_id, // Ensure these are available in your booking object
               developerId: booking.developer_id, // Ensure these are available in your booking object
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteBooking = () => {
+    if (!booking) return;
+
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to permanently delete this booking? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes, Delete Booking",
+          style: "destructive",
+          onPress: () => {
+            // The hook handles navigation and query invalidation
+            deleteBookingMutate({
+              bookingId: booking.id,
+              clientId: booking.client_id,
+              developerId: booking.developer_id, // Pass developer ID for invalidation
             });
           },
         },
@@ -222,7 +252,23 @@ const DeveloperBookingDetailsScreen: React.FC = () => {
             ) : (
               <Text style={styles.actionButtonText}>Cancel Booking</Text>
             )}
-            
+          </TouchableOpacity>
+        )}
+        {booking.status === "cancelled" && (
+          <TouchableOpacity
+            style={[
+              styles.actionButton,
+              styles.deleteButton, // New style for delete
+              isDeleting && styles.disabledButton,
+            ]}
+            onPress={handleDeleteBooking}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <ActivityIndicator color={colors.text} />
+            ) : (
+              <Text style={styles.actionButtonText}>Delete Booking</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
@@ -316,6 +362,9 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: colors.error,
+  },
+  deleteButton: {
+    backgroundColor: "#CC3333", // A more vibrant red
   },
   actionButtonText: {
     color: "#FFFFFF",

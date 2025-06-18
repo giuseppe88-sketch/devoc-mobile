@@ -7,7 +7,8 @@ import { useNavigation } from "@react-navigation/native";
 // Define the type for the mutation variables
 interface DeleteBookingVariables {
   bookingId: string;
-  clientId: string; // For targeted query invalidation
+  clientId: string; // For client list invalidation
+  developerId: string; // For developer list invalidation
 }
 
 // The async function that performs the deletion
@@ -41,10 +42,12 @@ export function useDeleteBooking() {
         text2: "The booking has been successfully deleted.",
       });
 
-      // Invalidate queries to update the UI
-      // We only need to invalidate the list, not the details of the deleted booking.
+      // Invalidate queries for both client and developer to update their booking lists
       queryClient.invalidateQueries({
         queryKey: ["clientBookings", variables.clientId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["developerBookings", variables.developerId],
       });
 
       if (navigation.canGoBack()) {

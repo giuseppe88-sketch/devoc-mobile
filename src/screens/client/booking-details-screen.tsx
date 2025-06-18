@@ -77,7 +77,11 @@ const BookingDetailsScreen: React.FC = () => {
         {
           text: "Yes, Delete",
           onPress: () => {
-            deleteBookingMutate({ bookingId, clientId: booking.client_id });
+            deleteBookingMutate({
+              bookingId,
+              clientId: booking.client_id,
+              developerId: booking.developer_id,
+            });
           },
           style: "destructive",
         },

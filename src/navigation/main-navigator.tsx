@@ -145,6 +145,7 @@ function ClientProfileStackNavigator() {
 function DeveloperBookingsStackNavigator() {
   return (
     <DeveloperBookingsStack.Navigator
+      initialRouteName="DeveloperBookingsList"
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,
