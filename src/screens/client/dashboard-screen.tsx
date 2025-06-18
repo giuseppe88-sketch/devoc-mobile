@@ -84,7 +84,7 @@ function ClientDashboardScreen() {
       .sort(
         (a: Booking, b: Booking) =>
           new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
-      );
+      ).slice(0,3);
   }, [allBookings, errorBookings]);
 
   return (
@@ -203,7 +203,7 @@ function ClientDashboardScreen() {
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Your Bookings</Text>
+              <Text style={styles.sectionTitle}>Your Recent Bookings</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate("ClientBookingsTab")}
               >
