@@ -206,6 +206,7 @@ function BrowseStackNavigator() {
   const colors = themeColors.light; // Use light theme for client stack
   return (
     <BrowseStack.Navigator
+      initialRouteName="ClientBrowse" // Explicitly set initial route
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.background, // Light background
