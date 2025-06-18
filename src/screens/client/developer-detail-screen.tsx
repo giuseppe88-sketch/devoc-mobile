@@ -382,6 +382,7 @@ export function DeveloperDetailScreen() {
         {/* Portfolio */}
         {(developer.portfolio_image_url || developer.portfolio_url) && (
           <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitleBig}>Portfolio</Text>
             {developer.portfolio_image_url ? (
               <TouchableOpacity
                 onPress={() => handleLinkPress(developer.portfolio_url)}
@@ -413,6 +414,7 @@ export function DeveloperDetailScreen() {
           )}
           {renderDetailItem("Phone", developer.phone_number, "call-outline")}
           {renderDetailItem("Location", developer.location, "location-outline")}
+          {renderDetailItem("Years of Experience", developer.years_of_experience, "location-outline")}
           {/* {renderDetailItem("Company", developer.company, "business-outline")}
           {renderDetailItem("Website", developer.website_url, "globe-outline")}
           {renderDetailItem("LinkedIn", developer.linkedin_url, "logo-linkedin")} */}
