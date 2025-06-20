@@ -39,10 +39,6 @@ function App(): ReactNode {
       (_event, session) => {
         setSession(session);
         setLoading(false);
-        console.log(
-          "Session Token (onAuthStateChange):",
-          session?.access_token
-        );
       }
     );
 

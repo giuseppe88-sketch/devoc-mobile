@@ -27,13 +27,7 @@ export const signUpUser = async (
     emailRedirectTo: "https://supabase-redirector.vercel.app",
     // emailRedirectTo: 'https://supabase-redirector.vercel.app/' // Ensure trailing slash if needed, though usually not critical
   };
-
-  // Log the options right before the call
-  console.log(
-    "*** Supabase signUp options:",
-    JSON.stringify(signUpOptions, null, 2),
-  );
-
+ 
   // Attempt to sign up the authentication user
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
@@ -48,11 +42,6 @@ export const signUpUser = async (
     return { error: authError };
   }
 
-  // Authentication successful
-  // We don't need the manual insert here anymore as the trigger handles it.
-  console.log("Supabase auth.signUp successful, user:", authData.user?.id);
-
-  // Return success
   return { error: null };
 };
 

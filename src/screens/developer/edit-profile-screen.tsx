@@ -243,14 +243,7 @@ function EditDeveloperProfileScreen() {
 
     if (pickerResult.assets && pickerResult.assets.length > 0) {
       const asset = pickerResult.assets[0];
-      console.log("Selected portfolio image asset:", {
-        uri: asset.uri,
-        mimeType: asset.mimeType,
-        fileSize: asset.fileSize,
-        width: asset.width,
-        height: asset.height,
-      });
-
+      
       // Ensure a reasonable extension
       let fileExt = "jpg";
       if (asset.mimeType && asset.mimeType.startsWith("image/")) {
@@ -278,15 +271,7 @@ function EditDeveloperProfileScreen() {
         }
 
         const arrayBuffer = decode(asset.base64);
-
-        console.log(
-          "Portfolio image ArrayBuffer size:",
-          arrayBuffer.byteLength,
-          "(Original asset size:",
-          asset.fileSize,
-          ")"
-        );
-
+       
         // Critical check - if blob is empty, stop here
         if (arrayBuffer.byteLength === 0) {
           console.error("ArrayBuffer is empty! This is the problem.");
@@ -308,8 +293,6 @@ function EditDeveloperProfileScreen() {
         if (uploadError) {
           throw uploadError;
         }
-
-        console.log("Upload successful:", uploadData);
 
         // Get public URL
         const { data: publicUrlData } = supabase.storage

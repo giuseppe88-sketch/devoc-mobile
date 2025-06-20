@@ -9,7 +9,6 @@ import Constants from 'expo-constants';
 const supabaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY as string | undefined;
 
-console.log('*** Supabase URL from Constants:', supabaseUrl); // Add this log
 // const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 // const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -67,30 +66,17 @@ const axiosFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise
     timeout: 15000, // 15 second timeout
   };
 
-  console.log('--- axiosFetch: Attempting Request ---');
-  console.log(`URL: ${urlString}`);
-  console.log(`Method: ${requestOptions.method}`);
-  console.log('Headers:', JSON.stringify(requestOptions.headers, null, 2));
   if (requestOptions.data) {
     if (typeof requestOptions.data === 'string' && requestOptions.data.length < 1000) {
-      console.log('Body:', requestOptions.data);
     } else {
-      console.log('Body Type:', typeof requestOptions.data, 'Body Length (if string):', typeof requestOptions.data === 'string' ? requestOptions.data.length : 'N/A');
     }
   } else {
-    console.log('Body: (No body)');
   }
-  console.log('------------------------------------');
   // For simplicity, not mapping all fetch RequestInit options to AxiosRequestConfig
   // e.g., cache, credentials, integrity, keepalive, mode, redirect, referrer, etc.
 
   try {
     const response: AxiosResponse = await axios(urlString, requestOptions);
-    console.log('--- axiosFetch: Request Successful ---');
-    console.log(`Status: ${response.status}`);
-    // console.log('Response Headers:', JSON.stringify(response.headers, null, 2)); // Optional: log response headers
-    // console.log('Response Data:', JSON.stringify(response.data, null, 2)); // Careful with large/sensitive data
-    console.log('------------------------------------');
 
     // Mimic Fetch API's Response object
     return {

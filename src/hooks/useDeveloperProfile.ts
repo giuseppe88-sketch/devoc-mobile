@@ -12,7 +12,6 @@ async function fetchDeveloperProfile(
   const [, userId] = queryKey;
   if (!userId) return null;
 
-  // console.log(`Fetching combined profile for user ID: ${userId}`); // Commented out
 
   try {
     // Fetch from developer_profiles
@@ -54,14 +53,11 @@ async function fetchDeveloperProfile(
     // If both fetches returned null (status 406), combinedProfile will just have user_id
     // Check if we actually got any data beyond the user_id
     if (!userData && !devData) {
-      // console.log("No profile data found for user ID:", userId); // Commented out
       return null; // Return null if neither profile exists
     }
 
-    // console.log("Combined profile data fetched:", combinedProfile); // Commented out
     return combinedProfile;
   } catch (error) {
-    // console.error("Critical error during combined profile fetch:", error); // Commented out
     // Re-throw or handle as appropriate for useQuery
     if (error instanceof Error) throw error;
     throw new Error("Failed to fetch profile data");

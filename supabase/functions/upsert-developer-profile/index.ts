@@ -20,13 +20,8 @@ interface ProfileData {
   portfolio_image_url?: string; // Added portfolio image URL
 }
 
-console.log('"upsert-developer-profile" function initialized');
 
 Deno.serve(async (req) => {
-  console.log('--- Edge Function Environment ---');
-  console.log('SUPABASE_URL:', Deno.env.get('SUPABASE_URL'));
-  console.log('SUPABASE_ANON_KEY:', Deno.env.get('SUPABASE_ANON_KEY') ? 'Exists' : 'Not Found'); // Don't log the key itself for security, just its presence
-  console.log('---------------------------------');
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -68,12 +63,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log("Successfully retrieved user:", user);
-
     // --- Parse Request Body ---
     const profileData: Partial<ProfileData> = await req.json();
-    console.log("Parsed profile data from body:", profileData);
-
     // Basic validation (check if required fields are provided)
     if (
       !profileData.phone_number && !profileData.skills &&
@@ -107,7 +98,6 @@ Deno.serve(async (req) => {
     let data, dbError;
 
     try {
-      console.log(`Attempting to SELECT profile for user ID: ${user.id}`);
       const { data: existingProfile, error: selectError } = await supabaseClient
         .from("developer_profiles")
         .select("id") // Select only the id to check for existence
@@ -122,9 +112,6 @@ Deno.serve(async (req) => {
 
       if (existingProfile) {
         // --- UPDATE existing profile ---
-        console.log(
-          `Profile found for user ID: ${user.id}. Attempting UPDATE.`,
-        );
         const { data: updateData, error: updateError } = await supabaseClient
           .from("developer_profiles")
           .update(dataToUpsert) // dataToUpsert includes id and updated_at
@@ -136,9 +123,6 @@ Deno.serve(async (req) => {
         if (updateError) console.error("Error during UPDATE:", updateError);
       } else {
         // --- INSERT new profile ---
-        console.log(
-          `No profile found for user ID: ${user.id}. Attempting INSERT.`,
-        );
         const { data: insertData, error: insertError } = await supabaseClient
           .from("developer_profiles")
           .insert(dataToUpsert) // dataToUpsert includes id and updated_at

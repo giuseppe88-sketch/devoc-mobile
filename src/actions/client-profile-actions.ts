@@ -26,10 +26,6 @@ export async function saveClientProfileAction(
 ): Promise<ActionState | null> {
   const { session, userId, clientData } = formData;
 
-  console.log('Server Action: saveClientProfileAction invoked');
-  console.log('User ID:', userId);
-  console.log('Client Data:', clientData);
-
   if (!session?.access_token) {
     console.error('Server Action Error: No session token provided.');
     return { success: false, message: 'Authentication required.' };
@@ -41,7 +37,6 @@ export async function saveClientProfileAction(
   }
 
   try {
-    console.log('Invoking upsert-client-profile Edge Function...');
     const { data, error: functionError } = await supabase.functions.invoke(
       'upsert-client-profile',
       {
@@ -63,7 +58,6 @@ export async function saveClientProfileAction(
         throw new Error(data.error || 'Failed to save profile via Edge Function.');
     }
 
-    console.log('Server Action: Profile saved successfully via Edge Function.');
     return { success: true, message: 'Profile updated successfully!' };
 
   } catch (error: any) {

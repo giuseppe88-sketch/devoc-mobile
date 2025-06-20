@@ -15,21 +15,10 @@ interface ProfileData {
   website_url?: string;
 }
 
-console.log('"upsert-client-profile" function initialized');
-
-// Log crucial environment variables for debugging local setup
-console.log(`SUPABASE_URL: ${Deno.env.get("SUPABASE_URL")}`);
-console.log(`SUPABASE_ANON_KEY: ${Deno.env.get("SUPABASE_ANON_KEY")}`);
-console.log(
-  `SUPABASE_SERVICE_ROLE_KEY: ${
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? "Loaded" : "NOT LOADED"
-  }`,
-);
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request for upsert-client-profile...");
     return new Response("ok", { headers: corsHeaders });
   }
 
@@ -64,11 +53,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log("Successfully retrieved user:", user);
 
     // --- Parse Request Body ---
     const profileData: Partial<ProfileData> = await req.json();
-    console.log("Parsed client profile data from body:", profileData);
 
     // Basic validation (check if required fields are provided)
     if (!profileData.client_name) { // client_name is required
@@ -103,9 +90,6 @@ Deno.serve(async (req) => {
     let data, dbError;
 
     try {
-      console.log(
-        `Attempting to SELECT client profile for user ID: ${user.id}`,
-      );
       const { data: existingProfile, error: selectError } =
         await adminSupabaseClient // Use admin client
           .from("client_profiles")
@@ -121,9 +105,6 @@ Deno.serve(async (req) => {
 
       if (existingProfile) {
         // --- UPDATE existing profile ---
-        console.log(
-          `Client profile found for user ID: ${user.id}. Attempting UPDATE.`,
-        );
         const { data: updateData, error: updateError } =
           await adminSupabaseClient // Use admin client
             .from("client_profiles")
@@ -136,9 +117,6 @@ Deno.serve(async (req) => {
         if (updateError) console.error("Error during UPDATE:", updateError);
       } else {
         // --- INSERT new profile ---
-        console.log(
-          `No client profile found for user ID: ${user.id}. Attempting INSERT.`,
-        );
         const { data: insertData, error: insertError } =
           await adminSupabaseClient // Use admin client
             .from("client_profiles")

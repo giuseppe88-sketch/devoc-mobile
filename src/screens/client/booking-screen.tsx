@@ -20,7 +20,6 @@ const BookingScreen: React.FC = () => {
   const route = useRoute<BookingScreenRouteProp>();
   const navigation = useNavigation<BookingScreenNavigationProp>();
   const { developerId, developerName } = route.params;
-  console.log('[BookingScreen] Fetching availability for developerId:', developerId); // Log developerId for debugging
 
   const colors = themeColors.light; // Or based on your theme logic
 

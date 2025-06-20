@@ -55,7 +55,6 @@ export const useCancelBooking = () => {
         queryClient.invalidateQueries({ queryKey: ['bookingDetails', variables.bookingId] }); // For specific booking details
         // Invalidate developer's first call availability to refresh slots
         if (variables.developerId) {
-          console.log('[useCancelBooking] Invalidating for developerId:', variables.developerId); // Log developerId for debugging
           queryClient.invalidateQueries({ queryKey: ['developerFirstCallAvailability', variables.developerId] });
           queryClient.invalidateQueries({ queryKey: ['developerBookings', variables.developerId] }); // <-- ADDED THIS LINE
         } 

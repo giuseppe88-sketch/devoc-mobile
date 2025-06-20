@@ -77,16 +77,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // Fetch profile only if the user ID has actually changed or was null before
     if (newUserId && newUserId !== currentUserId) {
-       console.log(`User changed (${currentUserId} -> ${newUserId}), fetching profile...`);
        // Ensure newUserId is not undefined before calling
        get().fetchUserProfile(newUserId);
     } else if (!newUserId && currentUserId) {
-       console.log(`User logged out (${currentUserId}), clearing role and name.`);
        set({ userRole: null, full_name: null, loadingProfile: false });
     } else if (newUserId && newUserId === currentUserId && (get().userRole === null || get().full_name === null) && !get().loadingProfile) {
         // User ID is the same, but role wasn't loaded (e.g., initial load), try fetching
         // Ensure newUserId is not undefined before calling
-        console.log(`User ID ${newUserId} same, but role missing, fetching profile...`);
         get().fetchUserProfile(newUserId);
     }
   },

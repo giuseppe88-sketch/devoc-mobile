@@ -21,7 +21,6 @@ const SignUpScreen = () => {
   const styles = getStyles(colors);
 
   const handleSignUp = async () => {
-    console.log('*** handleSignUp triggered with role:', role);
 
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');

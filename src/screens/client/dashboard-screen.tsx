@@ -56,8 +56,8 @@ function ClientDashboardScreen() {
   const featuredDevelopers = React.useMemo(() => {
     if (!allDevelopers) return [];
     return allDevelopers
-      .filter((dev) => dev.rating !== null)
-      .sort((a, b) => b.rating! - a.rating!) // Sort by rating descending, non-null asserted due to filter
+      // .filter((dev) => dev.rating !== null) TODO: rating <LOGIC></LOGIC>
+      // .sort((a, b) => b.rating! - a.rating!)
       .slice(0, 5); // Show top 5 featured developers
   }, [allDevelopers]);
 
@@ -183,14 +183,14 @@ function ClientDashboardScreen() {
                           )}
                         </View>
                       )}
-                    {developer.rating !== null && (
+                    {/* {developer.rating !== null && (
                       <View style={styles.ratingContainer}>
                         <Ionicons name="star" size={16} color={colors.star} />
                         <Text style={styles.ratingText}>
                           {developer.rating.toFixed(1)}
                         </Text>
                       </View>
-                    )}
+                    )} */}
                   </TouchableOpacity>
                 ))}
               </ScrollView>

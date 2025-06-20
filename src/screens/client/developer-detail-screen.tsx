@@ -317,14 +317,14 @@ export function DeveloperDetailScreen() {
             </View>
           )}
           <View style={styles.iconDetailRow}>
-            {developer.rating !== null && developer.rating !== undefined && (
+            {/* {developer.rating !== null && developer.rating !== undefined && (
               <View style={styles.iconDetailItem}>
                 <Ionicons name="star" size={18} color={colors.star} />
                 <Text style={styles.iconDetailText}>
                   {developer.rating.toFixed(1)}
                 </Text>
               </View>
-            )}
+            )} */} TODO: rating LOGIC
             {developer.github_url && (
               <TouchableOpacity
                 onPress={() => handleLinkPress(developer.github_url)}

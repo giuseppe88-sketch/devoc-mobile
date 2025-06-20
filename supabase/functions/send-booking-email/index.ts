@@ -40,14 +40,8 @@ function formatGoogleCalendarDate(isoDateString?: string): string {
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL_ADDRESS = "onboarding@resend.dev"; // For testing
 
-console.log(
-  `[send-booking-email] Attempting to read RESEND_API_KEY. Value: ${
-    RESEND_API_KEY ? "Exists" : "MISSING or empty"
-  }`,
-);
 
 serve(async (req: Request) => {
-  console.log("[send-booking-email] Function invoked.");
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -197,17 +191,7 @@ serve(async (req: Request) => {
         subject: emailToClient.subject,
         error: clientEmailError,
       });
-    } else {
-      console.log(
-        "[send-booking-email] Client confirmation email sent successfully:",
-        {
-          to: emailToClient.to,
-          subject: emailToClient.subject,
-          id: clientEmailData?.id,
-        },
-      );
-    }
-
+    } 
     const { data: developerEmailData, error: developerEmailError } =
       await resend.emails.send(emailToDeveloper);
     if (developerEmailError) {
@@ -237,17 +221,7 @@ serve(async (req: Request) => {
           },
         );
       }
-    } else {
-      console.log(
-        "[send-booking-email] Developer notification email sent successfully:",
-        {
-          to: emailToDeveloper.to,
-          subject: emailToDeveloper.subject,
-          id: developerEmailData?.id,
-        },
-      );
     }
-
     // If at least one email succeeded or no errors at all
     if (
       (clientEmailData || developerEmailData) &&

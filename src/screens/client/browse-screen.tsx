@@ -126,13 +126,13 @@ export function ClientBrowseScreen() {
             </View>
           )}
           <View style={styles.developerInfo}>
-            <View style={styles.nameRatingContainer}>
+            {/* <View style={styles.nameRatingContainer}>
               <Text style={styles.developerName}>{item.name}</Text>
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={14} color="#FFD700" />
                 <Text style={styles.ratingText}>{4}</Text>
               </View>
-            </View>
+            </View> */}
             {item.location && (
               <Text style={styles.developerDetailText}> {item.location}</Text>
             )}

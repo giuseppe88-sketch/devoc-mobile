@@ -156,7 +156,7 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                 <Text style={styles.emailText}>{user.email}</Text>
               )}
               <View style={styles.iconDetailRow}>
-                {profileData.rating !== null &&
+                {/* {profileData.rating !== null &&
                   profileData.rating !== undefined && (
                     <View style={styles.iconDetailItem}>
                       <Ionicons name="star" size={18} color={colors.star} />
@@ -164,7 +164,7 @@ function DeveloperProfileScreen({ navigation }: { navigation: any }) {
                         {profileData.rating.toFixed(1)}
                       </Text>
                     </View>
-                  )}
+                  )} */}
                 {profileData.github_url && (
                   <TouchableOpacity
                     onPress={() => handleLinkPress(profileData.github_url)}

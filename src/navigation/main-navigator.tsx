@@ -273,22 +273,16 @@ function MainNavigator() {
 
   useEffect(() => {
     const validateSession = async () => {
-      console.log("MainNavigator mounted, validating session...");
       const {
         data: { user },
         error,
       } = await supabase.auth.getUser();
 
       if (error || !user) {
-        console.log(
-          "Session validation failed in MainNavigator. Signing out.",
-          error?.message
-        );
         // Alert.alert("Session Expired", "Your session is no longer valid. Please log in again.");
         await signOut();
         // No need to explicitly navigate, App.tsx will react to session becoming null
       } else {
-        console.log("Session validated successfully in MainNavigator.Account");
       }
     };
 

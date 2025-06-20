@@ -27,9 +27,6 @@ export async function saveProfileAction(
 ): Promise<ActionState> {
   const { user_id, userData, devData } = formData;
 
-  console.log("Action triggered. Updating user data:", userData);
-  console.log("Action triggered. Upserting dev data:", devData);
-
   try {
     // 1. Update public.users table (only if userData has keys)
     if (Object.keys(userData).length > 0) {
@@ -42,7 +39,6 @@ export async function saveProfileAction(
         console.error('User update error:', userUpdateError);
         return { success: false, message: `Failed to update user profile: ${userUpdateError.message}` };
       }
-      // console.log('Public users table update success'); // Optional: add success log if needed
     }
 
     // 2. Upsert into developer_profiles using the Edge Function
@@ -61,7 +57,6 @@ export async function saveProfileAction(
       return { success: false, message: `Failed to update developer details: ${detailedMessage}` };
     }
 
-    console.log('Edge function success:', functionData);
     return { success: true, message: 'Profile updated successfully!' };
 
   } catch (err: any) {

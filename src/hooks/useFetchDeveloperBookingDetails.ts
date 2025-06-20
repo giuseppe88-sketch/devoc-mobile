@@ -104,13 +104,8 @@ export const useFetchDeveloperBookingDetails = (bookingId: string | undefined) =
     select: (rawBooking) => {
       if (!rawBooking) return null;
 
-      console.log('[useFetchDeveloperBookingDetails] Raw booking data from Supabase:', JSON.stringify(rawBooking, null, 2));
-
       const profileData = rawBooking.client_user_and_profile?.client_profile_data;
       const userData = rawBooking.client_user_and_profile;
-
-      console.log('[useFetchDeveloperBookingDetails] Extracted profileData:', JSON.stringify(profileData, null, 2));
-      console.log('[useFetchDeveloperBookingDetails] Extracted userData (for full_name, avatar_url):', JSON.stringify(userData, null, 2));
 
       const transformedBooking = {
         ...rawBooking,
