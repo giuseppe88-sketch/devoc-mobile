@@ -47,6 +47,10 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
     );
   }
 
+  const cancelledBookings = bookings.filter(
+    (b) => b.status === "cancelled"
+  ).length;
+
   const upcomingBookings = bookings
     .filter((b) => b.status === "confirmed" || b.status === "pending")
     .sort(
@@ -95,8 +99,8 @@ function DeveloperDashboardScreen({ navigation }: { navigation: any }) {
               <Text style={styles.statLabel}>Upcoming</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statNumber}>8</Text>
-              <Text style={styles.statLabel}>Profile Views</Text>
+              <Text style={styles.statNumber}>{cancelledBookings}</Text>
+              <Text style={styles.statLabel}>Cancelled</Text>
             </View>
           </View>
 
