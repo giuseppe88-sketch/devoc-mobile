@@ -14,3 +14,20 @@ index 022f60c..aba6d86 100644
    }
  }
  
+diff --git a/node_modules/@react-native/gradle-plugin/settings-plugin/build.gradle.kts b/node_modules/@react-native/gradle-plugin/settings-plugin/build.gradle.kts
+index 8f5ae86..608ce38 100644
+--- a/node_modules/@react-native/gradle-plugin/settings-plugin/build.gradle.kts
++++ b/node_modules/@react-native/gradle-plugin/settings-plugin/build.gradle.kts
+@@ -56,9 +56,9 @@ tasks.withType<KotlinCompile>().configureEach {
+     apiVersion.set(KotlinVersion.KOTLIN_1_7)
+     // See comment above on JDK 11 support
+     jvmTarget.set(JvmTarget.JVM_11)
+-    allWarningsAsErrors =
+-        project.properties["enableWarningsAsErrors"]?.toString()?.toBoolean() ?: false
+-  }
++    allWarningsAsErrors.set(
++    project.properties["enableWarningsAsErrors"]?.toString()?.toBoolean() ?: false
++)
+ }
+ 
+ tasks.withType<Test>().configureEach {
