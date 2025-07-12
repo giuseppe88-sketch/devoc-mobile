@@ -32,6 +32,22 @@ index 8f5ae86..d90b74d 100644
  }
  
  tasks.withType<Test>().configureEach {
+diff --git a/node_modules/@react-native/gradle-plugin/shared-testutil/build.gradle.kts b/node_modules/@react-native/gradle-plugin/shared-testutil/build.gradle.kts
+index b3c0204..9863df8 100644
+--- a/node_modules/@react-native/gradle-plugin/shared-testutil/build.gradle.kts
++++ b/node_modules/@react-native/gradle-plugin/shared-testutil/build.gradle.kts
+@@ -27,8 +27,9 @@ tasks.withType<KotlinCompile>().configureEach {
+     apiVersion.set(KotlinVersion.KOTLIN_1_7)
+     // See comment above on JDK 11 support
+     jvmTarget.set(JvmTarget.JVM_11)
+-    allWarningsAsErrors =
+-        project.properties["enableWarningsAsErrors"]?.toString()?.toBoolean() ?: false
++   allWarningsAsErrors.set(
++    project.properties["enableWarningsAsErrors"]?.toString()?.toBoolean() ?: false
++)
+   }
+ }
+ 
 diff --git a/node_modules/@react-native/gradle-plugin/shared/build.gradle.kts b/node_modules/@react-native/gradle-plugin/shared/build.gradle.kts
 index b705a7c..e87f341 100644
 --- a/node_modules/@react-native/gradle-plugin/shared/build.gradle.kts
