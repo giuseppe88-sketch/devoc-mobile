@@ -54,6 +54,10 @@
     "plugins": [
       "expo-dev-client"
     ],
-    "owner": "giuseppe88"
+    "owner": "giuseppe88",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/d3cfae8d-fc5f-401a-ab44-b4cbad6c30bf"
+    }
   }
 }

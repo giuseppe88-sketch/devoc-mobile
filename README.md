@@ -2,6 +2,33 @@
 
 A booking application for developers where developers can register and upload their portfolio, and clients can choose and book developers.
 
+## 🚀 Try Devoc Mobile Instantly with Expo Go
+
+You can experience the app on your own device using Expo Go—no need to access the source code or clone this repository.
+
+### 1. Install Expo Go
+
+- Download [Expo Go](https://expo.dev/expo-go) from the App Store (iOS) or Google Play (Android).
+
+### 2. Open the App
+
+- Open Expo Go on your device.
+- Scan the QR code below, or open this link directly in Expo Go:
+
+
+  ![Expo QR Code](https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://expo.dev/accounts/giuseppe88/projects/devoc-mobile)
+
+> **Note:**  
+> - You do **not** need access to the source code to try the app.
+> - All features are available for preview via Expo Go.
+> - If you encounter any issues, ensure your device is connected to the internet.
+
+---
+
+### ℹ️ About the Source Code
+
+The source code for this project is private. If you are interested in learning more about the implementation or collaborating, feel free to contact me via [GitHub](https://github.com/giuseppe88-sketch).
+
 ## Key MVP Features
 
 1. **Auth** – Login/signup with Supabase
