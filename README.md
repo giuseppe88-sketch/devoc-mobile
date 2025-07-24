@@ -125,8 +125,6 @@ The application uses Supabase with the following tables:
 
 ## Next Steps
 
-- Implement Google Calendar integration
-- Add push notifications
 - Create admin dashboard
 - Add ratings and reviews system
 - Implement payment processing
